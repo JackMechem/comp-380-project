@@ -6,7 +6,7 @@
 
 - Andrew Goldman
 - Jack Mechem
-- Jen
+- Jenny
 - Roark
 
 <details>
