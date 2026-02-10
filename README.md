@@ -29,12 +29,12 @@ to the customer via email. Optionally system lets customers leave a review.
 
 #### Front End 
 
-**Framework** -> Next.js
+ - Framework: Next.js
 
 #### Back End 
 
-**Language** -> Java
-**UI Libraries/Frameworks** -> Undecided
+ - Language: Java
+ - UI Libraries/Frameworks: Undecided
 
 ## Structure
 
