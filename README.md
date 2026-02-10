@@ -6,8 +6,8 @@
 
 - Andrew Goldman
 - Jack Mechem
-- Jenny
-- Roark
+- Jenny Ventura
+- Roark Wanner-Ruffalo
 
 <details>
     <summary><h2>Links</h2></summary>
