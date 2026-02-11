@@ -12,7 +12,7 @@
 <details>
     <summary><h2>Links</h2></summary>
 
-## [Test Deplotment](https://380-project.vercel.app/)
+[**Test Deplotment**](https://380-project.vercel.app/)
 
 ## Project Links
 
