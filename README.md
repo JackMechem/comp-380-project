@@ -12,6 +12,8 @@
 <details>
     <summary><h2>Links</h2></summary>
 
+[**Test Deplotment**](https://380-project.vercel.app/)
+
 ## Project Links
 
 - [Jira](https://jack-mechem.atlassian.net/?continue=https%3A%2F%2Fjack-mechem.atlassian.net%2Fwelcome%2Fsoftware%3FprojectId%3D10000&atlOrigin=eyJpIjoiM2M3NDZkZDAzYTEwNGUwMThmZDQ2MzIyY2UyZTBjNGIiLCJwIjoiamlyYS1zb2Z0d2FyZSJ9)
