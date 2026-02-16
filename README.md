@@ -22,6 +22,7 @@
 ## Tutorial Links
 
 - [Git/Github Crash Course](https://www.youtube.com/watch?v=mAFoROnOfHs)
+- [Jira Intro](https://youtu.be/ekQOcHf8cBc)
 
 </details>
 
