@@ -50,7 +50,9 @@ to the customer via email. Optionally system lets customers leave a review.
 
 ## Project Structure
 
-> :warning: **Subject to change**
+See [docs/](./docs/) for documentation and guides.
+
+To see the basic backend design and frontend implementation see [docs/frontAndBackCommunication.md](./docs/frontAndBackCommunication.md)
 
 ```mermaid
 flowchart TD
