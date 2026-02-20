@@ -126,15 +126,15 @@ Query string example with pages: `/api/cars?page=1&objects-per-page=10`.
 }
 ```
 
-## Example Frontend Implementation With Next.js (App Router)
+# Example Frontend Implementation With Next.js (App Router)
 
-### GET `/api/cars`
+## GET `/api/cars`
 
-#### Query parameters used
+### Query parameters used
 
 String: `?include=make&include=model&include=id`
 
-#### Response from server
+### Response from server
 
 ```json
 {
@@ -163,7 +163,7 @@ String: `?include=make&include=model&include=id`
 }
 ```
 
-#### Example React component that fetches data from API and displays car make and model, along with the total cars in the system.
+### Example React component that fetches data from API and displays car make and model, along with the total cars in the system.
 
 ```javascript
 const CarsPage = async () => {
