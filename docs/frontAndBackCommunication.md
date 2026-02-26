@@ -32,91 +32,59 @@ Query string example with pages: `/api/cars?page=1&objects-per-page=10`.
 {
     "cars": [
         {
-            "id": "7SAXCBE62RF001234",
+            "vin": "7SAXCBE62RF001234",
             "make": "Volkswagen",
             "model": "Golf GTI",
             "year": 2024,
             "transmission": "manual",
             "gears": 6,
             "fuelType": "gas",
-            "engineIsInline": true,
-            "engineCylinders": 4,
-            "engineDisplacement": 2.0,
+            "engineType": "Turbocharged Inline 4"
             "torqe": 273,
-            "torqeUnit": "ft-lb"
-            "engineExtraDetails": ["Turbocharged"],
             "horsepower": 228,
             "seats": 5,
-            "milesPerGallonOrChargeHighway": 30,
-            "milesPerGallonOrChargeCity": 25,
+            "mpg": 30,
             "pricePerDay": 85.0,
-            "currency": "USD",
-            "isAvailable": true,
             "imageUrls": ["https://imageurl.jpg", "https://anotherimageurl.jpg"],
-            "longitude": -118.2437,
-            "latitude": 34.0522,
             "features": ["Heated Seats", "Keyless Ignition", "Leather Seats"],
             "description": "It's a VW Golf GTI and it's sick."
         },
         {
-            "id": "2T3P1RFV5PW123456",
-            "make": "Mercedes Benz",
-            "model": "C300",
-            "year": 2009,
-            "transmission": "automatic",
-            "gears": 7,
+            "vin": "7SAXCBE62RF001234",
+            "make": "Volkswagen",
+            "model": "Golf GTI",
+            "year": 2024,
+            "transmission": "manual",
+            "gears": 6,
             "fuelType": "gas",
-            "engineIsInline": false,
-            "engineCylinders": 4,
-            "engineDisplacement": 2.0,
-            "torqe": 221,
-            "torqeUnit": "ft-lb"
-            "engineExtraDetails": [],
+            "engineType": "Turbocharged Inline 4"
+            "torqe": 273,
             "horsepower": 228,
             "seats": 5,
-            "milesPerGallonOrChargeHighway": 25,
-            "milesPerGallonOrChargeCity": 20,
-            "pricePerDay": 113.0,
-            "currency": "USD",
-            "isAvailable": true,
+            "mpg": 30,
+            "pricePerDay": 85.0,
             "imageUrls": ["https://imageurl.jpg", "https://anotherimageurl.jpg"],
-            "longitude": -118.2437,
-            "latitude": 34.0522,
-            "features": ["Heated Seats",  "Leather Seats"],
-            "description": "It's a Mercedes C300"
+            "features": ["Heated Seats", "Keyless Ignition", "Leather Seats"],
+            "description": "It's a VW Golf GTI and it's sick."
         },
         {
-            "id": "7SAXCBE62RF001234",
-            "make": "Tesla",
-            "model": "Model 3 Long Range",
+            "vin": "7SAXCBE62RF001234",
+            "make": "Volkswagen",
+            "model": "Golf GTI",
             "year": 2024,
-            "transmission": "automatic",
-            "gears": 1,
-            "fuelType": "electric",
-            "engineIsInline": false,
-            "engineCylinders": null,
-            "engineDisplacement": null,
-            "torqe": 377,
-            "torqeUnit": "ft-lb",
-            "engineExtraDetails": ["Dual Motor AWD", "82 kWh Battery"],
-            "horsepower": 394,
+            "transmission": "manual",
+            "gears": 6,
+            "fuelType": "gas",
+            "engineType": "Turbocharged Inline 4"
+            "torqe": 273,
+            "horsepower": 228,
             "seats": 5,
-            "milesPerGallonOrChargeHighway": 124,
-            "milesPerGallonOrChargeCity": 138,
-            "pricePerDay": 145.0,
-            "currency": "USD",
-            "isAvailable": true,
+            "mpg": 30,
+            "pricePerDay": 85.0,
             "imageUrls": ["https://imageurl.jpg", "https://anotherimageurl.jpg"],
-            "longitude": -118.2437,
-            "latitude": 34.0522,
-            "features": [
-                "Autopilot",
-                "Premium Audio",
-                "Glass Roof",
-                "Heated and Ventilated Seats"
-            ],
-            "description": "Teslas suck"
-        }
+            "features": ["Heated Seats", "Keyless Ignition", "Leather Seats"],
+            "description": "It's a VW Golf GTI and it's sick."
+        },
     ],
     "pageInfo": {
         "current": 1,
@@ -140,17 +108,17 @@ String: `?include=make&include=model&include=id`
 {
 	"cars": [
 		{
-			"id": "7SAXCBE62RF001234",
+			"vin": "7SAXCBE62RF001234",
 			"make": "Volkswagen",
 			"model": "Golf GTI"
 		},
 		{
-			"id": "2T3P1RFV5PW123456",
+			"vin": "2T3P1RFV5PW123456",
 			"make": "Mercedes Benz",
 			"model": "C300"
 		},
 		{
-			"id": "7SAXCBE62RF001234",
+			"vin": "7SAXCBE62RF001234",
 			"make": "Tesla",
 			"model": "Model 3 Long Range"
 		}
@@ -189,7 +157,7 @@ const CarsPage = async () => {
 			<h1>Cars</h1>
 			<div>
 				{result.data.map((car) => (
-					<div key={car.id}>
+					<div key={car.vin}>
 						<p>
 							{car.make} {car.model}
 						</p>

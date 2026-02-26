@@ -50,6 +50,35 @@ to the customer via email. Optionally system lets customers leave a review.
 
 ## Project Structure
 
+### Example API Output
+
+```json
+{
+    "cars": [
+        {
+            "vin": "7SAXCBE62RF001234",
+            "make": "Volkswagen",
+            "model": "Golf GTI",
+            "year": 2024,
+            "transmission": "manual",
+            "gears": 6,
+            "fuelType": "gas",
+            "engineType": "Turbocharged Inline 4"
+            "torqe": 273,
+            "horsepower": 228,
+            "seats": 5,
+            "mpg": 30,
+            "pricePerDay": 85.0,
+            "imageUrls": ["https://imageurl.jpg", "https://anotherimageurl.jpg"],
+            "features": ["Heated Seats", "Keyless Ignition", "Leather Seats"],
+            "description": "It's a VW Golf GTI and it's sick."
+        }
+    ]
+}
+```
+
+### File Structure
+
 See [docs/](./docs/) for documentation and guides.
 
 To see the basic backend design and frontend implementation see [docs/frontAndBackCommunication.md](./docs/frontAndBackCommunication.md)
