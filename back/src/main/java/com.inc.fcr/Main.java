@@ -6,18 +6,21 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public class Main {
     public static void main(String[] args) {
 
+        // Initiate API
         Javalin app = Javalin.create(config -> {
             config.router.mount(router -> {
                 router.beforeMatched(Auth::handleAccess);
             }).apiBuilder(() -> {
-                get("/", ctx -> ctx.redirect("/users"), Role.ANYONE);
-                path("users", () -> {
-                    get(UserController::getAllUserIds, Role.ANYONE);
-                    post(UserController::createUser, Role.USER_WRITE);
-                    path("{userId}", () -> {
-                        get(UserController::getUser, Role.USER_READ);
-                        patch(UserController::updateUser, Role.USER_WRITE);
-                        delete(UserController::deleteUser, Role.USER_WRITE);
+                // Specify default redirect (unspecified endpoint to cars endpoint)
+                get("/", ctx -> ctx.redirect("/cars"), Role.ANYONE);
+                // Cars endpoint
+                path("cars", () -> {
+                    get(CarController::getAllCars, Role.ANYONE);
+                    post(CarController::createCar, Role.WRITE);
+                    path("{id}", () -> {
+                        get(CarController::getCar, Role.ANYONE);
+                        patch(CarController::updateCar, Role.WRITE);
+                        delete(CarController::deleteCar, Role.WRITE);
                     });
                 });
             });

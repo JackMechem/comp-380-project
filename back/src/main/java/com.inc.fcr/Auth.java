@@ -11,33 +11,36 @@ import java.util.Optional;
 import java.util.Set;
 
 public class Auth {
-    
+
+    // Authentication starts here
     public static void handleAccess(Context ctx) {
         Set<RouteRole> permittedRoles = ctx.routeRoles();
-        if (permittedRoles.contains(Role.ANYONE)) {
-            return; // anyone can access
-        }
-        if (userRoles(ctx).stream().anyMatch(permittedRoles::contains)) {
-            return; // user has role required to access
-        }
+        // check if context requires (permitted) roles
+        if (permittedRoles.contains(Role.ANYONE)) {return;} // anyone can access
+        if (userRoles(ctx).stream().anyMatch(permittedRoles::contains)) {return;} // user has required role
+        // else auth error
         ctx.header(Header.WWW_AUTHENTICATE, "Basic");
         throw new UnauthorizedResponse();
     }
 
-    static class Pair {
-        String a, b;
-        Pair(String a, String b) {
-            this.a=a; this.b=b;
-        }
-    }
-    private static final Map<Pair, List<Role>> userRolesMap = Map.of(
-            new Pair("alice", "weak-1234"), List.of(Role.USER_READ),
-            new Pair("bob", "weak-123456"), List.of(Role.USER_READ, Role.USER_WRITE)
-    );
-
+    // Authenticate user/access roles (returns list of roles)
     public static List<Role> userRoles(Context ctx) {
         return Optional.ofNullable(ctx.basicAuthCredentials())
-                .map(credentials -> userRolesMap.getOrDefault(new Pair(credentials.getUsername(), credentials.getPassword()), List.of()))
+                .map(credentials -> userRolesMap
+                        .getOrDefault(new Pair(credentials.getUsername(), credentials.getPassword()), List.of()))
                 .orElse(List.of());
     }
+
+    // ---- TEMP ----
+    // Authentication test samples
+    // To be replaced with API keys and/or user logins later
+    static class Pair {
+        String a, b;
+        Pair(String a, String b) {this.a=a; this.b=b;}
+    }
+    private static final Map<Pair, List<Role>> userRolesMap = Map.of(
+            new Pair("ali", "intentionallyInsecurePassword#1"), List.of(Role.READ),
+            new Pair("bob", "intentionallyInsecurePassword#2"), List.of(Role.READ, Role.WRITE),
+            new Pair("jim", "intentionallyInsecurePassword#3"), List.of(Role.READ, Role.WRITE, Role.ADMIN)
+    );
 }
