@@ -77,33 +77,9 @@ to the customer via email. Optionally system lets customers leave a review.
 }
 ```
 
-### File Structure
-
-See [docs/](./docs/) for documentation and guides.
+See [docs/](./docs/) for more documentation and guides.
 
 To see the basic backend design and frontend implementation see [docs/frontAndBackCommunication.md](./docs/frontAndBackCommunication.md)
-
-```mermaid
-flowchart TD
-    %% Root
-    Root[Root];
-
-    %% Front
-    Root  --> Front["(front/): Frontend Next.js project environment"];
-    Front --> GIa["(.gitignore): Git ignore for files in front/"];
-    Front --> NextApp["(app/): Next.js app folder, contains majority of website content"]
-    Front --> FrontRM["(README.md): Documentation for frontend"]
-
-    %% Back
-    Root --> Back["(back/): Backend Java environment"];
-    Back --> GIb["(.gitignore): Git ignore for files in back/"];
-    Back --> BackRM["(README.md): Documentation for backend"]
-
-
-    %% Other files in project root
-    Root --> GIc["(.gitignore): Git ignore for files in project root"];
-    Root --> RootRM["(README.md): Main project documentation"];
-```
 
 ## Contributions
 
