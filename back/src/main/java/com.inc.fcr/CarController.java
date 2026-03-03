@@ -43,9 +43,17 @@ public class CarController {
     // replace with proper database class
     private static JsonNode readJson() {
         ObjectMapper objectMapper = new ObjectMapper();
-        // WARNING! Won't find file if main directly run, must maven package & execute
-        try { return objectMapper.readTree(new File("src/main/resources/cars.json")); }
-        catch (IOException ignored) { return MissingNode.getInstance(); }
+        try {
+            java.io.InputStream is = CarController.class.getClassLoader().getResourceAsStream("cars.json");
+            
+            if (is == null) {
+                System.out.println("Could not find cars.json!");
+                return com.fasterxml.jackson.databind.node.MissingNode.getInstance();
+            }
+            return objectMapper.readTree(is);
+        } catch (IOException e) {
+            return com.fasterxml.jackson.databind.node.MissingNode.getInstance();
+        }
     }
     private static JsonNode findCar(Context ctx) {
         return StreamSupport.stream(readJson().get("cars").spliterator(), false)

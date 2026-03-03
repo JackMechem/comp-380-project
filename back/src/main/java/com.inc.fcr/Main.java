@@ -6,6 +6,10 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public class Main {
     public static void main(String[] args) {
 
+        // Check for the "PORT" environment variable, default to 8080 if not found
+        String portProperty = System.getenv("PORT");
+        int port = (portProperty != null) ? Integer.parseInt(portProperty) : 8080;
+
         // Initiate API
         Javalin app = Javalin.create(config -> {
             config.router.mount(router -> {
@@ -24,7 +28,7 @@ public class Main {
                     });
                 });
             });
-        }).start(7070);
+        }).start(port);
 
         System.out.println("Hello from stdout java");
     }
