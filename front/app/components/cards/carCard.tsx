@@ -1,5 +1,6 @@
 import { Car } from "@/app/types/CarTypes";
 import Image from "next/image";
+import Link from "next/link";
 
 interface CarCardProps {
 	car: Car;
@@ -7,7 +8,10 @@ interface CarCardProps {
 
 const CarCard = async ({ car }: CarCardProps) => {
 	return (
-		<div className="text-left min-w-[300px] max-w-[300px] border-third rounded-xl cursor-pointer p-[5px] hover:scale-[102%] duration-150 text-accent font-titillium font-bold text-[20pt] italic">
+		<Link
+			href={`car/${car.vin}`}
+			className="text-left min-w-[300px] max-w-[300px] border-third rounded-xl cursor-pointer p-[5px] hover:scale-[102%] duration-150 text-accent font-titillium font-bold text-[20pt] italic"
+		>
 			<Image
 				width={300}
 				height={300}
@@ -22,7 +26,7 @@ const CarCard = async ({ car }: CarCardProps) => {
 			<h2 className="text-right text-[20pt] mt-[10px] mr-[10px]">
 				${car.pricePerDay}/day
 			</h2>
-		</div>
+		</Link>
 	);
 };
 
