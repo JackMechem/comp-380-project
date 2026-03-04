@@ -1,7 +1,7 @@
-package com.inc.fcr;
+package com.inc.fcr.car;
 
-import com.inc.fcr.carenums.FuelType;
-import com.inc.fcr.carenums.TransmissionType;
+import com.inc.fcr.car.enums.FuelType;
+import com.inc.fcr.car.enums.TransmissionType;
 
 import java.util.ArrayList;
 
