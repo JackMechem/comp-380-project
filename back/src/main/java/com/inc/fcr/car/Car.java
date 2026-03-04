@@ -1,5 +1,6 @@
 package com.inc.fcr.car;
 
+import com.inc.fcr.ValidationException;
 import com.inc.fcr.car.enums.FuelType;
 import com.inc.fcr.car.enums.TransmissionType;
 
@@ -30,22 +31,22 @@ public class Car {
     public Car(String vin, String make, String model, int year, String description,
                int cylinders, int gears, int horsepower, int torque, int seats,
                double pricePerDay, double mpg, ArrayList<String> features,
-               TransmissionType transmission, FuelType fuel) {
-        this.vin = vin;
-        this.make = make;
-        this.model = model;
-        this.year = year;
-        this.description = description;
-        this.cylinders = cylinders;
-        this.gears = gears;
-        this.horsepower = horsepower;
-        this.torque = torque;
-        this.seats = seats;
-        this.pricePerDay = pricePerDay;
-        this.mpg = mpg;
-        this.features = features;
-        this.transmission = transmission;
-        this.fuel = fuel;
+               TransmissionType transmission, FuelType fuel) throws ValidationException {
+        setVin(vin);
+        setMake(make);
+        setModel(model);
+        setYear(year);
+        setDescription(description);
+        setCylinders(cylinders);
+        setGears(gears);
+        setHorsepower(horsepower);
+        setTorque(torque);
+        setSeats(seats);
+        setPricePerDay(pricePerDay);
+        setMpg(mpg);
+        setFeatures(features);
+        setTransmission(transmission);
+        setFuel(fuel);
     }
     
     // Getters
@@ -66,18 +67,44 @@ public class Car {
     public FuelType getFuel() {return fuel;}
     
     // Setters
+    // NOTE: consider for String types: default null or ""?
+    //       should we data validate String types?
     public void setVin(String vin) {this.vin = vin;}
     public void setMake(String make) {this.make = make;}
     public void setModel(String model) {this.model = model;}
-    public void setYear(int year) {this.year = year;}
+    public void setYear(int year) throws ValidationException {
+        if (year > 0 && year < 10000) {this.year = year;}
+        else {throw new ValidationException("Invalid year: "+year);}
+    }
     public void setDescription(String description) {this.description = description;}
-    public void setCylinders(int cylinders) {this.cylinders = cylinders;}
-    public void setGears(int gears) {this.gears = gears;}
-    public void setHorsepower(int horsepower) {this.horsepower = horsepower;}
-    public void setTorque(int torque) {this.torque = torque;}
-    public void setSeats(int seats) {this.seats = seats;}
-    public void setPricePerDay(double pricePerDay) {this.pricePerDay = pricePerDay;}
-    public void setMpg(double mpg) {this.mpg = mpg;}
+    public void setCylinders(int cylinders) throws ValidationException {
+        if (cylinders >= 0 && cylinders < 100) {this.cylinders = cylinders;}
+        else {throw new ValidationException("Invalid cylinders:"+cylinders);}
+    }
+    public void setGears(int gears) throws ValidationException {
+        if (gears > 0 && gears < 100) {this.gears = gears;}
+        else {throw new ValidationException("Invalid gears:"+gears);}
+    }
+    public void setHorsepower(int horsepower) throws ValidationException {
+        if (horsepower > 0 && horsepower < 100000) {this.horsepower = horsepower;}
+        else {throw new ValidationException("Invalid horsepower:"+horsepower);}
+    }
+    public void setTorque(int torque) throws ValidationException {
+        if (torque > 0 && torque < 100000) {this.torque = torque;}
+        else {throw new ValidationException("Invalid torque:"+torque);}
+    }
+    public void setSeats(int seats)throws ValidationException {
+        if (seats >= 0 && seats < 100) {this.seats = seats;}
+        else {throw new ValidationException("Invalid seats:"+seats);}
+    }
+    public void setPricePerDay(double pricePerDay) throws ValidationException {
+        if (pricePerDay >= 0 && pricePerDay < 1000000) {this.pricePerDay = pricePerDay;}
+        else {throw new ValidationException("Invalid pricePerDay:"+pricePerDay);}
+    }
+    public void setMpg(double mpg) throws ValidationException {
+        if (mpg >= 0 && mpg < 1000) {this.mpg = mpg;}
+        else {throw new ValidationException("Invalid MPG:"+mpg);}
+    }
     public void setFeatures(ArrayList<String> features) {this.features = features;}
     public void setTransmission(TransmissionType transmission) {this.transmission = transmission;}
     public void setFuel(FuelType fuel) {this.fuel = fuel;}
