@@ -1,4 +1,4 @@
-package com.inc.fcr.carenums;
+package com.inc.fcr.car.enums;
 
 public enum Drivetrain {
     FWD, RWD, AWD
