@@ -5,9 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseController {
-    private static final String URL = "jdbc:mysql://localhost:PORT#/databaseNAME";
-    private static final String USER = "";
-    private static final String PASSWORD = "";
+    private static final String URL = "jdbc:mysql://127.0.0.1:3306/FCRDB";
+    private static final String USER = "root";
+    private static final String PASSWORD = "rentMyCar01#";
 
     private final Connection conn;
 
