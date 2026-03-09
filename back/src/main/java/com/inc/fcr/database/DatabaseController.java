@@ -121,6 +121,13 @@ public class DatabaseController {
     }
 
     /*
+     * DELETE
+     */
+    public static boolean deleteCar(String vin) {
+        return true;
+    }
+
+    /*
      * GET
      */
 
