@@ -14,6 +14,7 @@ public class DatabaseController {
 
     private static int DEFAULT_PAGE_SIZE = 5;
     private static int DEFAULT_PAGE = 1;
+    private static String DEFAULT_PARAMS = "";
 
     /*
      * Helper Functions
@@ -152,6 +153,12 @@ public class DatabaseController {
 
         if (page == -1)
             page = DEFAULT_PAGE;
+
+        if (pageSize == -1)
+            pageSize = DEFAULT_PAGE_SIZE;
+
+        if (params == null)
+            params = DEFAULT_PARAMS;
 
         int offset = (page - 1) * pageSize;
 
