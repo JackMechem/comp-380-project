@@ -6,7 +6,7 @@ const getAllCars = async (): Promise<Car[]> => {
 	});
 
 	if (!res.ok) {
-		throw new Error(`Failed to fetch data from ${res.url}`);
+		throw new Error(await res.text());
 	}
 
 	const cars: Promise<Car[]> = res.json();
