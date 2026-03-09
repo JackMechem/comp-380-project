@@ -33,11 +33,7 @@ public class CarController {
 
     public static void getCar(Context ctx) {
         Car car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
-        if (car != null) {
-            ctx.json(car);
-        } else {
-            ctx.status(404).result("Car not found.");
-        }
+        if (car != null) {ctx.json(car);} else {carNotFound(ctx);}
     }
 
     public static void updateCar(Context ctx) {
