@@ -20,30 +20,29 @@ public class CarController {
 
     public static void getAllCars(Context ctx) {
         try {
-            throw new SQLException("test");
-//            ctx.json(new DatabaseController().getCarDB());
-        } catch (SQLException e) {
-            ctx.status(500).result("Database error: "+e);
+            // throw new SQLException("test");
+            ctx.json(DatabaseController.getCarDB());
+        } catch (Exception e) {
+            ctx.status(500).result("Database error: " + e);
         }
     }
+
     public static void createCar(Context ctx) {
         // TODO
         // uses: ctx.bodyAsClass(AnyClassHere.class)
     }
+
     public static void getCar(Context ctx) {
-        try {
-            DatabaseController database = new DatabaseController();
-            String vinOut = ctx.pathParam("id");
-            Car car = database.getCarFromVin(vinOut);
-            ctx.json(car);
-        } catch (SQLException e) {
-            throw new RuntimeException("Database error", e);
-        }
+        String vinOut = ctx.pathParam("id");
+        Car car = DatabaseController.getCarFromVin(vinOut);
+        ctx.json(car);
     }
+
     public static void updateCar(Context ctx) {
         // TODO
         // uses: ctx.bodyAsClass(AnyClassHere.class)
     }
+
     public static void deleteCar(Context ctx) {
         // TODO
     }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class DatabaseController {
 
     /*
-     *  Helper Functions
+     * Helper Functions
      */
 
     private static String requireEnv(String key) {
@@ -35,8 +35,7 @@ public class DatabaseController {
             }
         }
         throw new IllegalArgumentException(
-                "Unknown " + enumClass.getSimpleName() + " value from DB: '" + dbValue + "'"
-        );
+                "Unknown " + enumClass.getSimpleName() + " value from DB: '" + dbValue + "'");
     }
 
     private static ArrayList<String> jsonToStringArrayList(String json) {
@@ -52,34 +51,37 @@ public class DatabaseController {
     }
 
     /*
-     *  Database Connection
+     * Database Connection
      */
 
-    private final Connection conn;
+    static String url = requireEnv("DB_URL");
+    static String user = requireEnv("DB_USER");
+    static String pass = requireEnv("DB_PASSWORD");
+    static final Connection conn = dbConnect();
 
-    public DatabaseController() throws SQLException {
-        String url = requireEnv("DB_URL");
-        String user = requireEnv("DB_USER");
-        String pass = requireEnv("DB_PASSWORD");
-        this.conn = DriverManager.getConnection(url, user, pass);
+    public static Connection dbConnect() {
+        try {
+            return (DriverManager.getConnection(url, user, pass));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to database: " + e);
+        }
     }
 
     /*
-     *  POST / PATCH
+     * POST / PATCH
      */
 
     // TODO: Add features and images
-    public void insertCar(Car car) {
+    public static void insertCar(Car car) {
         final String checkSQL = "SELECT 1 FROM cars WHERE vin = ?";
 
-        final String insertSQL =
-                "INSERT INTO cars " +
-                        "(vin, make, model, model_year, description, num_cylinders, gears, horsepower, torque, seats, " +
-                        " priceperday, mpg, transmission, fuel, engineLayout, drivetrain) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        final String insertSQL = "INSERT INTO cars " +
+                "(vin, make, model, model_year, description, num_cylinders, gears, horsepower, torque, seats, " +
+                " priceperday, mpg, transmission, fuel, engineLayout, drivetrain) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkSQL);
-             PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
+                PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
 
             // Check duplicate VIN
             checkStmt.setString(1, car.getVin());
@@ -118,37 +120,32 @@ public class DatabaseController {
         }
     }
 
-
     /*
-     *  GET
+     * GET
      */
 
-    public ArrayList<Car> getCarDB() {
-        final String sql =
-                "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
-                        "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features " +
-                        "FROM cars";
+    public static ArrayList<Car> getCarDB() {
+        final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
+                "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features "
+                +
+                "FROM cars";
 
         ArrayList<Car> cars = new ArrayList<>();
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 try {
 
-                    TransmissionType transmission =
-                            enumFromToString(TransmissionType.class, rs.getString("transmission"));
+                    TransmissionType transmission = enumFromToString(TransmissionType.class,
+                            rs.getString("transmission"));
 
-                    Drivetrain drivetrain =
-                            enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
+                    Drivetrain drivetrain = enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
 
-                    EngineLayout engineLayout =
-                            enumFromToString(EngineLayout.class, rs.getString("engineLayout"));
+                    EngineLayout engineLayout = enumFromToString(EngineLayout.class, rs.getString("engineLayout"));
 
-                    FuelType fuel =
-                            enumFromToString(FuelType.class, rs.getString("fuel"));
-
+                    FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
 
                     String featuresJson = rs.getString("features");
 
@@ -192,15 +189,13 @@ public class DatabaseController {
                             transmission,
                             drivetrain,
                             engineLayout,
-                            fuel
-                    );
+                            fuel);
 
                     cars.add(car);
 
                 } catch (IllegalArgumentException iae) {
                     System.err.println(
-                            "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): " + iae.getMessage()
-                    );
+                            "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): " + iae.getMessage());
                 }
             }
 
@@ -211,11 +206,11 @@ public class DatabaseController {
         return cars;
     }
 
-    public Car getCarFromVin(String vin) {
-        final String sql =
-                "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
-                        "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features " +
-                        "FROM cars WHERE vin = ?";
+    public static Car getCarFromVin(String vin) {
+        final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
+                "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features "
+                +
+                "FROM cars WHERE vin = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -225,17 +220,14 @@ public class DatabaseController {
                 while (rs.next()) {
                     try {
 
-                        TransmissionType transmission =
-                                enumFromToString(TransmissionType.class, rs.getString("transmission"));
+                        TransmissionType transmission = enumFromToString(TransmissionType.class,
+                                rs.getString("transmission"));
 
-                        Drivetrain drivetrain =
-                                enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
+                        Drivetrain drivetrain = enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
 
-                        EngineLayout engineLayout =
-                                enumFromToString(EngineLayout.class, rs.getString("engineLayout"));
+                        EngineLayout engineLayout = enumFromToString(EngineLayout.class, rs.getString("engineLayout"));
 
-                        FuelType fuel =
-                                enumFromToString(FuelType.class, rs.getString("fuel"));
+                        FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
 
                         ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
                         ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
@@ -258,13 +250,12 @@ public class DatabaseController {
                                 transmission,
                                 drivetrain,
                                 engineLayout,
-                                fuel
-                        );
+                                fuel);
 
                     } catch (IllegalArgumentException iae) {
                         System.err.println(
-                                "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): " + iae.getMessage()
-                        );
+                                "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
+                                        + iae.getMessage());
                     }
                 }
             }
