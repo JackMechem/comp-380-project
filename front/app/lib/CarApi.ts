@@ -1,12 +1,21 @@
 import { Car } from "../types/CarTypes";
 
 const getAllCars = async (): Promise<Car[]> => {
+	const username = "jim";
+	const password = "intentionallyInsecurePassword#3";
+
+	const token = btoa(`${username}:${password}`);
+
 	const res: Response = await fetch(`${process.env.API_BASE_URL}/cars`, {
 		next: { revalidate: Number(process.env.REVALIDATE_SECONDS) },
+		headers: {
+			Authorization: `Basic ${token}`,
+			"Content-Type": "application/json",
+		},
 	});
 
 	if (!res.ok) {
-		throw new Error(`Failed to fetch data from ${res.url}`);
+		throw new Error(await res.text());
 	}
 
 	const cars: Promise<Car[]> = res.json();

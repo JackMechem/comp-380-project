@@ -16,9 +16,13 @@ public class Auth {
     public static void handleAccess(Context ctx) {
         Set<RouteRole> permittedRoles = ctx.routeRoles();
         // check if context requires (permitted) roles
-        if (permittedRoles.contains(Role.ANYONE)) {return;} // anyone can access
-        if (userRoles(ctx).stream().anyMatch(permittedRoles::contains)) {return;} // user has required role
-        // else auth error
+        if (permittedRoles.contains(Role.ANYONE)) {
+            return;
+        } // anyone can access
+        if (userRoles(ctx).stream().anyMatch(permittedRoles::contains)) {
+            return;
+        } // user has required role
+          // else auth error
         ctx.header(Header.WWW_AUTHENTICATE, "Basic");
         throw new UnauthorizedResponse();
     }
@@ -36,8 +40,24 @@ public class Auth {
     // To be replaced with API keys and/or user logins later
     static class Pair {
         String a, b;
-        Pair(String a, String b) {this.a=a; this.b=b;}
+
+        Pair(String a, String b) {
+            this.a = a;
+            this.b = b;
+        }
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Pair)) return false;
+            Pair p = (Pair) o;
+            return a.equals(p.a) && b.equals(p.b);
+        }
+        @Override
+        public int hashCode() {
+            return 31 * a.hashCode() + b.hashCode();
+        }
     }
+
     private static final Map<Pair, List<Role>> userRolesMap = Map.of(
             new Pair("ali", "intentionallyInsecurePassword#1"), List.of(Role.READ),
             new Pair("bob", "intentionallyInsecurePassword#2"), List.of(Role.READ, Role.WRITE),
