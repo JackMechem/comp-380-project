@@ -45,17 +45,13 @@ public class Auth {
             this.a = a;
             this.b = b;
         }
-
         @Override
         public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (!(o instanceof Pair))
-                return false;
+            if (this == o) return true;
+            if (!(o instanceof Pair)) return false;
             Pair p = (Pair) o;
             return a.equals(p.a) && b.equals(p.b);
         }
-
         @Override
         public int hashCode() {
             return 31 * a.hashCode() + b.hashCode();
@@ -65,5 +61,6 @@ public class Auth {
     private static final Map<Pair, List<Role>> userRolesMap = Map.of(
             new Pair("ali", "intentionallyInsecurePassword#1"), List.of(Role.READ),
             new Pair("bob", "intentionallyInsecurePassword#2"), List.of(Role.READ, Role.WRITE),
-            new Pair("jim", "intentionallyInsecurePassword#3"), List.of(Role.READ, Role.WRITE, Role.ADMIN));
+            new Pair("jim", "intentionallyInsecurePassword#3"), List.of(Role.READ, Role.WRITE, Role.ADMIN)
+    );
 }
