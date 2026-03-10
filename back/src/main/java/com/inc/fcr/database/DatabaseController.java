@@ -175,15 +175,15 @@ public class DatabaseController {
     private static final int DEFAULT_PAGE_SIZE = 5;
     private static final int DEFAULT_PAGE = 1;
 
-    public static ArrayList<Car> getCarDB() throws ValidationException {
+    public static ArrayList<Car> getCarDB() throws ValidationException, SQLException {
         return getCarDB(-1, -1, new String[0]);
     }
 
-    public static ArrayList<Car> getCarDB(String[] columns) throws ValidationException {
+    public static ArrayList<Car> getCarDB(String[] columns) throws ValidationException, SQLException {
         return getCarDB(-1, -1, columns);
     }
 
-    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) throws ValidationException {
+    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) throws ValidationException, SQLException {
         if (page <= 0)
             page = DEFAULT_PAGE;
         if (pageSize <= 0)
@@ -272,8 +272,6 @@ public class DatabaseController {
                     }
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return cars;
     }
@@ -283,7 +281,7 @@ public class DatabaseController {
         return colSet == null || colSet.contains(col);
     }
 
-    public static Car getCarFromVin(String vin) throws ValidationException {
+    public static Car getCarFromVin(String vin) throws ValidationException, SQLException {
         final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
                 "horsepower, torque, seats, price_per_day, mpg, transmission, drivetrain, engine_layout, fuel, images, features,vehicle_class,body_type,roof_type "
                 +
@@ -347,10 +345,7 @@ public class DatabaseController {
                 }
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-
         return null;
     }
 
