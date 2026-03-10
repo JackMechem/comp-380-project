@@ -1,5 +1,5 @@
 import Image from "next/image";
-import bigLogoImage from "../../media/bigLogo.svg";
+import bigLogoImage from "../../media/bigLogoWhite.svg";
 import HeaderMenuButton from "../buttons/headerMenuButton";
 import Link from "next/link";
 

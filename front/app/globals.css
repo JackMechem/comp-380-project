@@ -7,6 +7,7 @@
 	--color-third: #dedede;
 	--color-accent: #993537;
 	--color-foreground-light: #585b61;
+    --color-primary-dark: #F6F6F8;
 }
 
 @theme {
@@ -17,6 +18,7 @@
 	--color-third: var(--color-third);
 	--color-accent: var(--color-accent);
 	--color-foreground-light: var(--color-foreground-light);
+	--color-primary-dark: var(--color-primary-dark);
 
 	/* fonts */
 	--font-inter: var(--font-inter);

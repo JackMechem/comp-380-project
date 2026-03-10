@@ -3,7 +3,7 @@ import { BiSearch } from "react-icons/bi";
 const LandingSearchBar = () => {
 	return (
 		<div className="w-full flex flex-col md:px-0 px-[20px] items-center">
-			<div className="flex md:flex-row md:w-auto w-full flex-col gap-[10px] h-auto border md:p-[6px] p-[10px] md:pl-[15px] border border-third rounded-xl shadow focus-within:border-accent focus-within:scale-[101%] duration-150">
+			<div className="flex md:flex-row md:w-auto w-full flex-col gap-[10px] h-auto md:p-[10px] p-[15px] md:pl-[25px] bg-primary md:rounded-full rounded-3xl shadow focus-within:border-accent focus-within:scale-[101%] duration-150">
 				<div>
 					<p className="text-[10pt]">What</p>
 					<input
@@ -19,7 +19,7 @@ const LandingSearchBar = () => {
 					<p className="text-[10pt]">Until</p>
 					<input placeholder="Add date" className="outline-none" />
 				</div>
-				<button className="cursor-pointer flex justify-center items-center text-center md:h-fill md:py-0 md:mt-0 mt-[10px] py-[10px] px-[10px] text-[18pt] bg-accent text-primary rounded-xl">
+				<button className="cursor-pointer flex justify-center items-center text-center md:h-fill md:py-0 md:mt-0 mt-[10px] py-[10px] px-[10px] text-[18pt] bg-accent text-primary rounded-full">
 					<BiSearch />
 				</button>
 			</div>

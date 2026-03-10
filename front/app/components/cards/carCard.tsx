@@ -1,6 +1,7 @@
 import { Car } from "@/app/types/CarTypes";
 import Image from "next/image";
 import Link from "next/link";
+import { BiHeart } from "react-icons/bi";
 
 interface CarCardProps {
 	car: Car;
@@ -10,23 +11,38 @@ const CarCard = async ({ car }: CarCardProps) => {
 	return (
 		<Link
 			href={`car/${car.vin}`}
-			className="text-left min-w-[300px] max-w-[300px] border-third rounded-xl cursor-pointer p-[5px] hover:scale-[102%] duration-150 text-accent font-titillium font-bold text-[20pt] italic"
+			className="text-left min-w-[250px] max-w-[250px] border-third rounded-lg overflow-hidden cursor-pointer hover:scale-[102%] duration-150 text-foreground font-inter text-[20pt] bg-primary shadow-lg"
 		>
 			<Image
 				width={300}
 				height={300}
 				alt={"car image"}
 				src={car.images[0]}
-				className="rounded-xl w-full h-[200px] object-cover"
+				className="w-full h-[200px] object-cover"
 				loading="lazy"
 			/>
-			<h2 className="text-[16pt]">
-				{car.make} {car.model}
-			</h2>
-			<p className="text-[12pt] capitalize font-[600]">{car.year}</p>
-			<h2 className="text-right text-[20pt] mt-[10px] mr-[10px]">
-				${car.pricePerDay}/day
-			</h2>
+			<div className="px-[20px] py-[15px] flex flex-col w-full gap-[10px]">
+				<div className="flex items-center justify-between w-full overflow-hidden">
+					<div>
+						<h2 className="text-[14pt] leading-[100%] font-[500] truncate w-[180px] flex-shrink overflow-y-visible overflow-x-hidden text-ellipsis">
+							{car.make} {car.model}
+						</h2>
+						<p className="text-[11pt] mt-[-3px] lowercase font-[400] text-secondary">
+							{car.year}
+						</p>
+					</div>
+                    <BiHeart className="w-[25px] min-w-[25px] max-w-[25px] justify-self-end" />
+				</div>
+				<div className="flex justify-between items-center">
+					<h2 className="text-right text-[14pt] text-accent font-[600]">
+						${car.pricePerDay}
+						<span className="text-[11pt] opacity-[0.6]">/day</span>
+					</h2>
+					<div className="bg-accent px-[20px] py-[5px] h-fit text-[11pt] rounded-full text-primary font-[500]">
+						Rent now
+					</div>
+				</div>
+			</div>
 		</Link>
 	);
 };
