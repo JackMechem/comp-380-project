@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.inc.fcr.Role;
 import com.inc.fcr.ValidationException;
-import com.inc.fcr.car.enums.BodyType;
-import com.inc.fcr.car.enums.FuelType;
-import com.inc.fcr.car.enums.RoofType;
-import com.inc.fcr.car.enums.VehicleClass;
+import com.inc.fcr.car.enums.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -57,10 +54,10 @@ public class CarController {
                     body.get("images").,
                     body.get("vin").asText(),
                     body.get("vin").asText(),
-                    body.get("transmission").asText(),
-                    body.get("driveTrain").asText(),
-                    body.get("engineLayout").asText(),
-                    FuelType.valueOf.get("fuel").valueOf(),
+                    Transmibody.get("transmission").asText(),
+                    Drivetrain.valueOf(body.get("driveTrain").asText()),
+                    EngineLayout.valueOf(body.get("engineLayout").asText()),
+                    FuelType.valueOf(body.get("fuel").asText()),
                     BodyType.valueOf(body.get("bodyType").asText()),
                     RoofType.valueOf(body.get("roofType").asText()),
                     VehicleClass.valueOf(body.get("vehicleClass").asText())
