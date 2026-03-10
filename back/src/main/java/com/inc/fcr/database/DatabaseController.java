@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DatabaseController {
 
@@ -69,6 +70,14 @@ public class DatabaseController {
         return out;
     }
 
+    private static String toJsonArray(ArrayList<String> list) {
+        if (list == null || list.isEmpty())
+            return "[]";
+        return "[" + list.stream()
+                .map(s -> "\"" + s + "\"")
+                .collect(Collectors.joining(",")) + "]";
+    }
+
     /*
      * Database Connection
      */
@@ -96,11 +105,12 @@ public class DatabaseController {
 
         final String insertSQL = "INSERT INTO cars " +
                 "(vin, make, model, model_year, description, num_cylinders, gears, horsepower, torque, seats, " +
-                " priceperday, mpg, transmission, fuel, engineLayout, drivetrain) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                " priceperday, mpg, transmission, fuel, engineLayout, drivetrain, features, images, roof_type, vehicle_class, body_type) "
+                +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?)";
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkSQL);
-             PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
+                PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
 
             // Check duplicate VIN
             checkStmt.setString(1, car.getVin());
@@ -130,6 +140,11 @@ public class DatabaseController {
             insertStmt.setString(14, car.getFuel().toString());
             insertStmt.setString(15, car.getEngineLayout().toString());
             insertStmt.setString(16, car.getDrivetrain().toString());
+            insertStmt.setObject(17, toJsonArray(car.getFeatures()));
+            insertStmt.setObject(18, toJsonArray(car.getImages()));
+            insertStmt.setString(19, car.getRoofType().toString());
+            insertStmt.setString(20, car.getVehicleClassProperty().toString());
+            insertStmt.setString(21, car.getBodyType().toString());
 
             int rows = insertStmt.executeUpdate();
             System.out.println(rows == 1 ? "insert successful" : "insert failed");
@@ -249,8 +264,7 @@ public class DatabaseController {
                                 hasCol(colSet, "mpg") ? rs.getDouble("mpg") : 0,
                                 features, images,
                                 transmission, drivetrain, engineLayout, fuel,
-                                bodyType, roofType, vehicleClassProperty
-                        );
+                                bodyType, roofType, vehicleClassProperty);
                         cars.add(car);
                     } catch (IllegalArgumentException iae) {
                         System.err.println("Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
@@ -292,16 +306,15 @@ public class DatabaseController {
 
                         FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
 
-                        VehicleClass vehicleClassProperty = enumFromToString(VehicleClass.class, rs.getString("vehicle_class"));
+                        VehicleClass vehicleClassProperty = enumFromToString(VehicleClass.class,
+                                rs.getString("vehicle_class"));
 
                         RoofType roofType = enumFromToString(RoofType.class, rs.getString("roof_type"));
 
                         BodyType bodyType = enumFromToString(BodyType.class, rs.getString("body_type"));
 
-
                         ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
                         ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
-
 
                         return new Car(
                                 rs.getString("vin"),
@@ -324,8 +337,7 @@ public class DatabaseController {
                                 fuel,
                                 bodyType,
                                 roofType,
-                                vehicleClassProperty
-                        );
+                                vehicleClassProperty);
 
                     } catch (IllegalArgumentException iae) {
                         System.err.println(
@@ -344,20 +356,19 @@ public class DatabaseController {
 
     /**
      * SORT BY ATTRIBUTE
-     * Sort by transmission type, fuel type, drivetrain, body_type, vehicle_class, price per day.
+     * Sort by transmission type, fuel type, drivetrain, body_type, vehicle_class,
+     * price per day.
      */
 
-    private static String sortByAttribute(Sort data){
-        return switch(data){
-            case TRANSMISSION -> "transmission";
-            case FUEL -> "fuel";
-            case DRIVETRAIN -> "drivetrain";
-            case BODY_TYPE -> "body_type";
-            case VEHICLE_CLASS -> "vehicle_class";
-            case PRICE_PER_DAY -> "price_per_pday";
-        };
-    }
-
-
+    // private static String sortByAttribute(Sort data){
+    // return switch(data){
+    // case TRANSMISSION -> "transmission";
+    // case FUEL -> "fuel";
+    // case DRIVETRAIN -> "drivetrain";
+    // case BODY_TYPE -> "body_type";
+    // case VEHICLE_CLASS -> "vehicle_class";
+    // case PRICE_PER_DAY -> "price_per_pday";
+    // };
+    // }
 
 }
