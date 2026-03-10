@@ -77,6 +77,7 @@ public class DatabaseController {
     protected static final String user = requireEnv("DB_USER");
     protected static final String pass = requireEnv("DB_PASSWORD");
     protected static final Connection conn = dbConnect();
+
     protected static Connection dbConnect() {
         try {
             return (DriverManager.getConnection(url, user, pass));
@@ -99,7 +100,7 @@ public class DatabaseController {
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkSQL);
-                PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
+             PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
 
             // Check duplicate VIN
             checkStmt.setString(1, car.getVin());
@@ -161,11 +162,13 @@ public class DatabaseController {
     private static final int DEFAULT_PAGE = 1;
 
     public static ArrayList<Car> getCarDB() {
-        return getCarDB(-1,-1,new String[0]);
+        return getCarDB(-1, -1, new String[0]);
     }
+
     public static ArrayList<Car> getCarDB(String[] columns) {
-        return getCarDB(-1,-1,columns);
+        return getCarDB(-1, -1, columns);
     }
+
     public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) {
         if (page <= 0)
             page = DEFAULT_PAGE;
@@ -248,7 +251,7 @@ public class DatabaseController {
                                 features, images,
                                 transmission, drivetrain, engineLayout, fuel,
                                 bodyType, roofType, vehicleClassProperty
-                                );
+                        );
                         cars.add(car);
                     } catch (IllegalArgumentException iae) {
                         System.err.println("Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
@@ -269,7 +272,7 @@ public class DatabaseController {
 
     public static Car getCarFromVin(String vin) {
         final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
-                "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features "
+                "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features,vehicle_class,body_type,roof_type "
                 +
                 "FROM cars WHERE vin = ?";
 
@@ -290,8 +293,16 @@ public class DatabaseController {
 
                         FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
 
+                        VehicleClassProperty vehicleClassProperty = enumFromToString(VehicleClassProperty.class, rs.getString("vehicle_class"));
+
+                        RoofType roofType = enumFromToString(RoofType.class, rs.getString("roof_type"));
+
+                        BodyType bodyType = enumFromToString(BodyType.class, rs.getString("body_type"));
+
+
                         ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
                         ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
+
 
                         return new Car(
                                 rs.getString("vin"),
@@ -312,9 +323,10 @@ public class DatabaseController {
                                 drivetrain,
                                 engineLayout,
                                 fuel,
-                                null,
-                                null,
-                                null);
+                                bodyType,
+                                roofType,
+                                vehicleClassProperty
+                        );
 
                     } catch (IllegalArgumentException iae) {
                         System.err.println(
@@ -330,5 +342,9 @@ public class DatabaseController {
 
         return null;
     }
+
+    /**
+     * Sort by transmission type, fuel type, drivetrain, body_type, vehicle_class, price per day.
+     */
 
 }

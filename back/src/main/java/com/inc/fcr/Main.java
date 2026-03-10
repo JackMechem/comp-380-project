@@ -40,6 +40,6 @@ public class Main {
             });
         }).start(port);
 
-         System.out.println(DatabaseController.getCarDB());
+//         System.out.println(DatabaseController.getCarDB());
     }
 }
