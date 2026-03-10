@@ -180,7 +180,7 @@ public class DatabaseController {
      * GET
      */
 
-    private static final int DEFAULT_PAGE_SIZE = 5;
+    private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int DEFAULT_PAGE = 1;
 
     public static ArrayList<Car> getCarDB() throws ValidationException, SQLException {
@@ -194,7 +194,7 @@ public class DatabaseController {
     public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) throws ValidationException, SQLException {
         if (page <= 0)
             page = DEFAULT_PAGE;
-        if (pageSize <= 0)
+        if (pageSize <= -1)
             pageSize = DEFAULT_PAGE_SIZE;
 
         String selectCols = sanitizeColumns(columns);
