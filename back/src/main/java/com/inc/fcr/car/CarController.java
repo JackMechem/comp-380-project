@@ -4,6 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.inc.fcr.Role;
+import com.inc.fcr.ValidationException;
+import com.inc.fcr.car.enums.BodyType;
+import com.inc.fcr.car.enums.FuelType;
+import com.inc.fcr.car.enums.RoofType;
+import com.inc.fcr.car.enums.VehicleClass;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 
@@ -33,17 +38,49 @@ public class CarController {
 
     public static void createCar(Context ctx) {
         // TODO
-//        ctx.bodyAsClass(Car.class)
-        // uses: ctx.bodyAsClass(AnyClassHere.class)
+        JsonNode body = ctx.bodyAsClass(JsonNode.class);
+        try {
+            Car car = new Car(
+                    body.get("vin").asText(),
+                    body.get("make").asText(),
+                    body.get("model").asText(),
+                    body.get("modelYear").asInt(),
+                    body.get("description").asText(),
+                    body.get("cylinders").asInt(),
+                    body.get("gears").asInt(),
+                    body.get("horsepower").asInt(),
+                    body.get("torque").asInt(),
+                    body.get("seats").asInt(),
+                    body.get("pricePerDay").asDouble(),
+                    body.get("mpg").asDouble(),
+                    body.get("features").,
+                    body.get("images").,
+                    body.get("vin").asText(),
+                    body.get("vin").asText(),
+                    body.get("transmission").asText(),
+                    body.get("driveTrain").asText(),
+                    body.get("engineLayout").asText(),
+                    FuelType.valueOf.get("fuel").valueOf(),
+                    BodyType.valueOf(body.get("bodyType").asText()),
+                    RoofType.valueOf(body.get("roofType").asText()),
+                    VehicleClass.valueOf(body.get("vehicleClass").asText())
+            );
+        } catch (Exception e) {
+            ctx.status(400).result("Improper car format: "+e);
+        }
+
     }
 
     public static void getCar(Context ctx) {
-        Car car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
-        if (car != null) {
-            ctx.json(car);
-        } else {
-            carNotFound(ctx);
+        Car car = null;
+        try {
+            car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
+        } catch (Exception e) {
+            ctx.status(500).result("Database error: " + e);
         }
+
+        if (car != null) {ctx.json(car);}
+        else {carNotFound(ctx);}
     }
 
     public static void updateCar(Context ctx) {

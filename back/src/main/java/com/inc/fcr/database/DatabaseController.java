@@ -161,15 +161,15 @@ public class DatabaseController {
     private static final int DEFAULT_PAGE_SIZE = 5;
     private static final int DEFAULT_PAGE = 1;
 
-    public static ArrayList<Car> getCarDB() {
+    public static ArrayList<Car> getCarDB() throws ValidationException {
         return getCarDB(-1, -1, new String[0]);
     }
 
-    public static ArrayList<Car> getCarDB(String[] columns) {
+    public static ArrayList<Car> getCarDB(String[] columns) throws ValidationException {
         return getCarDB(-1, -1, columns);
     }
 
-    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) {
+    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) throws ValidationException {
         if (page <= 0)
             page = DEFAULT_PAGE;
         if (pageSize <= 0)
@@ -211,8 +211,8 @@ public class DatabaseController {
                         RoofType roofType = hasCol(colSet, "roof_type")
                                 ? enumFromToString(RoofType.class, rs.getString("roof_type"))
                                 : null;
-                        VehicleClassProperty vehicleClassProperty = hasCol(colSet, "vehicle_class")
-                                ? enumFromToString(VehicleClassProperty.class, rs.getString("vehicle_class"))
+                        VehicleClass vehicleClassProperty = hasCol(colSet, "vehicle_class")
+                                ? enumFromToString(VehicleClass.class, rs.getString("vehicle_class"))
                                 : null;
 
                         ArrayList<String> features = new ArrayList<>();
@@ -270,7 +270,7 @@ public class DatabaseController {
         return colSet == null || colSet.contains(col);
     }
 
-    public static Car getCarFromVin(String vin) {
+    public static Car getCarFromVin(String vin) throws ValidationException {
         final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
                 "horsepower, torque, seats, priceperday, mpg, transmission, drivetrain, engineLayout, fuel, images, features,vehicle_class,body_type,roof_type "
                 +
@@ -293,7 +293,7 @@ public class DatabaseController {
 
                         FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
 
-                        VehicleClassProperty vehicleClassProperty = enumFromToString(VehicleClassProperty.class, rs.getString("vehicle_class"));
+                        VehicleClass vehicleClassProperty = enumFromToString(VehicleClass.class, rs.getString("vehicle_class"));
 
                         RoofType roofType = enumFromToString(RoofType.class, rs.getString("roof_type"));
 
@@ -344,7 +344,21 @@ public class DatabaseController {
     }
 
     /**
+     * SORT BY ATTRIBUTE
      * Sort by transmission type, fuel type, drivetrain, body_type, vehicle_class, price per day.
      */
+
+    private static String sortByAttribute(Sort data){
+        return switch(data){
+            case TRANSMISSION -> "transmission";
+            case FUEL -> "fuel";
+            case DRIVETRAIN -> "drivetrain";
+            case BODY_TYPE -> "body_type";
+            case VEHICLE_CLASS -> "vehicle_class";
+            case PRICE_PER_DAY -> "price_per_pday";
+        };
+    }
+
+
 
 }

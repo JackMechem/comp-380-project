@@ -30,7 +30,7 @@ public class Main {
 
                 path("cars", () -> {
                     get(CarController::getAllCars, Role.ANYONE);
-                    post(CarController::createCar, Role.WRITE);
+                    post(CarController::createCar, Role.ANYONE);
                     path("{id}", () -> {
                         get(CarController::getCar, Role.ANYONE);
                         patch(CarController::updateCar, Role.WRITE);
