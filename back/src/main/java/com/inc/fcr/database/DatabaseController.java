@@ -91,7 +91,7 @@ public class DatabaseController {
      */
 
     // TODO: Add features and images - refactor
-    public static void insertCar(Car car) {
+    public static void insertCar(Car car) throws SQLException {
         final String checkSQL = "SELECT 1 FROM cars WHERE vin = ?";
 
         final String insertSQL = "INSERT INTO cars " +
@@ -136,21 +136,20 @@ public class DatabaseController {
 
         } catch (SQLException e) {
             e.printStackTrace();
+            throw e;
         }
     }
 
     /*
      * DELETE
      */
-    public static boolean deleteCar(String vin) {
+    public static void deleteCar(String vin) throws SQLException {
         final String sql = "DELETE FROM cars WHERE vin = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, vin);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            throw e;
         }
     }
 

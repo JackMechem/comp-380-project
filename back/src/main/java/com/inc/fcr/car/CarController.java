@@ -1,5 +1,6 @@
 package com.inc.fcr.car;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.MissingNode;
@@ -29,14 +30,17 @@ public class CarController {
             ctx.json(DatabaseController.getCarDB(pageNum, pageSizeNum, columns));
 
         } catch (Exception e) {
-            ctx.status(500).result("Database error: " + e);
+            databaseError(ctx, e);
         }
     }
 
     public static void createCar(Context ctx) {
-        // TODO
         JsonNode body = ctx.bodyAsClass(JsonNode.class);
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            ArrayList<String> features = mapper.convertValue(body.get("features"), new TypeReference<ArrayList<String>>() {});
+            ArrayList<String> images = mapper.convertValue(body.get("images"), new TypeReference<ArrayList<String>>() {});
+            // TODO: add some default values if not found here
             Car car = new Car(
                     body.get("vin").asText(),
                     body.get("make").asText(),
@@ -50,8 +54,8 @@ public class CarController {
                     body.get("seats").asInt(),
                     body.get("pricePerDay").asDouble(),
                     body.get("mpg").asDouble(),
-                    body.get("features").,
-                    body.get("images").,
+                    features,
+                    images,
                     TransmissionType.valueOf(body.get("transmission").asText()),
                     Drivetrain.valueOf(body.get("driveTrain").asText()),
                     EngineLayout.valueOf(body.get("engineLayout").asText()),
@@ -60,10 +64,16 @@ public class CarController {
                     RoofType.valueOf(body.get("roofType").asText()),
                     VehicleClass.valueOf(body.get("vehicleClass").asText())
             );
-        } catch (Exception e) {
-            ctx.status(400).result("Improper car format: "+e);
-        }
+            DatabaseController.insertCar(car);
+            ctx.status(201);
 
+        } catch (Exception e) {
+            if (e instanceof SQLException) {
+                databaseError(ctx, e);
+            } else {
+                ctx.status(400).result("Improper car format: " + e);
+            }
+        }
     }
 
     public static void getCar(Context ctx) {
@@ -71,7 +81,7 @@ public class CarController {
         try {
             car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
         } catch (Exception e) {
-            ctx.status(500).result("Database error: " + e);
+            databaseError(ctx, e);
         }
 
         if (car != null) {ctx.json(car);}
@@ -84,10 +94,10 @@ public class CarController {
     }
 
     public static void deleteCar(Context ctx) {
-        boolean successfullyDeleted = DatabaseController.deleteCar(ctx.pathParam("id"));
-        if (successfullyDeleted) {
+        try {
+            DatabaseController.deleteCar(ctx.pathParam("id"));
             ctx.status(204);
-        } else {
+        } catch (SQLException e) {
             carNotFound(ctx);
         }
     }
@@ -95,5 +105,8 @@ public class CarController {
     // Helper methods
     private static void carNotFound(Context ctx) {
         ctx.status(404).result("Car not found.");
+    }
+    private static void databaseError(Context ctx, Exception e) {
+        ctx.status(500).result("Database error: " + e);
     }
 }

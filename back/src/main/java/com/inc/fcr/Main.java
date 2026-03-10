@@ -30,11 +30,11 @@ public class Main {
 
                 path("cars", () -> {
                     get(CarController::getAllCars, Role.ANYONE);
-                    post(CarController::createCar, Role.ANYONE);
+                    post(CarController::createCar, Role.WRITE);
                     path("{id}", () -> {
                         get(CarController::getCar, Role.ANYONE);
                         patch(CarController::updateCar, Role.WRITE);
-                        delete(CarController::deleteCar, Role.WRITE);
+                        delete(CarController::deleteCar, Role.ADMIN);
                     });
                 });
             });
