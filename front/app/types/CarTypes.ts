@@ -15,4 +15,7 @@ export interface Car {
 	images: string[];
 	features: string[];
 	description: string;
+	bodyType: string;
+	roofType: string;
+	vehicleClass: string;
 }
