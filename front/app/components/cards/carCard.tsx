@@ -7,11 +7,11 @@ interface CarCardProps {
 	car: Car;
 }
 
-const CarCard = async ({ car }: CarCardProps) => {
+const CarCard = ({ car }: CarCardProps) => {
 	return (
 		<Link
 			href={`car/${car.vin}`}
-			className="text-left min-w-[250px] max-w-[250px] border-third rounded-lg overflow-hidden cursor-pointer hover:scale-[102%] duration-150 text-foreground font-inter text-[20pt] bg-primary shadow-lg"
+			className="text-left min-w-[250px] max-w-[250px] rounded-lg overflow-hidden cursor-pointer hover:scale-[103%] duration-150 text-foreground font-inter text-[20pt] bg-primary shadow-md"
 		>
 			<Image
 				width={300}
@@ -23,8 +23,8 @@ const CarCard = async ({ car }: CarCardProps) => {
 			/>
 			<div className="px-[20px] py-[15px] flex flex-col w-full gap-[10px]">
 				<div className="flex items-center justify-between w-full overflow-hidden">
-					<div>
-						<h2 className="text-[14pt] leading-[100%] font-[500] truncate w-[180px] flex-shrink overflow-y-visible overflow-x-hidden text-ellipsis">
+					<div className="h-auto flex-grow min-w-0">
+						<h2 className="text-[14pt] font-[500]  truncate h-fit w-full overflow-x-hidden text-ellipsis">
 							{car.make} {car.model}
 						</h2>
 						<p className="text-[11pt] mt-[-3px] lowercase font-[400] text-secondary">

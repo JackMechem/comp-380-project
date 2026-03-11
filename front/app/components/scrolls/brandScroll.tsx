@@ -1,15 +1,9 @@
 "use client";
 
-import { Car } from "@/app/types/CarTypes";
-import CarCard from "../cards/carCard";
 import { ReactNode, useRef, useState } from "react";
 import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
-interface CarScrollProps {
-	cars: Car[];
-}
-
-const CarScroll = ({ cars }: CarScrollProps) => {
+const BrandScroll = ({ children }: { children: ReactNode }) => {
 	const scrollAmount = 300;
 
 	const [controllerVisible, setControllerVisible] = useState<boolean>(false);
@@ -30,11 +24,9 @@ const CarScroll = ({ cars }: CarScrollProps) => {
 			ref={scrollRef}
 			onMouseEnter={() => setControllerVisible(true)}
 			onMouseLeave={() => setControllerVisible(false)}
-			className="w-full h-fit flex gap-[20px] overflow-x-scroll px-[10px] py-[10px]"
+			className="relative flex gap-[15px] p-[10px] w-full overflow-x-scroll"
 		>
-			{cars.map((car: Car) => (
-				<CarCard key={car.vin} car={car} />
-			))}
+			{children}
 			<div className="sticky float-right top-0 inset-0 right-0 w-0 h-0 pointer-events-none">
 				<div
 					className={`sticky mr-0 pointer-events-auto float-right mt-[10px] mr-[0px] w-fit h-fit duration-[200ms] text-[20px] text-secondary bg-primary shadow-md flex gap-[10px] p-[6px] rounded-full ${controllerVisible ? "opacity-[1]" : "sm:opacity-[0] opacity-[1]"} `}
@@ -56,5 +48,4 @@ const CarScroll = ({ cars }: CarScrollProps) => {
 		</div>
 	);
 };
-
-export default CarScroll;
+export default BrandScroll;

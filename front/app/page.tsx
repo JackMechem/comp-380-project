@@ -1,63 +1,71 @@
 import CarScroll from "./components/scrolls/carScroll";
-import LandingSearchBar from "./components/searchBars/landingSearchBar";
 import TitleText from "./components/text/titleText";
 import { getAllCars } from "./lib/CarApi";
 import { Car } from "./types/CarTypes";
-import CarTransparentBg from "./media/transparentCar.png";
-import Image from "next/image";
 import MainBodyContainer from "./components/containers/mainBodyContainer";
+import LandingPageFilterButtons from "./components/buttons/landingPageFilterButtons";
+import LandingHeader from "./components/headers/landingHeader";
+import LandingHero from "./components/heros/landingHero";
+import CarBrandCard from "./components/cards/carBrandCard";
+
+import BrandScroll from "./components/scrolls/brandScroll";
+import BmwLogo from "./media/carBrandLogos/bmw.svg";
+import BmwCarImage from "./media/transparentCarImages/bmw.png";
+import MercedesLogo from "./media/carBrandLogos/mercedes.svg";
+import MercedesCarImage from "./media/transparentCarImages/mercedesAmg.png";
+import PorscheLogo from "./media/carBrandLogos/porsche.svg";
+import PorscheCarImage from "./media/transparentCarImages/porsche.png";
+import AudiLogo from "./media/carBrandLogos/audi.svg";
+import AudiCarImage from "./media/transparentCarImages/audi.png";
+import VolkswagenLogo from "./media/carBrandLogos/volkswagen.svg";
+import VolkswagenCarImage from "./media/transparentCarImages/volkswagen.png";
 
 const Home = async () => {
 	const carsData: Car[] = await getAllCars();
 	console.log(carsData);
 
-	const manualCarsData: Car[] = carsData.filter((car: Car) => {
-		return car.transmission === "MANUAL";
-	});
-
-	const automaticCarsData: Car[] = carsData.filter((car: Car) => {
-		return car.transmission === "AUTOMATIC";
-	});
-
 	return (
 		<>
-			<div className="relative w-full flex flex-col gap-[20px] items-center overflow-x-clip md:mb-[400px] mb-[300px]">
-				<div
-					className="absolute xl:w-[120vw] xl:h-[120vw] lg:w-[170vw] lg:h-[170vw] md:w-[180vw] md:h-[180vw] w-[550vw] h-[550vw] md:bottom-[-150px] bottom-[-100px] left-1/2 -translate-x-1/2 rounded-full overflow-hidden z-[-1]"
-					style={{
-						background:
-							"linear-gradient(180deg, var(--Primary, #FDFDFF) 0%, #C69192 50%, var(--Accent, #993537) 100%)",
-					}}
-				>
-					<div
-						className="absolute inset-0 rounded-full opacity-30"
-						style={{
-							backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.3' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-							backgroundSize: "200px 200px",
-							mixBlendMode: "overlay",
-						}}
+			<LandingHeader white />
+			<LandingHero />
+			<MainBodyContainer className="flex flex-col gap-[40px]">
+				<BrandScroll>
+					<CarBrandCard
+						title="Porsche"
+						startingPrice={119}
+						logoImage={PorscheLogo.src}
+						carImage={PorscheCarImage.src}
 					/>
+					<CarBrandCard
+						title="BMW"
+						startingPrice={79}
+						logoImage={BmwLogo.src}
+						carImage={BmwCarImage.src}
+					/>
+					<CarBrandCard
+						title="Mercedes Benz"
+						startingPrice={69}
+						logoImage={MercedesLogo.src}
+						carImage={MercedesCarImage.src}
+					/>
+					<CarBrandCard
+						title="Audi"
+						startingPrice={89}
+						logoImage={AudiLogo.src}
+						carImage={AudiCarImage.src}
+					/>
+					<CarBrandCard
+						title="Volkswagen"
+						startingPrice={69}
+						logoImage={VolkswagenLogo.src}
+						carImage={VolkswagenCarImage.src}
+					/>
+				</BrandScroll>
+
+				<div>
+					<TitleText className="mt-[20px]">Popular Cars</TitleText>
+					{carsData.length > 0 && <CarScroll cars={carsData} />}
 				</div>
-				<h1 className="font-titillium md:text-[76pt] text-[64pt] text-primary font-bold max-w-[500px] text-center leading-[90%] tracking-[-2%] italic w-fit md:mt-0 mt-[20px]">
-					Get a Fast Car Fast
-				</h1>
-				<p className="text-center text-primary font-[500] text-[14pt] mb-[20px]">
-					Rent any car, anytime, anywhere
-				</p>
-				<LandingSearchBar />
-				<Image
-					src={CarTransparentBg.src}
-					alt={"Car transparent background"}
-					width={600}
-					height={600}
-					className="absolute md:bottom-[-270px] bottom-[-210px] md:w-[600px] w-[500px] min-w-[500px]"
-				/>
-			</div>
-			<MainBodyContainer>
-				<TitleText className="mt-[80px]">Manual Transmission</TitleText>
-				{manualCarsData.length > 0 && <CarScroll cars={manualCarsData} />}
-				<TitleText className="mt-[80px]">Automatic Transmission</TitleText>
-				{manualCarsData.length > 0 && <CarScroll cars={automaticCarsData} />}
 			</MainBodyContainer>
 		</>
 	);
