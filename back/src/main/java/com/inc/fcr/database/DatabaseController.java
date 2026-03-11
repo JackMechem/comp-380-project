@@ -4,19 +4,53 @@ import com.inc.fcr.ValidationException;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.car.enums.*;
 
+import org.jooq.*;
+import org.jooq.impl.DSL;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.jooq.impl.DSL.*;
 
 public class DatabaseController {
 
     private static final Set<String> VALID_COLUMNS = new HashSet<>(Arrays.asList(
             "vin", "make", "model", "model_year", "description", "num_cylinders", "gears",
             "horsepower", "torque", "seats", "price_per_day", "mpg", "transmission",
-            "drivetrain", "engine_layout", "fuel", "images", "features", "roof_type", "vehicle_class", "body_type"));
+            "drivetrain", "engine_layout", "fuel", "images", "features", "rootype", "vehicle_class", "body_type"));
+
+    // jOOQ table/field references
+    private static final Table<Record> CARS = table("cars");
+    private static final Field<String> VIN = field(name("vin"), String.class);
+    private static final Field<String> MAKE = field(name("make"), String.class);
+    private static final Field<String> MODEL = field(name("model"), String.class);
+    private static final Field<Integer> MODEL_YEAR = field(name("model_year"), Integer.class);
+    private static final Field<String> DESCRIPTION = field(name("description"), String.class);
+    private static final Field<Integer> NUM_CYLINDERS = field(name("num_cylinders"), Integer.class);
+    private static final Field<Integer> GEARS = field(name("gears"), Integer.class);
+    private static final Field<Integer> HORSEPOWER = field(name("horsepower"), Integer.class);
+    private static final Field<Integer> TORQUE = field(name("torque"), Integer.class);
+    private static final Field<Integer> SEATS = field(name("seats"), Integer.class);
+    private static final Field<Double> PRICE_PER_DAY = field(name("price_per_day"), Double.class);
+    private static final Field<Double> MPG = field(name("mpg"), Double.class);
+    private static final Field<String> TRANSMISSION = field(name("transmission"), String.class);
+    private static final Field<String> FUEL = field(name("fuel"), String.class);
+    private static final Field<String> ENGINE_LAYOUT = field(name("engine_layout"), String.class);
+    private static final Field<String> DRIVETRAIN = field(name("drivetrain"), String.class);
+    private static final Field<String> FEATURES = field(name("features"), String.class);
+    private static final Field<String> IMAGES = field(name("images"), String.class);
+    private static final Field<String> ROOF_TYPE = field(name("roof_type"), String.class);
+    private static final Field<String> VEHICLE_CLASS = field(name("vehicle_class"), String.class);
+    private static final Field<String> BODY_TYPE = field(name("body_type"), String.class);
+
+    /*
+     * Helper Functions
+     */
 
     private static String sanitizeColumns(String[] columns) {
         if (columns == null || columns.length == 0)
@@ -27,14 +61,10 @@ public class DatabaseController {
                 .toArray(String[]::new);
 
         if (valid.length == 0)
-            return "*"; // fallback to all if nothing valid passed
+            return "*";
 
         return String.join(", ", valid);
     }
-
-    /*
-     * Helper Functions
-     */
 
     private static String requireEnv(String key) {
         String v = System.getenv(key);
@@ -59,7 +89,7 @@ public class DatabaseController {
     }
 
     private static ArrayList<String> jsonToStringArrayList(String json) {
-        ArrayList<String> out = new ArrayList<String>();
+        ArrayList<String> out = new ArrayList<>();
         if (json != null && !json.equals("[]")) {
             json = json.replace("[", "").replace("]", "").replace("\"", "");
             String[] parts = json.split(",");
@@ -78,8 +108,36 @@ public class DatabaseController {
                 .collect(Collectors.joining(",")) + "]";
     }
 
+    /**
+     * Maps a jOOQ Record to a Car, reusing existing enum/json helpers.
+     */
+    private static Car recordToCar(Record r) throws ValidationException {
+        return new Car(
+                r.get(VIN),
+                r.get(MAKE),
+                r.get(MODEL),
+                r.get(MODEL_YEAR) != null ? r.get(MODEL_YEAR) : 2080,
+                r.get(DESCRIPTION),
+                r.get(NUM_CYLINDERS) != null ? r.get(NUM_CYLINDERS) : 0,
+                r.get(GEARS) != null ? r.get(GEARS) : 1,
+                r.get(HORSEPOWER) != null ? r.get(HORSEPOWER) : 0,
+                r.get(TORQUE) != null ? r.get(TORQUE) : 0,
+                r.get(SEATS) != null ? r.get(SEATS) : 0,
+                r.get(PRICE_PER_DAY) != null ? r.get(PRICE_PER_DAY) : 0.0,
+                r.get(MPG) != null ? r.get(MPG) : 0.0,
+                jsonToStringArrayList(r.get(FEATURES)),
+                jsonToStringArrayList(r.get(IMAGES)),
+                r.get(TRANSMISSION) != null ? enumFromToString(TransmissionType.class, r.get(TRANSMISSION)) : null,
+                r.get(DRIVETRAIN) != null ? enumFromToString(Drivetrain.class, r.get(DRIVETRAIN)) : null,
+                r.get(ENGINE_LAYOUT) != null ? enumFromToString(EngineLayout.class, r.get(ENGINE_LAYOUT)) : null,
+                r.get(FUEL) != null ? enumFromToString(FuelType.class, r.get(FUEL)) : null,
+                r.get(BODY_TYPE) != null ? enumFromToString(BodyType.class, r.get(BODY_TYPE)) : null,
+                r.get(ROOF_TYPE) != null ? enumFromToString(RoofType.class, r.get(ROOF_TYPE)) : null,
+                r.get(VEHICLE_CLASS) != null ? enumFromToString(VehicleClass.class, r.get(VEHICLE_CLASS)) : null);
+    }
+
     /*
-     * Database Connection
+     * Database Connection (legacy JDBC — kept for existing methods)
      */
 
     protected static final String url = requireEnv("DB_URL");
@@ -89,30 +147,30 @@ public class DatabaseController {
 
     protected static Connection dbConnect() {
         try {
-            return (DriverManager.getConnection(url, user, pass));
+            return DriverManager.getConnection(url, user, pass);
         } catch (Exception e) {
             throw new RuntimeException("Failed to connect to database: " + e);
         }
     }
 
-    /*
-     * POST / PATCH
-     */
+    // =========================================================================
+    // LEGACY JDBC METHODS (unchanged)
+    // =========================================================================
+
+    /* POST */
 
     // TODO: Add features and images - refactor
     public static void insertCar(Car car) throws SQLException {
         final String checkSQL = "SELECT 1 FROM cars WHERE vin = ?";
-
-        final String insertSQL = "INSERT INTO cars " +
-                "(vin, make, model, model_year, description, num_cylinders, gears, horsepower, torque, seats, " +
-                " price_per_day, mpg, transmission, fuel, engine_layout, drivetrain, features, images, roof_type, vehicle_class, body_type) "
-                +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?)";
+        final String insertSQL =
+                "INSERT INTO cars " +
+                        "(vin, make, model, model_year, description, num_cylinders, gears, horsepower, torque, seats, " +
+                        " price_per_day, mpg, transmission, fuel, engine_layout, drivetrain, features, images, roof_type, vehicle_class, body_type) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?)";
 
         try (PreparedStatement checkStmt = conn.prepareStatement(checkSQL);
-                PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
+             PreparedStatement insertStmt = conn.prepareStatement(insertSQL)) {
 
-            // Check duplicate VIN
             checkStmt.setString(1, car.getVin());
             try (ResultSet rs = checkStmt.executeQuery()) {
                 if (rs.next()) {
@@ -121,7 +179,6 @@ public class DatabaseController {
                 }
             }
 
-            // Bind parameters in the SAME order as the columns in insertSQL
             insertStmt.setString(1, car.getVin());
             insertStmt.setString(2, car.getMake());
             insertStmt.setString(3, car.getModel());
@@ -134,8 +191,6 @@ public class DatabaseController {
             insertStmt.setInt(10, car.getSeats());
             insertStmt.setDouble(11, car.getPricePerDay());
             insertStmt.setDouble(12, car.getMpg());
-
-            // Stored as enum.toString()
             insertStmt.setString(13, car.getTransmission().toString());
             insertStmt.setString(14, car.getFuel().toString());
             insertStmt.setString(15, car.getEngineLayout().toString());
@@ -155,30 +210,23 @@ public class DatabaseController {
         }
     }
 
-    /*
-     * DELETE
-     */
+    /* DELETE */
+
     public static void deleteCar(String vin) throws SQLException {
         final String sql = "DELETE FROM cars WHERE vin = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, vin);
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw e;
         }
     }
 
+    /* PATCH */
 
-    /*
-     * DELETE
-     */
     public static void updateCar(Car car) throws SQLException {
         // TODO
     }
 
-    /*
-     * GET
-     */
+    /* GET */
 
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int DEFAULT_PAGE = 1;
@@ -191,11 +239,11 @@ public class DatabaseController {
         return getCarDB(-1, -1, columns);
     }
 
-    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns) throws ValidationException, SQLException {
-        if (page <= 0)
-            page = DEFAULT_PAGE;
-        if (pageSize <= -1)
-            pageSize = DEFAULT_PAGE_SIZE;
+    public static ArrayList<Car> getCarDB(int page, int pageSize, String[] columns)
+            throws ValidationException, SQLException {
+
+        if (page <= 0) page = DEFAULT_PAGE;
+        if (pageSize <= -1) pageSize = DEFAULT_PAGE_SIZE;
 
         String selectCols = sanitizeColumns(columns);
         boolean paginate = pageSize != 0;
@@ -216,26 +264,19 @@ public class DatabaseController {
                 while (rs.next()) {
                     try {
                         TransmissionType transmission = hasCol(colSet, "transmission")
-                                ? enumFromToString(TransmissionType.class, rs.getString("transmission"))
-                                : null;
+                                ? enumFromToString(TransmissionType.class, rs.getString("transmission")) : null;
                         Drivetrain drivetrain = hasCol(colSet, "drivetrain")
-                                ? enumFromToString(Drivetrain.class, rs.getString("drivetrain"))
-                                : null;
+                                ? enumFromToString(Drivetrain.class, rs.getString("drivetrain")) : null;
                         EngineLayout engineLayout = hasCol(colSet, "engine_layout")
-                                ? enumFromToString(EngineLayout.class, rs.getString("engine_layout"))
-                                : null;
+                                ? enumFromToString(EngineLayout.class, rs.getString("engine_layout")) : null;
                         FuelType fuel = hasCol(colSet, "fuel")
-                                ? enumFromToString(FuelType.class, rs.getString("fuel"))
-                                : null;
+                                ? enumFromToString(FuelType.class, rs.getString("fuel")) : null;
                         BodyType bodyType = hasCol(colSet, "body_type")
-                                ? enumFromToString(BodyType.class, rs.getString("body_type"))
-                                : null;
+                                ? enumFromToString(BodyType.class, rs.getString("body_type")) : null;
                         RoofType roofType = hasCol(colSet, "roof_type")
-                                ? enumFromToString(RoofType.class, rs.getString("roof_type"))
-                                : null;
+                                ? enumFromToString(RoofType.class, rs.getString("roof_type")) : null;
                         VehicleClass vehicleClass = hasCol(colSet, "vehicle_class")
-                                ? enumFromToString(VehicleClass.class, rs.getString("vehicle_class"))
-                                : null;
+                                ? enumFromToString(VehicleClass.class, rs.getString("vehicle_class")) : null;
 
                         ArrayList<String> features = new ArrayList<>();
                         if (hasCol(colSet, "features")) {
@@ -257,7 +298,7 @@ public class DatabaseController {
                             }
                         }
 
-                        Car car = new Car(
+                        cars.add(new Car(
                                 hasCol(colSet, "vin") ? rs.getString("vin") : null,
                                 hasCol(colSet, "make") ? rs.getString("make") : null,
                                 hasCol(colSet, "model") ? rs.getString("model") : null,
@@ -272,8 +313,8 @@ public class DatabaseController {
                                 hasCol(colSet, "mpg") ? rs.getDouble("mpg") : 0,
                                 features, images,
                                 transmission, drivetrain, engineLayout, fuel,
-                                bodyType, roofType, vehicleClass);
-                        cars.add(car);
+                                bodyType, roofType, vehicleClass));
+
                     } catch (IllegalArgumentException iae) {
                         System.err.println("Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
                                 + iae.getMessage());
@@ -284,44 +325,21 @@ public class DatabaseController {
         return cars;
     }
 
-    // null colSet means all columns were requested
-    private static boolean hasCol(java.util.Set<String> colSet, String col) {
+    private static boolean hasCol(Set<String> colSet, String col) {
         return colSet == null || colSet.contains(col);
     }
 
     public static Car getCarFromVin(String vin) throws ValidationException, SQLException {
-        final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
-                "horsepower, torque, seats, price_per_day, mpg, transmission, drivetrain, engine_layout, fuel, images, features,vehicle_class,body_type,roof_type "
-                +
-                "FROM cars WHERE vin = ?";
+        final String sql =
+                "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
+                        "horsepower, torque, seats, price_per_day, mpg, transmission, drivetrain, engine_layout, fuel, " +
+                        "images, features, vehicle_class, body_type, roof_type FROM cars WHERE vin = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-
             stmt.setString(1, vin);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     try {
-
-                        TransmissionType transmission = enumFromToString(TransmissionType.class,
-                                rs.getString("transmission"));
-
-                        Drivetrain drivetrain = enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
-
-                        EngineLayout engineLayout = enumFromToString(EngineLayout.class, rs.getString("engine_layout"));
-
-                        FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
-
-                        VehicleClass vehicleClass = enumFromToString(VehicleClass.class,
-                                rs.getString("vehicle_class"));
-
-                        RoofType roofType = enumFromToString(RoofType.class, rs.getString("roof_type"));
-
-                        BodyType bodyType = enumFromToString(BodyType.class, rs.getString("body_type"));
-
-                        ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
-                        ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
-
                         return new Car(
                                 rs.getString("vin"),
                                 rs.getString("make"),
@@ -335,43 +353,154 @@ public class DatabaseController {
                                 rs.getInt("seats"),
                                 rs.getDouble("price_per_day"),
                                 rs.getDouble("mpg"),
-                                features,
-                                images,
-                                transmission,
-                                drivetrain,
-                                engineLayout,
-                                fuel,
-                                bodyType,
-                                roofType,
-                                vehicleClass);
-
+                                jsonToStringArrayList(rs.getString("features")),
+                                jsonToStringArrayList(rs.getString("images")),
+                                enumFromToString(TransmissionType.class, rs.getString("transmission")),
+                                enumFromToString(Drivetrain.class, rs.getString("drivetrain")),
+                                enumFromToString(EngineLayout.class, rs.getString("engine_layout")),
+                                enumFromToString(FuelType.class, rs.getString("fuel")),
+                                enumFromToString(BodyType.class, rs.getString("body_type")),
+                                enumFromToString(RoofType.class, rs.getString("roof_type")),
+                                enumFromToString(VehicleClass.class, rs.getString("vehicle_class")));
                     } catch (IllegalArgumentException iae) {
-                        System.err.println(
-                                "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
-                                        + iae.getMessage());
+                        System.err.println("Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
+                                + iae.getMessage());
                     }
                 }
             }
-
         }
         return null;
     }
 
+    // =========================================================================
+    // jOOQ METHODS
+    // =========================================================================
+
     /**
-     * SORT BY ATTRIBUTE
-     * Sort by transmission type, fuel type, drivetrain, body_type, vehicle_class,
-     * price per day.
+     * [jOOQ] Insert a car. Skips insert if the VIN already exists.
+     * Replaces: insertCar(Car)
      */
+    public static void insertCarJooq(Car car) {
+        DSLContext ctx = Jooq.ctx();
 
-    // private static String sortByAttribute(Sort data){
-    // return switch(data){
-    // case TRANSMISSION -> "transmission";
-    // case FUEL -> "fuel";
-    // case DRIVETRAIN -> "drivetrain";
-    // case BODY_TYPE -> "body_type";
-    // case VEHICLE_CLASS -> "vehicle_class";
-    // case PRICE_PER_DAY -> "price_per_pday";
-    // };
-    // }
+        boolean exists = ctx.fetchExists(
+                ctx.selectOne().from(CARS).where(VIN.eq(car.getVin())));
 
+        if (exists) {
+            System.out.println("insert failed: VIN already exists");
+            return;
+        }
+
+        int rows = ctx.insertInto(CARS)
+                .set(VIN, car.getVin())
+                .set(MAKE, car.getMake())
+                .set(MODEL, car.getModel())
+                .set(MODEL_YEAR, car.getYear())
+                .set(DESCRIPTION, car.getDescription())
+                .set(NUM_CYLINDERS, car.getCylinders())
+                .set(GEARS, car.getGears())
+                .set(HORSEPOWER, car.getHorsepower())
+                .set(TORQUE, car.getTorque())
+                .set(SEATS, car.getSeats())
+                .set(PRICE_PER_DAY, car.getPricePerDay())
+                .set(MPG, car.getMpg())
+                .set(TRANSMISSION, car.getTransmission().toString())
+                .set(FUEL, car.getFuel().toString())
+                .set(ENGINE_LAYOUT, car.getEngineLayout().toString())
+                .set(DRIVETRAIN, car.getDrivetrain().toString())
+                .set(FEATURES, toJsonArray(car.getFeatures()))
+                .set(IMAGES, toJsonArray(car.getImages()))
+                .set(ROOF_TYPE, car.getRoofType().toString())
+                .set(VEHICLE_CLASS, car.getVehicleClass().toString())
+                .set(BODY_TYPE, car.getBodyType().toString())
+                .execute();
+
+        System.out.println(rows == 1 ? "insert successful" : "insert failed");
+    }
+
+    public static void deleteCarJooq(String vin) {
+        Jooq.ctx()
+                .deleteFrom(CARS)
+                .where(VIN.eq(vin))
+                .execute();
+    }
+
+    public static void updateCarJooq(Car car) {
+        var step = Jooq.ctx().update(CARS);
+
+        // Build update dynamically so partial updates are supported
+        var set = step
+                .set(MAKE, car.getMake())
+                .set(MODEL, car.getModel())
+                .set(MODEL_YEAR, car.getYear())
+                .set(DESCRIPTION, car.getDescription())
+                .set(NUM_CYLINDERS, car.getCylinders())
+                .set(GEARS, car.getGears())
+                .set(HORSEPOWER, car.getHorsepower())
+                .set(TORQUE, car.getTorque())
+                .set(SEATS, car.getSeats())
+                .set(PRICE_PER_DAY, car.getPricePerDay())
+                .set(MPG, car.getMpg())
+                .set(FEATURES, toJsonArray(car.getFeatures()))
+                .set(IMAGES, toJsonArray(car.getImages()));
+
+        if (car.getTransmission() != null) set = set.set(TRANSMISSION, car.getTransmission().toString());
+        if (car.getFuel() != null) set = set.set(FUEL, car.getFuel().toString());
+        if (car.getEngineLayout() != null) set = set.set(ENGINE_LAYOUT, car.getEngineLayout().toString());
+        if (car.getDrivetrain() != null) set = set.set(DRIVETRAIN, car.getDrivetrain().toString());
+        if (car.getRoofType() != null) set = set.set(ROOF_TYPE, car.getRoofType().toString());
+        if (car.getVehicleClass() != null) set = set.set(VEHICLE_CLASS, car.getVehicleClass().toString());
+        if (car.getBodyType() != null) set = set.set(BODY_TYPE, car.getBodyType().toString());
+
+        int rows = set.where(VIN.eq(car.getVin())).execute();
+        System.out.println(rows == 1 ? "update successful" : "update failed (vin not found?)");
+    }
+
+    public static ArrayList<Car> getCarDBJooq() {
+        return getCarDBJooq(0, 0);
+    }
+
+    public static ArrayList<Car> getCarDBJooq(int page, int pageSize) {
+        if (page <= 0) page = DEFAULT_PAGE;
+        if (pageSize < 0) pageSize = DEFAULT_PAGE_SIZE;
+
+        DSLContext ctx = Jooq.ctx();
+        SelectLimitStep<Record> query = ctx.select().from(CARS);
+
+        List<Record> records = (pageSize == 0)
+                ? query.fetch()
+                : query.limit(pageSize).offset((long) (page - 1) * pageSize).fetch();
+
+        ArrayList<Car> cars = new ArrayList<>();
+        for (Record r : records) {
+            try {
+                cars.add(recordToCar(r));
+            } catch (IllegalArgumentException iae) {
+                System.err.println("Skipping row due to enum mismatch (vin=" + r.get(VIN) + "): "
+                        + iae.getMessage());
+            } catch (ValidationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return cars;
+    }
+
+    public static Car getCarFromVinJooq(String vin) {
+        Record r = Jooq.ctx()
+                .select()
+                .from(CARS)
+                .where(VIN.eq(vin))
+                .fetchOne();
+
+        if (r == null) return null;
+
+        try {
+            return recordToCar(r);
+        } catch (IllegalArgumentException iae) {
+            System.err.println("Skipping row due to enum mismatch (vin=" + vin + "): " + iae.getMessage());
+            return null;
+        } catch (ValidationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
