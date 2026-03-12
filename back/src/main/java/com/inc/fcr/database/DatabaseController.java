@@ -44,20 +44,6 @@ public class DatabaseController {
         return v;
     }
 
-    private static <E extends Enum<E>> E enumFromToString(Class<E> enumClass, String dbValue) {
-        if (dbValue == null) {
-            throw new IllegalArgumentException("DB value is null for enum " + enumClass.getSimpleName());
-        }
-        String normalized = dbValue.trim();
-        for (E e : enumClass.getEnumConstants()) {
-            if (e.toString().equalsIgnoreCase(normalized)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException(
-                "Unknown " + enumClass.getSimpleName() + " value from DB: '" + dbValue + "'");
-    }
-
     private static ArrayList<String> jsonToStringArrayList(String json) {
         ArrayList<String> out = new ArrayList<String>();
         if (json != null && !json.equals("[]")) {
@@ -207,79 +193,55 @@ public class DatabaseController {
         ArrayList<Car> cars = new ArrayList<>();
         int offset = (page - 1) * pageSize;
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (paginate) {
-                stmt.setInt(1, pageSize);
-                stmt.setInt(2, offset);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    try {
-                        TransmissionType transmission = hasCol(colSet, "transmission")
-                                ? enumFromToString(TransmissionType.class, rs.getString("transmission"))
-                                : null;
-                        Drivetrain drivetrain = hasCol(colSet, "drivetrain")
-                                ? enumFromToString(Drivetrain.class, rs.getString("drivetrain"))
-                                : null;
-                        EngineLayout engineLayout = hasCol(colSet, "engine_layout")
-                                ? enumFromToString(EngineLayout.class, rs.getString("engine_layout"))
-                                : null;
-                        FuelType fuel = hasCol(colSet, "fuel")
-                                ? enumFromToString(FuelType.class, rs.getString("fuel"))
-                                : null;
-                        BodyType bodyType = hasCol(colSet, "body_type")
-                                ? enumFromToString(BodyType.class, rs.getString("body_type"))
-                                : null;
-                        RoofType roofType = hasCol(colSet, "roof_type")
-                                ? enumFromToString(RoofType.class, rs.getString("roof_type"))
-                                : null;
-                        VehicleClass vehicleClass = hasCol(colSet, "vehicle_class")
-                                ? enumFromToString(VehicleClass.class, rs.getString("vehicle_class"))
-                                : null;
-
-                        ArrayList<String> features = new ArrayList<>();
-                        if (hasCol(colSet, "features")) {
-                            String featuresJson = rs.getString("features");
-                            if (featuresJson != null && !featuresJson.equals("[]")) {
-                                featuresJson = featuresJson.replace("[", "").replace("]", "").replace("\"", "");
-                                for (String part : featuresJson.split(","))
-                                    features.add(part.trim());
-                            }
-                        }
-
-                        ArrayList<String> images = new ArrayList<>();
-                        if (hasCol(colSet, "images")) {
-                            String imagesJson = rs.getString("images");
-                            if (imagesJson != null && !imagesJson.equals("[]")) {
-                                imagesJson = imagesJson.replace("[", "").replace("]", "").replace("\"", "");
-                                for (String part : imagesJson.split(","))
-                                    images.add(part.trim());
-                            }
-                        }
-
-                        Car car = new Car(
-                                hasCol(colSet, "vin") ? rs.getString("vin") : null,
-                                hasCol(colSet, "make") ? rs.getString("make") : null,
-                                hasCol(colSet, "model") ? rs.getString("model") : null,
-                                hasCol(colSet, "model_year") ? rs.getInt("model_year") : 2080,
-                                hasCol(colSet, "description") ? rs.getString("description") : null,
-                                hasCol(colSet, "num_cylinders") ? rs.getInt("num_cylinders") : 0,
-                                hasCol(colSet, "gears") ? rs.getInt("gears") : 1,
-                                hasCol(colSet, "horsepower") ? rs.getInt("horsepower") : 0,
-                                hasCol(colSet, "torque") ? rs.getInt("torque") : 0,
-                                hasCol(colSet, "seats") ? rs.getInt("seats") : 0,
-                                hasCol(colSet, "price_per_day") ? rs.getDouble("price_per_day") : 0,
-                                hasCol(colSet, "mpg") ? rs.getDouble("mpg") : 0,
-                                features, images,
-                                transmission, drivetrain, engineLayout, fuel,
-                                bodyType, roofType, vehicleClass);
-                        cars.add(car);
-                    } catch (IllegalArgumentException iae) {
-                        System.err.println("Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
-                                + iae.getMessage());
-                    }
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        if (paginate) {
+            stmt.setInt(1, pageSize);
+            stmt.setInt(2, offset);
+        }
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            ArrayList<String> features = new ArrayList<>();
+            if (hasCol(colSet, "features")) {
+                String featuresJson = rs.getString("features");
+                if (featuresJson != null && !featuresJson.equals("[]")) {
+                    featuresJson = featuresJson.replace("[", "").replace("]", "").replace("\"", "");
+                    for (String part : featuresJson.split(","))
+                        features.add(part.trim());
                 }
             }
+
+            ArrayList<String> images = new ArrayList<>();
+            if (hasCol(colSet, "images")) {
+                String imagesJson = rs.getString("images");
+                if (imagesJson != null && !imagesJson.equals("[]")) {
+                    imagesJson = imagesJson.replace("[", "").replace("]", "").replace("\"", "");
+                    for (String part : imagesJson.split(","))
+                        images.add(part.trim());
+                }
+            }
+
+            cars.add(new Car(
+                hasCol(colSet, "vin") ? rs.getString("vin") : null,
+                hasCol(colSet, "make") ? rs.getString("make") : null,
+                hasCol(colSet, "model") ? rs.getString("model") : null,
+                hasCol(colSet, "model_year") ? rs.getInt("model_year") : 2080,
+                hasCol(colSet, "description") ? rs.getString("description") : null,
+                hasCol(colSet, "num_cylinders") ? rs.getInt("num_cylinders") : 0,
+                hasCol(colSet, "gears") ? rs.getInt("gears") : 1,
+                hasCol(colSet, "horsepower") ? rs.getInt("horsepower") : 0,
+                hasCol(colSet, "torque") ? rs.getInt("torque") : 0,
+                hasCol(colSet, "seats") ? rs.getInt("seats") : 0,
+                hasCol(colSet, "price_per_day") ? rs.getDouble("price_per_day") : 0,
+                hasCol(colSet, "mpg") ? rs.getDouble("mpg") : 0,
+                features, images,
+                TransmissionType.valueOf(rs.getString("transmission")),
+                Drivetrain.valueOf(rs.getString("drivetrain")),
+                EngineLayout.valueOf(rs.getString("engine_layout")),
+                FuelType.valueOf(rs.getString("fuel")),
+                BodyType.valueOf(rs.getString("body_type")),
+                RoofType.valueOf(rs.getString("roof_type")),
+                VehicleClass.valueOf(rs.getString("vehicle_class"))
+            ));
         }
         return cars;
     }
@@ -292,67 +254,38 @@ public class DatabaseController {
     public static Car getCarFromVin(String vin) throws ValidationException, SQLException {
         final String sql = "SELECT vin, make, model, model_year, description, num_cylinders, gears, " +
                 "horsepower, torque, seats, price_per_day, mpg, transmission, drivetrain, engine_layout, fuel, images, features,vehicle_class,body_type,roof_type "
-                +
-                "FROM cars WHERE vin = ?";
+                + "FROM cars WHERE vin = ?";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setString(1, vin);
+        ResultSet rs = stmt.executeQuery();
 
-            stmt.setString(1, vin);
+        while (rs.next()) {
+            ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
+            ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    try {
-
-                        TransmissionType transmission = enumFromToString(TransmissionType.class,
-                                rs.getString("transmission"));
-
-                        Drivetrain drivetrain = enumFromToString(Drivetrain.class, rs.getString("drivetrain"));
-
-                        EngineLayout engineLayout = enumFromToString(EngineLayout.class, rs.getString("engine_layout"));
-
-                        FuelType fuel = enumFromToString(FuelType.class, rs.getString("fuel"));
-
-                        VehicleClass vehicleClass = enumFromToString(VehicleClass.class,
-                                rs.getString("vehicle_class"));
-
-                        RoofType roofType = enumFromToString(RoofType.class, rs.getString("roof_type"));
-
-                        BodyType bodyType = enumFromToString(BodyType.class, rs.getString("body_type"));
-
-                        ArrayList<String> features = jsonToStringArrayList(rs.getString("features"));
-                        ArrayList<String> images = jsonToStringArrayList(rs.getString("images"));
-
-                        return new Car(
-                                rs.getString("vin"),
-                                rs.getString("make"),
-                                rs.getString("model"),
-                                rs.getInt("model_year"),
-                                rs.getString("description"),
-                                rs.getInt("num_cylinders"),
-                                rs.getInt("gears"),
-                                rs.getInt("horsepower"),
-                                rs.getInt("torque"),
-                                rs.getInt("seats"),
-                                rs.getDouble("price_per_day"),
-                                rs.getDouble("mpg"),
-                                features,
-                                images,
-                                transmission,
-                                drivetrain,
-                                engineLayout,
-                                fuel,
-                                bodyType,
-                                roofType,
-                                vehicleClass);
-
-                    } catch (IllegalArgumentException iae) {
-                        System.err.println(
-                                "Skipping row due to enum mismatch (vin=" + rs.getString("vin") + "): "
-                                        + iae.getMessage());
-                    }
-                }
-            }
-
+            return new Car(
+                rs.getString("vin"),
+                rs.getString("make"),
+                rs.getString("model"),
+                rs.getInt("model_year"),
+                rs.getString("description"),
+                rs.getInt("num_cylinders"),
+                rs.getInt("gears"),
+                rs.getInt("horsepower"),
+                rs.getInt("torque"),
+                rs.getInt("seats"),
+                rs.getDouble("price_per_day"),
+                rs.getDouble("mpg"),
+                features, images,
+                TransmissionType.valueOf(rs.getString("transmission")),
+                Drivetrain.valueOf(rs.getString("drivetrain")),
+                EngineLayout.valueOf(rs.getString("engine_layout")),
+                FuelType.valueOf(rs.getString("fuel")),
+                BodyType.valueOf(rs.getString("body_type")),
+                RoofType.valueOf(rs.getString("roof_type")),
+                VehicleClass.valueOf(rs.getString("vehicle_class"))
+            );
         }
         return null;
     }
