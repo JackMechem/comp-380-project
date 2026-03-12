@@ -36,11 +36,8 @@ public class CarController {
         JsonNode body = ctx.bodyAsClass(JsonNode.class);
         try {
             ObjectMapper mapper = new ObjectMapper();
-            ArrayList<String> features = mapper.convertValue(body.get("features"),
-                    new TypeReference<ArrayList<String>>() {
-                    });
-            ArrayList<String> images = mapper.convertValue(body.get("images"), new TypeReference<ArrayList<String>>() {
-            });
+            ArrayList<String> features = mapper.convertValue(body.get("features"),new TypeReference<ArrayList<String>>() {});
+            ArrayList<String> images = mapper.convertValue(body.get("images"), new TypeReference<ArrayList<String>>() {});
             // TODO: add some default values if not found here
             Car car = new Car(
                     body.get("vin").asText(),
