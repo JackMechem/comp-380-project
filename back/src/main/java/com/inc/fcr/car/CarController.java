@@ -58,7 +58,7 @@ public class CarController {
                     features,
                     images,
                     TransmissionType.valueOf(body.get("transmission").asText()),
-                    Drivetrain.valueOf(body.get("driveTrain").asText()),
+                    Drivetrain.valueOf(body.get("drivetrain").asText()),
                     EngineLayout.valueOf(body.get("engineLayout").asText()),
                     FuelType.valueOf(body.get("fuel").asText()),
                     BodyType.valueOf(body.get("bodyType").asText()),

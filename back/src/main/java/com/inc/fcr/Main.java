@@ -22,6 +22,11 @@ public class Main {
         int port = (portProperty != null) ? Integer.parseInt(portProperty) : 8080;
 
         Javalin app = Javalin.create(config -> {
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(it -> {
+                    it.allowHost("https://fcr-inc.org", "http://localhost:3000");
+                });
+            });
             config.router.mount(router -> {
                 router.beforeMatched(Auth::handleAccess);
             }).apiBuilder(() -> {
