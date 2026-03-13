@@ -9,7 +9,7 @@ export const getAllCars = async (): Promise<Car[]> => {
 	const res: Response = await fetch(
 		`${process.env.NEXT_PUBLIC_API_BASE_URL}/cars?pageSize=0`,
 		{
-			next: { revalidate: Number(process.env.NEXT_PUBLIC_REVALIDATE_SECONDS) },
+			next: { revalidate: false },
 			headers: {
 				Authorization: `Basic ${token}`,
 				"Content-Type": "application/json",
