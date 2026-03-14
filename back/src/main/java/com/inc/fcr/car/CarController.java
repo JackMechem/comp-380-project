@@ -24,7 +24,7 @@ public class CarController {
 
             String[] columns = (paramsQuery != null) ? paramsQuery.split(",") : null;
             
-            List<Car> cars = DatabaseController.getCarDB(pageNum, pageSizeNum);
+            CarPagesWrapper cars = DatabaseController.getCarDB(pageNum, pageSizeNum);
             ctx.json(cars);
 
         } catch (Exception e) {
@@ -38,7 +38,6 @@ public class CarController {
             ObjectMapper mapper = new ObjectMapper();
             ArrayList<String> features = mapper.convertValue(body.get("features"),new TypeReference<ArrayList<String>>() {});
             ArrayList<String> images = mapper.convertValue(body.get("images"), new TypeReference<ArrayList<String>>() {});
-            // TODO: add some default values if not found here
             Car car = new Car(
                     body.get("vin").asText(),
                     body.get("make").asText(),
@@ -83,17 +82,14 @@ public class CarController {
 
     public static void updateCar(Context ctx) {
         try {
-            // Retrieve car from database
             Car car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
             if (car == null) {carNotFound(ctx); return;}
 
-            // Update car fields specified
             var fields = ctx.bodyAsClass(JsonNode.class).fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
                 Car.setterKeyMap.get(entry.getKey()).accept(car, entry.getValue());
             }
-            // Send back to database
             DatabaseController.updateCar(car);
             ctx.status(201);
 

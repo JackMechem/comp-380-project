@@ -1,6 +1,7 @@
 package com.inc.fcr.database;
 
 import com.inc.fcr.car.Car;
+import com.inc.fcr.car.CarPagesWrapper;
 
 import java.util.ArrayList;
 import org.hibernate.Session;
@@ -17,21 +18,27 @@ public class DatabaseController {
 
     private static final int DEFAULT_PAGE_SIZE = 10;
 
-    public static List<Car> getCarDB(int page, int pageSize) {
+    public static CarPagesWrapper getCarDB(int page, int pageSize) {
         int currentPage = (page <= 0) ? 1 : page;
         int limit = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
         int offset = (currentPage - 1) * limit;
 
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Query<Car> query = session.createQuery("FROM Car", Car.class);
+            Long totalItems = session.createQuery("SELECT count(c) FROM Car c", Long.class)
+                    .getSingleResult();
 
-            query.setFirstResult(offset);
-            query.setMaxResults(limit);
+            List<Car> cars = session.createQuery("FROM Car", Car.class)
+                    .setFirstResult(offset)
+                    .setMaxResults(limit)
+                    .getResultList();
 
-            return query.getResultList();
+            int totalPages = (int) Math.ceil((double) totalItems / limit);
+
+            return new CarPagesWrapper(cars, currentPage, totalPages, totalItems);
+
         } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            return new CarPagesWrapper(new ArrayList<>(), 1, 0, 0);
         }
     }
 
