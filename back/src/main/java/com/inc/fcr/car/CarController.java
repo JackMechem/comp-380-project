@@ -8,11 +8,9 @@ import com.inc.fcr.car.enums.*;
 import io.javalin.http.Context;
 
 import com.inc.fcr.database.DatabaseController;
-import com.inc.fcr.car.Car;
 
 import java.sql.*;
 import java.util.ArrayList;
-
 import java.util.Map;
 
 public class CarController {
@@ -20,14 +18,15 @@ public class CarController {
         try {
             int pageNum = ctx.queryParamAsClass("page", int.class).getOrDefault(-1);
             int pageSizeNum = ctx.queryParamAsClass("pageSize", int.class).getOrDefault(-1);
-            String paramsQuery = ctx.queryParamAsClass("params", String.class).getOrDefault(null);
 
-            String[] columns = (paramsQuery != null) ? paramsQuery.split(",") : null;
+            // TODO:
+            // String paramsQuery = ctx.queryParamAsClass("params", String.class).getOrDefault(null);
+            // String[] columns = (paramsQuery != null) ? paramsQuery.split(",") : null;
             
-            ArrayList<Car> cars = DatabaseController.getCarDB(pageNum, pageSizeNum, columns);
+            CarPagesWrapper cars = DatabaseController.getCarDB(pageNum, pageSizeNum);
             ctx.json(cars);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             databaseError(ctx, e);
         }
     }
@@ -38,7 +37,6 @@ public class CarController {
             ObjectMapper mapper = new ObjectMapper();
             ArrayList<String> features = mapper.convertValue(body.get("features"),new TypeReference<ArrayList<String>>() {});
             ArrayList<String> images = mapper.convertValue(body.get("images"), new TypeReference<ArrayList<String>>() {});
-            // TODO: add some default values if not found here
             Car car = new Car(
                     body.get("vin").asText(),
                     body.get("make").asText(),
@@ -76,24 +74,24 @@ public class CarController {
             if (car == null) {carNotFound(ctx);}
             else {ctx.json(car);}
         }
-        catch (Exception e) {
+        catch (RuntimeException e) {
             databaseError(ctx, e);
         }
     }
 
     public static void updateCar(Context ctx) {
         try {
-            // Retrieve car from database
+            // Get car from database
             Car car = DatabaseController.getCarFromVin(ctx.pathParam("id"));
             if (car == null) {carNotFound(ctx); return;}
 
-            // Update car fields specified
+            // Update specified fields
             var fields = ctx.bodyAsClass(JsonNode.class).fields();
             while (fields.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fields.next();
                 Car.setterKeyMap.get(entry.getKey()).accept(car, entry.getValue());
             }
-            // Send back to database
+
             DatabaseController.updateCar(car);
             ctx.status(201);
 
@@ -109,7 +107,7 @@ public class CarController {
         try {
             DatabaseController.deleteCar(ctx.pathParam("id"));
             ctx.status(204);
-        } catch (SQLException e) {
+        } catch (RuntimeException e) {
             carNotFound(ctx);
         }
     }
