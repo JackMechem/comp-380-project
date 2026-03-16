@@ -92,10 +92,6 @@ public class DatabaseController {
         TypedQuery<Car> query = session.createQuery(queryStr.toString(), Car.class);
         TypedQuery<Long> countQuery = session.createQuery(countStr.toString(), Long.class);
 
-        // Bind given field names to correct case
-        bindFilterParams(query, countQuery, transmission, drivetrain, engineLayout, fuel, bodyType, roofType,
-                vehicleClass);
-
         Long totalItems = countQuery.getSingleResult();
         List<Car> cars = query.setFirstResult(offset).setMaxResults(limit).getResultList();
         int totalPages = (int) Math.ceil((double) totalItems / limit);
@@ -143,10 +139,6 @@ public class DatabaseController {
         // Create queries
         TypedQuery<Object[]> query = session.createQuery(queryStr.toString(), Object[].class);
         TypedQuery<Long> countQuery = session.createQuery(countStr.toString(), Long.class);
-
-        // Bind given field names to correct case
-        bindFilterParams(query, countQuery, transmission, drivetrain, engineLayout, fuel, bodyType, roofType,
-                vehicleClass);
 
         Long totalItems = countQuery.getSingleResult();
         List<Object[]> rows = query.setFirstResult(offset).setMaxResults(limit).getResultList();
@@ -280,48 +272,20 @@ public class DatabaseController {
      * Helper Functions
      */
 
-    // Convert filter strings to their enum types;
-    // bind them to both queries
-    private static void bindFilterParams(TypedQuery<?> query, TypedQuery<?> countQuery,
-            String transmission, String drivetrain, String engineLayout,
-            String fuel, String bodyType, String roofType, String vehicleClass) {
-
-        Map<String, Object> params = new LinkedHashMap<>();
-        if (transmission != null)
-            params.put("transmission", TransmissionType.valueOf(transmission));
-        if (drivetrain != null)
-            params.put("drivetrain", Drivetrain.valueOf(drivetrain));
-        if (engineLayout != null)
-            params.put("engineLayout", EngineLayout.valueOf(engineLayout));
-        if (fuel != null)
-            params.put("fuel", FuelType.valueOf(fuel));
-        if (bodyType != null)
-            params.put("bodyType", BodyType.valueOf(bodyType));
-        if (roofType != null)
-            params.put("roofType", RoofType.valueOf(roofType));
-        if (vehicleClass != null)
-            params.put("vehicleClass", VehicleClass.valueOf(vehicleClass));
-
-        for (var entry : params.entrySet()) {
-            query.setParameter(entry.getKey(), entry.getValue());
-            countQuery.setParameter(entry.getKey(), entry.getValue());
-        }
-    }
-
     // Build filters to append to query strings (if any)
     private static String buildFilters(
             String transmission, String drivetrain, String engineLayout,
             String fuel, String bodyType, String roofType, String vehicleClass) {
 
         StringBuilder filters = new StringBuilder(" WHERE 1=1");
-
-        if (transmission != null) filters.append(" AND c.transmission = :transmission");
-        if (drivetrain != null) filters.append(" AND c.drivetrain = :drivetrain");
-        if (engineLayout != null) filters.append(" AND c.engineLayout = :engineLayout");
-        if (fuel != null) filters.append(" AND c.fuel = :fuel");
-        if (bodyType != null) filters.append(" AND c.bodyType = :bodyType");
-        if (roofType != null) filters.append(" AND c.roofType = :roofType");
-        if (vehicleClass != null) filters.append(" AND c.vehicleClass = :vehicleClass");
+        // Note: safe because converts to enum first (else query inject vulnerability)
+        if (transmission != null) filters.append(" AND c.transmission = ").append(TransmissionType.valueOf(transmission));
+        if (drivetrain != null) filters.append(" AND c.drivetrain = ").append(Drivetrain.valueOf(drivetrain));
+        if (engineLayout != null) filters.append(" AND c.engineLayout = ").append(EngineLayout.valueOf(engineLayout));
+        if (fuel != null) filters.append(" AND c.fuel = ").append(FuelType.valueOf(fuel));
+        if (bodyType != null) filters.append(" AND c.bodyType = ").append(BodyType.valueOf(bodyType));
+        if (roofType != null) filters.append(" AND c.roofType = ").append(RoofType.valueOf(roofType));
+        if (vehicleClass != null) filters.append(" AND c.vehicleClass = ").append(VehicleClass.valueOf(vehicleClass));
 
         return filters.toString();
     }
