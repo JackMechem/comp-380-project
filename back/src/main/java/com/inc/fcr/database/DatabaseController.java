@@ -10,136 +10,54 @@ import org.hibernate.Transaction;
 
 import com.inc.fcr.utils.HibernateUtil;
 
-import jakarta.persistence.TypedQuery;
-
-import java.beans.Transient;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import com.inc.fcr.car.enums.*;
 
 public class DatabaseController {
-
-    /*
-     * Global Variables
-     */
-
-    private static final int DEFAULT_PAGE_SIZE = 10;
-
-    // Fields allowed to be sorted by
-    private static final List<String> VALID_SORT_FIELDS = List.of(
-            "vin", "make", "model", "modelYear", "cylinders", "gears",
-            "horsepower", "torque", "seats", "pricePerDay", "mpg",
-            "transmission", "drivetrain", "engineLayout", "fuel",
-            "bodyType", "roofType", "vehicleClass");
-
-    // Maps lowercase to camel case for all fields
-    private static final Map<String, String> FIELD_MAP;
-
-    // Dynamically populates FIELD_MAP based on Car class;
-    // runs when class is first loaded
-    static {
-        Map<String, String> fieldMap = new LinkedHashMap<>();
-        for (Field field : Car.class.getDeclaredFields()) {
-            // Skip static and transient fields
-            if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
-                continue;
-            if (field.isAnnotationPresent(Transient.class))
-                continue;
-
-            String name = field.getName();
-            fieldMap.put(name.toLowerCase(), name);
-        }
-        FIELD_MAP = Collections.unmodifiableMap(fieldMap);
-    }
-
-
 
     /*
      * Get Car(s) Functions
      */
 
-    public static CarPagesWrapper getCarsFiltered(int page, int pageSize,
-            String transmission, String drivetrain, String engineLayout,
-            String fuel, String bodyType, String roofType, String vehicleClass,
-            String sortBy, String sortDir) throws HibernateException, QueryParamException {
+    public static CarPagesWrapper getCars(ParsedQueryParams params) throws HibernateException, QueryParamException {
+        // Print parsed query params
+        params.printParams();
 
-        return getCarsFilteredSelect(page, pageSize, transmission, drivetrain, engineLayout,
-                fuel, bodyType, roofType, vehicleClass, null, sortBy, sortDir);
-    }
+        // Page variables
+        int limit  = params.getPageSize();
+        int page   = params.getPage();
+        int offset = (page - 1) * limit;
 
-    public static CarPagesWrapper getCarsFilteredSelect(int page, int pageSize,
-            String transmission, String drivetrain, String engineLayout,
-            String fuel, String bodyType, String roofType, String vehicleClass,
-            String[] select, String sortBy, String sortDir) throws HibernateException, QueryParamException {
+        // Make sql query strings
+        String filterClause = params.getFilterClause();
+        String queryString  = (params.getSelectFields() != null ? "SELECT " + params.getSelectClause() + " " : "") + "FROM Car c" + filterClause + params.getSortClause();
+        String countString  = "SELECT count(c) FROM Car c" + filterClause;
 
-        final boolean selectFields = (select != null);
-
-        // Set page and page size; if null set to default
-        int currentPage = (page <= 0) ? 1 : page;
-        int limit = (pageSize <= 0) ? DEFAULT_PAGE_SIZE : pageSize;
-        int offset = (currentPage - 1) * limit;
-
+        // Hibername session
         Session session = HibernateUtil.getSessionFactory().openSession();
 
-        // Base query strings
-        StringBuilder queryStr = new StringBuilder("FROM Car c");
-        StringBuilder countStr = new StringBuilder("SELECT count(c) FROM Car c");
+        // Get total items in database and calculate total pages
+        long totalItems = session.createQuery(countString, Long.class).getSingleResult();
+        int totalPages  = (int) Math.ceil((double) totalItems / limit);
 
-        // Select
-        List<String> validSelect = null;
-        if (selectFields) {
-            // Checks if given select values are valid
-            validSelect = Arrays.stream(select)
-                    .filter(f -> FIELD_MAP.containsKey(f.toLowerCase()))
-                    .toList();
-
-            if (validSelect.isEmpty()) throw new QueryParamException(
-                        "Valid fields for parameter 'select': " + String.join(", ", FIELD_MAP.keySet()));
-
-            // Format valid select into string for Hibernate
-            String selectClause = validSelect.stream()
-                    .map(f -> "c." + FIELD_MAP.get(f.toLowerCase()))
-                    .collect(Collectors.joining(", "));
-
-            queryStr.insert(0, "SELECT "+selectClause+" ");
-        }
-
-        // Append filters and sort to query string;
-        // if all are null, don't filter and set sort to default
-        String filters = buildFilters(transmission, drivetrain, engineLayout, fuel, bodyType, roofType, vehicleClass);
-        queryStr.append(filters);
-        countStr.append(filters);
-        appendSort(queryStr, sortBy, sortDir);
-
-        // Create queries
-        TypedQuery<Long> countQuery = session.createQuery(countStr.toString(), Long.class);
-        Long totalItems = countQuery.getSingleResult();
-        int totalPages = (int) Math.ceil((double) totalItems / limit);
-
-        if (selectFields) { // partial car objects
-            TypedQuery<Object[]> query = session.createQuery(queryStr.toString(), Object[].class);
-            List<Object[]> rows = query.setFirstResult(offset).setMaxResults(limit).getResultList();
-            // Converts rows to a map list
+        // Build car map and return
+        if (params.getSelectFields() != null) {
+            List<Object[]> rows = session.createQuery(queryString, Object[].class)
+                    .setFirstResult(offset).setMaxResults(limit).getResultList();
             List<Map<String, Object>> result = new ArrayList<>();
             for (Object[] row : rows) {
                 Map<String, Object> carMap = new LinkedHashMap<>();
-                for (int i = 0; i < validSelect.size(); i++) {
-                    carMap.put(FIELD_MAP.get(validSelect.get(i).toLowerCase()), row[i]);
-                }
+                for (int i = 0; i < params.getSelectFields().size(); i++)
+                    carMap.put(params.getSelectFields().get(i), row[i]);
                 result.add(carMap);
             }
-            return new CarPagesWrapper(result, currentPage, totalPages, totalItems);
-        } else { // full car objects
-            TypedQuery<Car> query = session.createQuery(queryStr.toString(), Car.class);
-            List<Car> rows = query.setFirstResult(offset).setMaxResults(limit).getResultList();
-            return new CarPagesWrapper(rows, currentPage, totalPages, totalItems);
+            return new CarPagesWrapper(result, page, totalPages, totalItems);
+        } else {
+            List<Car> rows = session.createQuery(queryString, Car.class)
+                    .setFirstResult(offset).setMaxResults(limit).getResultList();
+            return new CarPagesWrapper(rows, page, totalPages, totalItems);
         }
     }
 
@@ -148,43 +66,27 @@ public class DatabaseController {
         return session.get(Car.class, vin);
     }
 
-    public static Map<String, Object> getCarFromVinSelect(String vin, String[] select) throws HibernateException, QueryParamException {
+    public static Map<String, Object> getCarFromVinSelect(String vin, ParsedQueryParams params) throws HibernateException, QueryParamException {
+        params.setVinFilter(vin);
+
+        List<String> selectFields = params.getSelectFields();
+
+        String query = (selectFields != null ? "SELECT " + params.getSelectClause() + " " : "") 
+                     + "FROM Car c" + params.getFilterClause();
+
         Session session = HibernateUtil.getSessionFactory().openSession();
 
-        // Checks if given select values are valid
-        List<String> validSelect = Arrays.stream(select)
-                .filter(f -> FIELD_MAP.containsKey(f.toLowerCase()))
-                .toList();
-
-        // Format valid select into string for Hibernate
-        String selectClause = validSelect.stream()
-                .map(f -> "c." + FIELD_MAP.get(f.toLowerCase()))
-                .collect(Collectors.joining(", "));
-
         Object[] row;
-        // Create row object(s)
-        if (validSelect.isEmpty()) {
-            throw new QueryParamException("Valid fields for parameter 'select': " + String.join(", ", FIELD_MAP.keySet()));
-        } else if (validSelect.size() == 1) {
-            // Single queries don't return an array
-            Object single = session
-                    .createQuery("SELECT " + selectClause + " FROM Car c WHERE c.vin = :vin", Object.class)
-                    .setParameter("vin", vin)
-                    .uniqueResult();
-            row = new Object[] { single };
+        if (selectFields.size() == 1) {
+            Object single = session.createQuery(query, Object.class).uniqueResult();
+            row = new Object[]{ single };
         } else {
-            row = session
-                    .createQuery("SELECT " + selectClause + " FROM Car c WHERE c.vin = :vin", Object[].class)
-                    .setParameter("vin", vin)
-                    .uniqueResult();
+            row = session.createQuery(query, Object[].class).uniqueResult();
         }
         if (row == null) return null;
-
-        // Create map with field name and value
         Map<String, Object> carMap = new LinkedHashMap<>();
-        for (int i = 0; i < validSelect.size(); i++) {
-            carMap.put(FIELD_MAP.get(validSelect.get(i).toLowerCase()), row[i]);
-        }
+        for (int i = 0; i < selectFields.size(); i++)
+            carMap.put(selectFields.get(i), row[i]);
         return carMap;
     }
 
@@ -247,39 +149,4 @@ public class DatabaseController {
             throw new ValidationException("Car not found.");
         }
     }
-
-
-
-    /*
-     * Helper Functions
-     */
-
-    // Build filters to append to query strings (if any)
-    private static String buildFilters(
-            String transmission, String drivetrain, String engineLayout,
-            String fuel, String bodyType, String roofType, String vehicleClass) {
-
-        StringBuilder filters = new StringBuilder(" WHERE 1=1");
-        // Note: safe because converts to enum first (else query inject vulnerability)
-        if (transmission != null) filters.append(" AND c.transmission = ").append(TransmissionType.valueOf(transmission));
-        if (drivetrain != null) filters.append(" AND c.drivetrain = ").append(Drivetrain.valueOf(drivetrain));
-        if (engineLayout != null) filters.append(" AND c.engineLayout = ").append(EngineLayout.valueOf(engineLayout));
-        if (fuel != null) filters.append(" AND c.fuel = ").append(FuelType.valueOf(fuel));
-        if (bodyType != null) filters.append(" AND c.bodyType = ").append(BodyType.valueOf(bodyType));
-        if (roofType != null) filters.append(" AND c.roofType = ").append(RoofType.valueOf(roofType));
-        if (vehicleClass != null) filters.append(" AND c.vehicleClass = ").append(VehicleClass.valueOf(vehicleClass));
-
-        return filters.toString();
-    }
-
-    // Appends filters to query string;
-    // does nothing if both sortBy and sortDir are null
-    // defaults to ascending if just sortDir is null;
-    private static void appendSort(StringBuilder queryStr, String sortBy, String sortDir) {
-        if (sortBy != null && VALID_SORT_FIELDS.contains(sortBy)) {
-            String dir = (sortDir != null && sortDir.equalsIgnoreCase("desc")) ? "DESC" : "ASC";
-            queryStr.append(" ORDER BY c.").append(sortBy).append(" ").append(dir);
-        }
-    }
-
 }

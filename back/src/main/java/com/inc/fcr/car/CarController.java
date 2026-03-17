@@ -9,37 +9,23 @@ import io.javalin.http.Context;
 import io.javalin.openapi.*;
 
 import com.inc.fcr.database.DatabaseController;
+import com.inc.fcr.database.ParsedQueryParams;
+
 import org.hibernate.HibernateException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class CarController extends CarOpenApi {
 
     public static void getAllCars(Context ctx) {
         try {
-            int pageNum = ctx.queryParamAsClass("page", int.class).getOrDefault(-1);
-            int pageSizeNum = ctx.queryParamAsClass("pageSize", int.class).getOrDefault(-1);
-            String sortBy = ctx.queryParam("sortBy");
-            String sortDir = ctx.queryParam("sortDir");
-
-            String selectParam = ctx.queryParam("select");
-            String[] select = (selectParam != null) ? selectParam.split(",") : null;
-
-            String transmission = upperOrNull(ctx, "transmission");
-            String drivetrain = upperOrNull(ctx, "drivetrain");
-            String engineLayout = upperOrNull(ctx, "engineLayout");
-            String fuel = upperOrNull(ctx, "fuel");
-            String bodyType = upperOrNull(ctx, "bodyType");
-            String roofType = upperOrNull(ctx, "roofType");
-            String vehicleClass = upperOrNull(ctx, "vehicleClass");
-
-            ctx.json(DatabaseController.getCarsFilteredSelect(pageNum, pageSizeNum, transmission, drivetrain,
-                    engineLayout, fuel, bodyType, roofType, vehicleClass, select, sortBy, sortDir));
-
+            ParsedQueryParams parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
+            ctx.json(DatabaseController.getCars(parsedQueryParams));
         } catch (Exception e) {
             if (e instanceof QueryParamException) queryParamError(ctx, e);
             else if (e instanceof HibernateException) databaseError(ctx, e);
@@ -50,11 +36,11 @@ public class CarController extends CarOpenApi {
     public static void getCar(Context ctx) {
         try {
             String vin = ctx.pathParam("id");
-            String selectParam = ctx.queryParam("select");
-            String[] select = (selectParam != null) ? selectParam.split(",") : null;
+            ParsedQueryParams parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
+            String[] select = parsedQueryParams.getSelectFields() != null ? parsedQueryParams.getSelectFields().toArray(new String[parsedQueryParams.getSelectFields().size()]) : null;
 
             Object car;
-            if (select != null) car = DatabaseController.getCarFromVinSelect(vin, select);
+            if (select != null) car = DatabaseController.getCarFromVinSelect(vin, parsedQueryParams);
             else car = DatabaseController.getCarFromVin(vin);
 
             if (car == null) carNotFound(ctx);
