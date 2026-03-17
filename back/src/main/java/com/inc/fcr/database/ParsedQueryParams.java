@@ -18,6 +18,7 @@ public class ParsedQueryParams {
     private static final int DEFAULT_PAGE_SIZE = 10;
 
     private static final Map<String, String> FIELD_MAP;
+
     static {
         Map<String, String> map = new LinkedHashMap<>();
         for (Field field : Car.class.getDeclaredFields()) {

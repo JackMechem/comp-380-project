@@ -48,7 +48,8 @@ public class CarController extends CarOpenApi {
 
         } catch (Exception e) {
             if (e instanceof QueryParamException) queryParamError(ctx, e);
-            else databaseError(ctx, e);
+            else if (e instanceof HibernateException) databaseError(ctx, e);
+            else serverError(ctx, e);
         }
     }
 
@@ -137,29 +138,24 @@ public class CarController extends CarOpenApi {
     }
 
     private static void validationError(Context ctx, Exception e) {
-        ctx.status(400).json(new ApiErrorResponse(400, "Improper Car Format", ""+e, stackTraceString(e)));
+        ctx.status(400).json(new ApiErrorResponse(400, "Improper Car Format", "" + e, stackTraceString(e)));
     }
 
     private static void queryParamError(Context ctx, Exception e) {
-        ctx.status(400).json(new ApiErrorResponse(400, "Invalid Query Parameters", ""+e, stackTraceString(e)));
+        ctx.status(400).json(new ApiErrorResponse(400, "Invalid Query Parameters", "" + e, stackTraceString(e)));
     }
 
     private static void databaseError(Context ctx, Exception e) {
-        ctx.status(500).json(new ApiErrorResponse(500, "Database Error", ""+e, stackTraceString(e)));
+        ctx.status(500).json(new ApiErrorResponse(500, "Database Error", "" + e, stackTraceString(e)));
     }
 
     private static void serverError(Context ctx, Exception e) {
-        ctx.status(500).json(new ApiErrorResponse(500, "Server Error", ""+e, stackTraceString(e)));
+        ctx.status(500).json(new ApiErrorResponse(500, "Server Error", "" + e, stackTraceString(e)));
     }
 
     private static String stackTraceString(Exception e) {
         StringWriter stack = new StringWriter();
         e.printStackTrace(new PrintWriter(stack));
         return stack.toString();
-    }
-
-    private static String upperOrNull(Context ctx, String param) {
-        String val = ctx.queryParam(param);
-        return val != null ? val.toUpperCase() : null;
     }
 }
