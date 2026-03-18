@@ -1,6 +1,7 @@
 package com.inc.fcr;
 
 import com.inc.fcr.car.CarController;
+import com.inc.fcr.reservation.ReservationController;
 import com.inc.fcr.utils.HibernateUtil;
 
 import io.javalin.Javalin;
@@ -54,6 +55,16 @@ public class Main {
                         get(CarController::getCar, Role.ANYONE);
                         patch(CarController::updateCar, Role.WRITE);
                         delete(CarController::deleteCar, Role.ADMIN);
+                    });
+                });
+
+                path("reservations", () -> {
+                    get(ReservationController::getAllReservations, Role.ANYONE);
+                    post(ReservationController::createReservation, Role.WRITE);
+                    path("{id}", () -> {
+                        get(ReservationController::getReservation, Role.ANYONE);
+                        patch(ReservationController::updateReservation, Role.WRITE);
+                        delete(ReservationController::deleteReservation, Role.WRITE);
                     });
                 });
             });
