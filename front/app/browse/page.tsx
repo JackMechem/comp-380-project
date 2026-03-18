@@ -42,6 +42,8 @@ const BrowsePage = async ({
 		modelYear: str(p.modelYear) ? Number(str(p.modelYear)) : undefined,
 		minModelYear: str(p.minModelYear) ? Number(str(p.minModelYear)) : undefined,
 		maxModelYear: str(p.maxModelYear) ? Number(str(p.maxModelYear)) : undefined,
+		minHorsepower: str(p.minHorsepower) ? Number(str(p.minHorsepower)) : undefined,
+		maxHorsepower: str(p.maxHorsepower) ? Number(str(p.maxHorsepower)) : undefined,
 		select: str(p.select),
 		sortBy: str(p.sortBy),
 		sortDir: str(p.sortDir) as "asc" | "desc" | undefined,
@@ -60,8 +62,8 @@ const BrowsePage = async ({
 		<>
 			<LandingHeader white={false} />
 			<FilterBar />
-			<MainBodyContainer>
-				<div className="grid grid-cols-2 w-full gap-[10px] mt-[10px] text-foreground">
+			<MainBodyContainer className="2xl:px-[200px] lg:px-[50px]">
+				<div className="grid md:grid-cols-2 grid-cols-1 w-full gap-[10px] mt-[10px] text-foreground">
 					{carsPages.cars.map((car: Car) => (
 						<Link
                             href={"/car/" + car.vin}
@@ -75,7 +77,7 @@ const BrowsePage = async ({
 								width={500}
 								className="object-cover w-[40%]"
 							/>
-							<div className="w-[60%] px-[25px] py-[15px] flex">
+							<div className="w-[60%] px-[25px] py-[15px] flex flex-col justify-between">
 								<div>
 									<h1 className="text-[16pt] font-[500]">
 										{car.make} {car.model}

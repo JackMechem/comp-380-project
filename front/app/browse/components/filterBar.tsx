@@ -1,10 +1,10 @@
 "use client";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
 import FilterBarDropdown from "./filterBarDropdown";
 import FilterBarYearRange from "./filterBarYearSelect";
 import { BiRefresh } from "react-icons/bi";
 import FilterBarInput from "./filterBarInput";
+import FilterBarNumberRange from "./filterBarNumberRange";
 
 interface FilterAndSelectFields {
 	page?: string;
@@ -24,6 +24,8 @@ interface FilterAndSelectFields {
 	bodyType?: string;
 	roofType?: string;
 	vehicleClass?: string;
+    minHorsepower?: number;
+    maxHorsepower?: number;
 }
 
 const FilterBar = () => {
@@ -32,47 +34,49 @@ const FilterBar = () => {
 	const searchParams = useSearchParams();
 	const get = (key: keyof FilterAndSelectFields) =>
 		searchParams.get(key) ?? undefined;
-	const [pendingParams, setPendingParams] = useState<
-		Partial<FilterAndSelectFields>
-	>({});
 
-	const setPending = (
+	const applyParam = (
 		param: keyof FilterAndSelectFields,
 		value: string | null,
 	) => {
-		setPendingParams((prev) => ({ ...prev, [param]: value ?? undefined }));
+		const params = new URLSearchParams(searchParams.toString());
+		if (value) params.set(param, value);
+		else params.delete(param);
+		router.push(`${pathname}?${params.toString()}`);
 	};
 
-	const applyFilters = () => {
+	const applyMultiple = (updates: Partial<FilterAndSelectFields>) => {
 		const params = new URLSearchParams(searchParams.toString());
-		for (const [key, value] of Object.entries(pendingParams)) {
-			if (value) params.set(key, value);
+		for (const [key, value] of Object.entries(updates)) {
+			if (value) params.set(key, value.toString());
 			else params.delete(key);
 		}
 		router.push(`${pathname}?${params.toString()}`);
 	};
 
 	return (
-		<div className="w-full bg-primary border-y border-y-third shadow-sm shadow-third/30 p-[10px] text-foreground flex gap-[10px] items-center justify-start">
+		<div className="w-full bg-primary border-y border-y-third shadow-sm shadow-third/30 p-[10px] text-foreground flex gap-[15px] items-center justify-start">
 			<FilterBarInput
 				label="Make"
 				paramId="make"
 				defaultValue={get("make")}
-				onChange={(v) => setPending("make", v ?? "")}
+				onChange={(v) => applyParam("make", v)}
 			/>
 			<FilterBarInput
 				label="Model"
 				paramId="model"
 				defaultValue={get("model")}
-				onChange={(v) => setPending("model", v ?? "")}
+				onChange={(v) => applyParam("model", v)}
 			/>
 			<FilterBarYearRange
 				defaultMin={get("minModelYear")}
 				defaultMax={get("maxModelYear")}
-				onChange={(min, max) => {
-					setPending("minModelYear", min);
-					setPending("maxModelYear", max);
-				}}
+				onApply={(min, max) =>
+					applyMultiple({
+						minModelYear: min || undefined,
+						maxModelYear: max || undefined,
+					})
+				}
 			/>
 			<FilterBarDropdown
 				label="Transmission"
@@ -80,7 +84,8 @@ const FilterBar = () => {
 					{ paramId: "MANUAL", displayText: "Manual" },
 					{ paramId: "AUTOMATIC", displayText: "Automatic" },
 				]}
-				onChange={(v) => setPending("transmission", v)}
+				defaultValue={get("transmission")}
+				onChange={(v) => applyParam("transmission", v)}
 			/>
 			<FilterBarDropdown
 				label="Engine Layout"
@@ -91,9 +96,9 @@ const FilterBar = () => {
 					{ paramId: "SINGLE_MOTOR", displayText: "Single Motor" },
 					{ paramId: "DUAL_MOTOR", displayText: "Dual Motor" },
 				]}
-				onChange={(v) => setPending("engineLayout", v)}
+				defaultValue={get("engineLayout")}
+				onChange={(v) => applyParam("engineLayout", v)}
 			/>
-
 			<FilterBarDropdown
 				label="Drivetrain"
 				options={[
@@ -101,7 +106,19 @@ const FilterBar = () => {
 					{ paramId: "RWD", displayText: "Rear Wheel Drive" },
 					{ paramId: "AWD", displayText: "All Wheel Drive" },
 				]}
-				onChange={(v) => setPending("drivetrain", v)}
+				defaultValue={get("drivetrain")}
+				onChange={(v) => applyParam("drivetrain", v)}
+			/>
+			<FilterBarNumberRange
+				label="Horsepower"
+				paramId="horsepower"
+				defaultMin={get("minHorsepower")}
+				defaultMax={get("maxHorsepower")}
+				min={0}
+				max={1000}
+				onApply={(min, max) =>
+					applyMultiple({ minHorsepower: Number.parseInt(min), maxHorsepower: Number.parseInt(max) })
+				}
 			/>
 			<div className="flex gap-[10px] ml-auto h-full items-center">
 				<FilterBarDropdown
@@ -112,7 +129,7 @@ const FilterBar = () => {
 						{ paramId: "DESC", displayText: "Descending" },
 					]}
 					defaultValue={get("sortDir") ?? "ASC"}
-					onChange={(v) => setPending("sortDir", v)}
+					onChange={(v) => applyParam("sortDir", v)}
 				/>
 				<FilterBarDropdown
 					label="Sort By"
@@ -130,10 +147,10 @@ const FilterBar = () => {
 						{ paramId: "mpg", displayText: "MPG" },
 					]}
 					defaultValue={get("sortBy") ?? "make"}
-					onChange={(v) => setPending("sortBy", v)}
+					onChange={(v) => applyParam("sortBy", v)}
 				/>
 				<button
-					onClick={applyFilters}
+					onClick={() => router.push(pathname)}
 					className="bg-accent/80 rounded-full px-[10px] py-[5px] text-primary-dark ml-[20px]"
 				>
 					<BiRefresh />
