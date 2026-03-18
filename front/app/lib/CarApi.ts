@@ -22,6 +22,8 @@ type FilteredCarsParams = {
 	make?: string;
 	model?: string;
 	modelYear?: number;
+	minModelYear?: number;
+	maxModelYear?: number;
 	transmission?: string;
 	drivetrain?: string;
 	engineLayout?: string;
@@ -40,6 +42,8 @@ export const getFilteredCars = async ({
 	make,
 	model,
 	modelYear,
+    minModelYear,
+    maxModelYear,
 	transmission,
 	drivetrain,
 	engineLayout,
@@ -57,6 +61,8 @@ export const getFilteredCars = async ({
 	if (make != null) params.set("make", make);
 	if (model != null) params.set("model", model);
 	if (modelYear != null) params.set("modelYear", String(modelYear));
+	if (minModelYear != null) params.set("minModelYear", String(minModelYear));
+	if (maxModelYear != null) params.set("maxModelYear", String(maxModelYear));
 	if (transmission != null) params.set("transmission", transmission);
 	if (drivetrain != null) params.set("drivetrain", drivetrain);
 	if (engineLayout != null) params.set("engineLayout", engineLayout);
