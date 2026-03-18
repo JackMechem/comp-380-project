@@ -1,9 +1,7 @@
-package com.inc.fcr.car;
+package com.inc.fcr.database;
 
-import java.util.List;
-
-public record CarPagesWrapper(
-    Object cars,
+public record PagesWrapper(
+    Object object,
     int currentPage,
     int totalPages,
     long totalItems
