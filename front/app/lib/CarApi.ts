@@ -31,6 +31,8 @@ type FilteredCarsParams = {
 	bodyType?: string;
 	roofType?: string;
 	vehicleClass?: string;
+    minHorsepower?: number;
+    maxHorsepower?: number;
 };
 
 export const getFilteredCars = async ({
@@ -44,6 +46,8 @@ export const getFilteredCars = async ({
 	modelYear,
     minModelYear,
     maxModelYear,
+    minHorsepower,
+    maxHorsepower,
 	transmission,
 	drivetrain,
 	engineLayout,
@@ -63,6 +67,8 @@ export const getFilteredCars = async ({
 	if (modelYear != null) params.set("modelYear", String(modelYear));
 	if (minModelYear != null) params.set("minModelYear", String(minModelYear));
 	if (maxModelYear != null) params.set("maxModelYear", String(maxModelYear));
+	if (minHorsepower != null) params.set("minHorsepower", String(minHorsepower));
+	if (maxHorsepower != null) params.set("maxHorsepower", String(maxHorsepower));
 	if (transmission != null) params.set("transmission", transmission);
 	if (drivetrain != null) params.set("drivetrain", drivetrain);
 	if (engineLayout != null) params.set("engineLayout", engineLayout);

@@ -23,9 +23,9 @@ const FilterBarDropdown = ({ label, options, defaultValue, showAll = true, onCha
     };
 
     return (
-        <div className="flex flex-col">
-            <label className="text-[8pt] font-[500] text-foreground-light leading-[100%]">{label}</label>
-            <select className="bg-primary-dark/70 border border-third rounded-md px-[10px] py-[5px] w-fit text-[11pt]" value={selected} onChange={handleChange}>
+        <div className="flex flex-col h-full justify-stretch">
+            <label className="text-[8pt] font-[500] text-foreground-light ml-[2px] leading-[100%]">{label}</label>
+            <select className="bg-primary border border-third rounded-lg px-[10px] py-[5px] w-fit text-[11pt]" value={selected} onChange={handleChange}>
                 {showAll && <option value="">All</option>}
                 {options.map((option) => (
                     <option key={option.paramId} value={option.paramId}>
