@@ -1,5 +1,6 @@
 package com.inc.fcr.car;
 
+import com.inc.fcr.database.PagesWrapper;
 import com.inc.fcr.errorHandling.ApiErrorResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
@@ -27,7 +28,7 @@ public class CarOpenApi {
             @OpenApiParam(name = "vehicleClass",  type = String.class,  description = "Filter by vehicle class")
         },
         responses = {
-            @OpenApiResponse(status = "200", content = {@OpenApiContent(from = CarPagesWrapper.class)}),
+            @OpenApiResponse(status = "200", content = {@OpenApiContent(from = PagesWrapper.class)}),
             @OpenApiResponse(status = "400", content = {@OpenApiContent(from = ApiErrorResponse.class)}),
             @OpenApiResponse(status = "500", content = {@OpenApiContent(from = ApiErrorResponse.class)})
         }

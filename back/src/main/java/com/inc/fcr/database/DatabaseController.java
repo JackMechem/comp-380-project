@@ -2,7 +2,6 @@ package com.inc.fcr.database;
 
 import com.inc.fcr.errorHandling.*;
 import com.inc.fcr.car.Car;
-import com.inc.fcr.car.CarPagesWrapper;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -21,7 +20,7 @@ public class DatabaseController {
      * Get Car(s) Functions
      */
 
-    public static CarPagesWrapper getCars(ParsedQueryParams params) throws HibernateException, QueryParamException {
+    public static PagesWrapper getCars(ParsedQueryParams params) throws HibernateException, QueryParamException {
         // Print parsed query params
         params.printParams();
 
@@ -53,11 +52,11 @@ public class DatabaseController {
                     carMap.put(params.getSelectFields().get(i), row[i]);
                 result.add(carMap);
             }
-            return new CarPagesWrapper(result, page, totalPages, totalItems);
+            return new PagesWrapper(result, page, totalPages, totalItems);
         } else {
             List<Car> rows = session.createQuery(queryString, Car.class)
                     .setFirstResult(offset).setMaxResults(limit).getResultList();
-            return new CarPagesWrapper(rows, page, totalPages, totalItems);
+            return new PagesWrapper(rows, page, totalPages, totalItems);
         }
     }
 
