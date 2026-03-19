@@ -26,15 +26,19 @@ public class EnumController {
     //FIXING
     public static void getAllEnums(Context ctx) {
 
-        // do something with this?
-        /*try {
-            ParsedQueryParams parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
-            ctx.json(DatabaseController.getCars(parsedQueryParams));
+        try {
+            ctx.json(Map.of(
+            "BodyType", BodyType.values(),
+            "Drivetrain", Drivetrain.values(),
+            "EngineLayout", EngineLayout.values(),
+            "FuelType", FuelType.values(),
+            "RoofType", RoofType.values(),
+            "TransmissionType", TransmissionType.values(),
+            "VehicleClass", VehicleClass.values()
+            ));
         } catch (Exception e) {
-            if (e instanceof QueryParamException) queryParamError(ctx, e);
-            else if (e instanceof HibernateException) databaseError(ctx, e);
-            else serverError(ctx, e);
-        }*/
+            // do something with this?
+        }
 
         //THIS
         /*"fuelType":[GASOLINE, DIESEL, ELECTRIC, HYBRID],
@@ -91,7 +95,7 @@ public class EnumController {
     }
 
     // maybe not needed?
-    /*private static void validationError(Context ctx, Exception e) {
+    private static void validationError(Context ctx, Exception e) {
         ctx.status(400).json(new ApiErrorResponse(400, "Improper Enum Format", "" + e, stackTraceString(e)));
     }
 
@@ -101,7 +105,7 @@ public class EnumController {
 
     private static void databaseError(Context ctx, Exception e) {
         ctx.status(500).json(new ApiErrorResponse(500, "Database Error", "" + e, stackTraceString(e)));
-    }*/
+    }
 
     private static void serverError(Context ctx, Exception e) {
         ctx.status(500).json(new ApiErrorResponse(500, "Server Error", "" + e, stackTraceString(e)));
