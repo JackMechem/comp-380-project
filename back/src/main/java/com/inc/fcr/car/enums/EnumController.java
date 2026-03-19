@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class EnumController {
     public static void getAllEnums(Context ctx) {
-        try {
             ctx.json(Map.of(
             "BodyType", BodyType.values(),
             "Drivetrain", Drivetrain.values(),
@@ -21,15 +20,9 @@ public class EnumController {
             "TransmissionType", TransmissionType.values(),
             "VehicleClass", VehicleClass.values()
             ));
-        } catch (Exception e) {
-            // needed or get rid of try catch all together?
-            if (e instanceof ValidationException) enumNotFound(ctx);
-            else serverError(ctx, e);
-        }
     }
 
     public static void getEnum(Context ctx) {
-        try {
             String select = ctx.pathParam("enum");
             switch(select) {
                 case "BodyType":
@@ -53,16 +46,12 @@ public class EnumController {
                 case "VehicleClass":
                     ctx.json(VehicleClass.values());
                     break;
+                default:
+                    ctx.status(400).result("Invalid enum type");
             }
-        } catch (Exception e) {
-            // replace try catch with default at end??
-            if (e instanceof ValidationException) enumNotFound(ctx);
-            else serverError(ctx, e);
-        }
     }
 
-
-    // Helper methods -- add 200?
+    // Helper methods
     private static void enumNotFound(Context ctx) {
         ctx.status(404).json(new ApiErrorResponse(404, "Enum Not Found", null, null));
     }
