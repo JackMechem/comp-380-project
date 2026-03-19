@@ -1,6 +1,5 @@
 package com.inc.fcr.car.enums;
 
-// import com.inc.fcr.car.enums.*; -- not needed?
 import com.inc.fcr.errorHandling.ApiErrorResponse;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;

@@ -1,11 +1,5 @@
 package com.inc.fcr.car.enums;
 
-// some of these are needed and some not!!!
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.inc.fcr.car.enums.*;
-
 import com.inc.fcr.errorHandling.*;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
@@ -16,8 +10,6 @@ import java.sql.*;
 import java.util.Map;
 
 public class EnumController {
-
-    //FIXING
     public static void getAllEnums(Context ctx) {
         try {
             ctx.json(Map.of(
@@ -30,13 +22,12 @@ public class EnumController {
             "VehicleClass", VehicleClass.values()
             ));
         } catch (Exception e) {
-            // do something with this? -- like this?
+            // needed or get rid of try catch all together?
             if (e instanceof ValidationException) enumNotFound(ctx);
             else serverError(ctx, e);
         }
     }
 
-    //FIXING
     public static void getEnum(Context ctx) {
         try {
             String select = ctx.pathParam("enum");
@@ -64,14 +55,14 @@ public class EnumController {
                     break;
             }
         } catch (Exception e) {
-            // do something with this? -- like this?
+            // replace try catch with default at end??
             if (e instanceof ValidationException) enumNotFound(ctx);
             else serverError(ctx, e);
         }
     }
 
 
-    // Helper methods
+    // Helper methods -- add 200?
     private static void enumNotFound(Context ctx) {
         ctx.status(404).json(new ApiErrorResponse(404, "Enum Not Found", null, null));
     }
