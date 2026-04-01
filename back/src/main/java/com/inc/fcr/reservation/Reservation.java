@@ -3,6 +3,7 @@ package com.inc.fcr.reservation;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.payment.Payment;
 import com.inc.fcr.user.User;
+import com.inc.fcr.utils.DatabaseController;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -34,6 +35,16 @@ public class Reservation {
         this.car = car;
         this.user = user;
         this.payments = payments;
+        this.pickupTime = pickupTime;
+        this.dropOffTime = dropOffTime;
+    }
+
+    // Seems not to work/be used by the parsers or hibernate?
+    public Reservation(String vin, Long id, List<Long> payments, long pickupTime, long dropOffTime) {
+        this.car = (Car) DatabaseController.getOne(Car.class, vin);
+        this.user = (User) DatabaseController.getOne(User.class, id);
+        this.payments = payments.stream().map(p -> (Payment)
+                DatabaseController.getOne(Payment.class, p)).toList();
         this.pickupTime = pickupTime;
         this.dropOffTime = dropOffTime;
     }

@@ -3,6 +3,8 @@ package com.inc.fcr.payment;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.user.User;
+import com.inc.fcr.utils.DatabaseController;
+import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -31,6 +33,11 @@ public class Payment {
         this.amountPaid = amountPaid;
         this.date = date;
         this.paymentType = paymentType;
+    }
+
+    public Payment(long id) throws IllegalAccessException {
+        Payment p = (Payment) DatabaseController.getOne(Payment.class, id);
+        EntityController.copyFields(p, this);
     }
 
     public Payment() {}

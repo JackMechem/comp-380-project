@@ -2,6 +2,8 @@ package com.inc.fcr.car;
 
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.utils.DatabaseController;
+import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -112,12 +114,17 @@ public class Car {
     private VehicleClass vehicleClass;
 
     // TODO: Implement this..? (note: do not include in constructor or try to set it)
-    @OneToMany(mappedBy = "car")
-    private List<Reservation> reservations = new ArrayList<>();
+//    @OneToMany(mappedBy = "car")
+//    private List<Reservation> reservations = new ArrayList<>();
 
     // --- CONSTRUCTORS ---
 
     public Car() {}
+
+    public Car(String vin) throws IllegalAccessException {
+        Car c = (Car) DatabaseController.getOne(Car.class, vin);
+        EntityController.copyFields(c, this);
+    }
 
     public Car(String vin, String make, String model, int modelYear, String description,
             int cylinders, int gears, int horsepower, int torque, int seats, double pricePerDay, double mpg,
@@ -204,7 +211,7 @@ public class Car {
     public VehicleClass getVehicleClass() { return vehicleClass; }
     public void setVehicleClass(VehicleClass vehicleClass) { this.vehicleClass = vehicleClass; }
 
-    public List<Reservation> getReservations() { return reservations; }
+//    public List<Reservation> getReservations() { return reservations; }
 
     // Setters with Validation
     public void setModelYear(int modelYear) throws ValidationException {

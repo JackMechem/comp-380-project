@@ -2,6 +2,8 @@ package com.inc.fcr.user;
 
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.utils.DatabaseController;
+import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -37,6 +39,11 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.address = address;
         this.driversLicense = driversLicense;
+    }
+
+    public User(long id) throws IllegalAccessException {
+        User u = (User) DatabaseController.getOne(User.class, id);
+        EntityController.copyFields(u, this);
     }
 
     public User() {
