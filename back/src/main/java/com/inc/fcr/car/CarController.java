@@ -37,10 +37,10 @@ public class CarController extends CarOpenApi {
         try {
             String vin = ctx.pathParam("id");
             ParsedQueryParams parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
-            String[] select = parsedQueryParams.getSelectFields() != null ? parsedQueryParams.getSelectFields().toArray(new String[parsedQueryParams.getSelectFields().size()]) : null;
+            boolean select = parsedQueryParams.getSelectFields() != null && !parsedQueryParams.getSelectFields().isEmpty();
 
             Object car;
-            if (select != null) car = DatabaseController.getCarFromVinSelect(vin, parsedQueryParams);
+            if (select) car = DatabaseController.getCarFromVinSelect(vin, parsedQueryParams);
             else car = DatabaseController.getCarFromVin(vin);
 
             if (car == null) carNotFound(ctx);

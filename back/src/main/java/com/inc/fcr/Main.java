@@ -1,6 +1,10 @@
 package com.inc.fcr;
 
+import com.inc.fcr.car.Car;
 import com.inc.fcr.car.CarController;
+import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.reservation.ReservationController;
+import com.inc.fcr.utils.APIController;
 import com.inc.fcr.car.enums.EnumController;
 import com.inc.fcr.utils.HibernateUtil;
 
@@ -42,6 +46,12 @@ public class Main {
                     it.allowCredentials = true;
                 });
             });
+
+            // Create controllers
+            APIController cars = new APIController(Car.class, String.class);
+            APIController reservations = new APIController(Reservation.class, Long.class);
+
+            // Initialize endpoints
             config.router.mount(router -> {
                 router.beforeMatched(Auth::handleAccess);
             }).apiBuilder(() -> {
@@ -49,12 +59,22 @@ public class Main {
                 get("/", ctx -> ctx.redirect("/cars"), Role.ANYONE);
 
                 path("cars", () -> {
-                    get(CarController::getAllCars, Role.ANYONE);
-                    post(CarController::createCar, Role.WRITE);
+                    get(cars::getAll, Role.ANYONE);
+                    post(cars::create, Role.WRITE);
                     path("{id}", () -> {
-                        get(CarController::getCar, Role.ANYONE);
-                        patch(CarController::updateCar, Role.WRITE);
-                        delete(CarController::deleteCar, Role.ADMIN);
+                        get(cars::getOne, Role.ANYONE);
+                        patch(cars::update, Role.WRITE);
+                        delete(cars::delete, Role.ADMIN);
+                    });
+                });
+
+                path("reservations", () -> {
+                    get(reservations::getAll, Role.ANYONE);
+                    post(reservations::create, Role.WRITE);
+                    path("{id}", () -> {
+                        get(reservations::getOne, Role.ANYONE);
+                        patch(reservations::update, Role.WRITE);
+                        delete(reservations::delete, Role.ADMIN);
                     });
                 });
 
