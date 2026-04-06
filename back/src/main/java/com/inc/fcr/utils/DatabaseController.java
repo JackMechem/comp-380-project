@@ -1,5 +1,6 @@
 package com.inc.fcr.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inc.fcr.database.PagesWrapper;
 import com.inc.fcr.database.ParsedQueryParams;
 import com.inc.fcr.errorHandling.QueryParamException;
@@ -62,34 +63,22 @@ public class DatabaseController {
         }
     }
 
-    public static Object getOne(Class<?> clazz, Object id) throws HibernateException {
-        Session session = HibernateUtil.getSessionFactory().openSession();
-        return session.get(clazz, id);
-    }
+    public static Object getOne(Class<?> clazz, Object id) { return getOne(clazz, id, null); }
 
-    public static Map<String, Object> getOneSelect(Object id, ParsedQueryParams params) throws HibernateException, QueryParamException {
-        throw new QueryParamException("TODO: rework ParsedQueryParams");
-//        params.setVinFilter(id);
-//
-//        List<String> selectFields = params.getSelectFields();
-//
-//        String query = (selectFields != null ? "SELECT " + params.getSelectClause() + " " : "")
-//                + "FROM Car c" + params.getFilterClause();
-//
-//        Session session = HibernateUtil.getSessionFactory().openSession();
-//
-//        Object[] row;
-//        if (selectFields.size() == 1) {
-//            Object single = session.createQuery(query, Object.class).uniqueResult();
-//            row = new Object[]{ single };
-//        } else {
-//            row = session.createQuery(query, Object[].class).uniqueResult();
-//        }
-//        if (row == null) return null;
-//        Map<String, Object> carMap = new LinkedHashMap<>();
-//        for (int i = 0; i < selectFields.size(); i++)
-//            carMap.put(selectFields.get(i), row[i]);
-//        return carMap;
+    public static Object getOne(Class<?> clazz, Object id, ParsedQueryParams params) throws HibernateException {
+        // Get entity
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Object entity = session.get(clazz, id);
+
+        if (params == null || !params.isSelecting()) {
+            return entity;
+        } else {
+            // Filter down to selected fields
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> map = mapper.convertValue(entity, Map.class);
+            map.keySet().removeIf(k -> !params.getSelectFields().contains(k.toLowerCase()));
+            return map;
+        }
     }
 
     /*

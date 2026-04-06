@@ -47,12 +47,9 @@ public class APIController {
     public void getOne(Context ctx) {
         try {
             Object id = ctx.pathParamAsClass("id", idClazz).get();
-            var parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
-            boolean select = parsedQueryParams.getSelectFields() != null
-                    && !parsedQueryParams.getSelectFields().isEmpty();
             // TODO: Query Params differ by endpoint, db controller too
-            Object obj = select ? DatabaseController.getOneSelect(id, parsedQueryParams) : DatabaseController.getOne(clazz, id);
-            // TODO: combine?
+            var parsedQueryParams = new ParsedQueryParams(ctx.queryParamMap());
+            Object obj = DatabaseController.getOne(clazz, id, parsedQueryParams);
 
             if (obj == null) notFound(ctx);
             else ctx.json(obj);

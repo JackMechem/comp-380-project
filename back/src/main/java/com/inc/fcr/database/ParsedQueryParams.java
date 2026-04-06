@@ -12,6 +12,9 @@ import com.inc.fcr.errorHandling.QueryParamException;
 
 public class ParsedQueryParams {
 
+    // Static Variables
+    // ----------------
+
     private static final boolean STRICT_QUERY_PARAMS = Boolean
             .parseBoolean(System.getenv().getOrDefault("STRICT_QUERY_PARAMS", "true"));
 
@@ -51,12 +54,18 @@ public class ParsedQueryParams {
             Map.entry("vehicleClass",
                     String.join(", ", Arrays.stream(VehicleClass.values()).map(Enum::name).toList())));
 
+    // Instance Variables
+    // ------------------
+
     private List<String> selectFields = null;
     private Map<String, String> filterFields = null;
     private SortStyle sortDir = SortStyle.ASCENDING;
     private String sortBy = "make";
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
+
+    // Params Constructor
+    // ------------------
 
     public ParsedQueryParams(Map<String, List<String>> queryParams) throws QueryParamException {
         for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
@@ -78,6 +87,9 @@ public class ParsedQueryParams {
             }
         }
     }
+
+    // Data Processing
+    // ---------------
 
     private void parseSelect(List<String> values) throws QueryParamException {
         if (values.isEmpty()) {
@@ -119,6 +131,9 @@ public class ParsedQueryParams {
         filterFields.put(FIELD_MAP.get(key), val);
     }
 
+    // Getters
+    // -------
+
     public String getSelectClause() throws QueryParamException {
         return selectFields.stream()
                 .map(f -> "c." + f)
@@ -152,6 +167,10 @@ public class ParsedQueryParams {
 
     public String getSortClause() {
         return " ORDER BY c." + sortBy + (sortDir == SortStyle.DESCENDING ? " DESC" : " ASC");
+    }
+
+    public boolean isSelecting() {
+        return (selectFields != null) && (!selectFields.isEmpty());
     }
 
     public List<String> getSelectFields() {
