@@ -6,9 +6,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.inc.fcr.car.Car;
 import com.inc.fcr.car.enums.*;
 import com.inc.fcr.errorHandling.QueryParamException;
+import jakarta.persistence.Id;
 
 public class ParsedQueryParams {
 
@@ -20,52 +20,52 @@ public class ParsedQueryParams {
 
     private static final int DEFAULT_PAGE_SIZE = 10;
 
-    private static final Set<String> NUMERIC_FIELDS;
-    private static final Map<String, String> FIELD_MAP;
-    private static final Map<String, String> ALPHA_FIELD_MAP; // strings only
+    // Initialize Field Maps
+    // ---------------------
 
-    static {
+    private void mapClassFields() {
         Set<String> numericSet = new LinkedHashSet<>();
         Map<String, String> fieldMap = new LinkedHashMap<>();
         Map<String, String> alphaFieldMap = new LinkedHashMap<>();
-        for (Field field : Car.class.getDeclaredFields()) {
-            if (java.lang.reflect.Modifier.isStatic(field.getModifiers()))
-                continue;
-            if (field.isAnnotationPresent(Transient.class))
-                continue;
-            Class<?> type = field.getType();
-            fieldMap.put(field.getName().toLowerCase(), field.getName());
-            if (type == int.class || type == long.class || type == double.class || type == float.class ||
-                    type == Integer.class || type == Long.class || type == Double.class || type == Float.class) {
-                numericSet.add(field.getName());
-            } else {
-                alphaFieldMap.put(field.getName().toLowerCase(), field.getName());
+        Map<String, Function<String, Object>> filterParsers = new HashMap<>();
+        Map<String, String> filterValidValues = new HashMap<>();
+
+        for (Field field : clazz.getDeclaredFields()) {
+            // Filter unwanted fields
+            if (java.lang.reflect.Modifier.isStatic(field.getModifiers())) continue;
+            if (field.isAnnotationPresent(Transient.class)) continue;
+            // Build field maps
+            final String name = field.getName();
+            final Class<?> type = field.getType();
+
+            if (field.isAnnotationPresent(Id.class)) sortBy = name;
+
+            fieldMap.put(name.toLowerCase(), name);
+            if (isNumericClass(type)) numericSet.add(name);
+            else alphaFieldMap.put(name.toLowerCase(), name);
+
+            if (type.isEnum()) {
+                Class<? extends Enum> eType = (Class<? extends Enum>) type;
+                filterParsers.put(name, val -> Enum.valueOf(eType, val.toUpperCase()));
+                filterValidValues.put(name, String.join(",", Arrays.stream(eType.getEnumConstants()).map(Enum::name).toList()));
             }
         }
         NUMERIC_FIELDS = Collections.unmodifiableSet(numericSet);
         FIELD_MAP = Collections.unmodifiableMap(fieldMap);
         ALPHA_FIELD_MAP = Collections.unmodifiableMap(alphaFieldMap);
+        FILTER_PARSERS = Collections.unmodifiableMap(filterParsers);
+        FILTER_VALID_VALUES = Collections.unmodifiableMap(filterValidValues);
     }
 
-    private static final Map<String, Function<String, Object>> FILTER_PARSERS = Map.ofEntries(
-            Map.entry("transmission", v -> TransmissionType.valueOf(v.toUpperCase())),
-            Map.entry("drivetrain", v -> Drivetrain.valueOf(v.toUpperCase())),
-            Map.entry("engineLayout", v -> EngineLayout.valueOf(v.toUpperCase())),
-            Map.entry("fuel", v -> FuelType.valueOf(v.toUpperCase())),
-            Map.entry("bodyType", v -> BodyType.valueOf(v.toUpperCase())),
-            Map.entry("roofType", v -> RoofType.valueOf(v.toUpperCase())),
-            Map.entry("vehicleClass", v -> VehicleClass.valueOf(v.toUpperCase())));
-
-    private static final Map<String, String> FILTER_VALID_VALUES = Map.ofEntries(
-            Map.entry("transmission",
-                    String.join(", ", Arrays.stream(TransmissionType.values()).map(Enum::name).toList())),
-            Map.entry("drivetrain", String.join(", ", Arrays.stream(Drivetrain.values()).map(Enum::name).toList())),
-            Map.entry("engineLayout", String.join(", ", Arrays.stream(EngineLayout.values()).map(Enum::name).toList())),
-            Map.entry("fuel", String.join(", ", Arrays.stream(FuelType.values()).map(Enum::name).toList())),
-            Map.entry("bodyType", String.join(", ", Arrays.stream(BodyType.values()).map(Enum::name).toList())),
-            Map.entry("roofType", String.join(", ", Arrays.stream(RoofType.values()).map(Enum::name).toList())),
-            Map.entry("vehicleClass",
-                    String.join(", ", Arrays.stream(VehicleClass.values()).map(Enum::name).toList())));
+    private static boolean isNumericClass(Class<?> clazz) {
+        return Number.class.isAssignableFrom(clazz) // handles object versions
+                || clazz == int.class
+                || clazz == long.class
+                || clazz == double.class
+                || clazz == float.class
+                || clazz == short.class
+                || clazz == byte.class;
+    }
 
     // Instance Variables
     // ------------------
@@ -73,14 +73,30 @@ public class ParsedQueryParams {
     private List<String> selectFields = null;
     private Map<String, String> filterFields = null;
     private SortStyle sortDir = SortStyle.ASCENDING;
-    private String sortBy = "make";
+    private String sortBy;
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
+
+    private final Class<?> clazz;
+    private Set<String> NUMERIC_FIELDS; // numeric only
+    private Map<String, String> FIELD_MAP; // contains alpha & numeric
+    private Map<String, String> ALPHA_FIELD_MAP; // strings only
+    private Map<String, Function<String, Object>> FILTER_PARSERS;
+    private Map<String, String> FILTER_VALID_VALUES;
 
     // Params Constructor
     // ------------------
 
-    public ParsedQueryParams(Map<String, List<String>> queryParams) throws QueryParamException {
+    public ParsedQueryParams(Class<?> clazz, Map<String,List<String>> queryParams) throws QueryParamException {
+        this.clazz = clazz;
+        mapClassFields();
+        parseQueryParams(queryParams);
+    }
+
+    // Data Processing
+    // ---------------
+
+    private void parseQueryParams(Map<String,List<String>> queryParams) throws  QueryParamException {
         for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
             String key = entry.getKey().trim().toLowerCase();
             String val = entry.getValue().getFirst().trim();
@@ -112,10 +128,8 @@ public class ParsedQueryParams {
                 }
             }
         }
-    }
 
-    // Data Processing
-    // ---------------
+    }
 
     private void parseSelect(List<String> values) throws QueryParamException {
         if (values.isEmpty()) {
