@@ -60,7 +60,7 @@ const BrowsePage = async ({
 			<FilterBar />
 			<div className="2xl:px-[200px] lg:px-[50px] pt-[15px] pb-[50px] w-full h-fill bg-primary m-0">
 				<div className="grid lg:grid-cols-2 grid-cols-1 w-full gap-[20px] px-[10px] h-auto text-foreground">
-					{carsPages.cars.map((car: Car) => (
+					{carsPages.data.map((car: Car) => (
 						<CarCard key={car.vin} car={car} />
 					))}
 				</div>
