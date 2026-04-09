@@ -1,6 +1,7 @@
 package com.inc.fcr.car;
 
 import com.inc.fcr.database.Converters;
+import com.inc.fcr.database.SearchField;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
@@ -55,9 +56,11 @@ public class Car {
     @Column(length = 17)
     private String vin;
 
+    @SearchField
     @Column(nullable = false)
     private String make;
 
+    @SearchField
     @Column(nullable = false)
     private String model;
 

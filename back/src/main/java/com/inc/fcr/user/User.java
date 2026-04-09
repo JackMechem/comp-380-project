@@ -2,6 +2,7 @@ package com.inc.fcr.user;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.inc.fcr.database.Converters;
+import com.inc.fcr.database.SearchField;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
@@ -17,11 +18,11 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long userId;
-    @Column(nullable = false)
+    @Column(nullable = false) @SearchField
     private String firstName;
-    @Column(nullable = false)
+    @Column(nullable = false) @SearchField
     private String lastName;
-    @Column(nullable = false)
+    @Column(nullable = false) @SearchField
     private String email;
     @Column(nullable = false)
     private String phoneNumber;
