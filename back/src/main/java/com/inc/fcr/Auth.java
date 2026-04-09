@@ -27,6 +27,16 @@ public class Auth {
         throw new UnauthorizedResponse();
     }
 
+    // Validate credentials from Basic auth header, returns 200 or 401
+    public static void validateCredentials(Context ctx) {
+        if (!userRoles(ctx).isEmpty()) {
+            ctx.status(200);
+        } else {
+            ctx.header(Header.WWW_AUTHENTICATE, "Basic");
+            throw new UnauthorizedResponse();
+        }
+    }
+
     // Authenticate user/access roles (returns list of roles)
     public static List<Role> userRoles(Context ctx) {
         return Optional.ofNullable(ctx.basicAuthCredentials())

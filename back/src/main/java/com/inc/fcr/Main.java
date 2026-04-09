@@ -60,6 +60,9 @@ public class Main {
                 // Default redirect (/cars)
                 get("/", ctx -> ctx.redirect("/cars"), Role.ANYONE);
 
+                // Validate auth credentials
+                get("/auth/validate", Auth::validateCredentials, Role.ANYONE);
+
                 path("cars", () -> {
                     get(cars::getAll, Role.ANYONE);
                     post(cars::create, Role.WRITE);
