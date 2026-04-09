@@ -4,6 +4,7 @@ import { Car } from "@/app/types/CarTypes";
 import { useEffect, useState } from "react";
 import { addCar, getAllCars, deleteCar } from "../../lib/AdminApiCalls";
 import { getCar, getFilteredCars } from "@/app/lib/CarApi";
+import Cookies from "js-cookie";
 import BrowseHeader from "@/app/components/headers/browseHeader";
 
 interface ICopyOptions {
@@ -47,10 +48,9 @@ const EditCarPage = () => {
 		}
 	}, [copyCarVin]);
 
-	// 1. Admin Credentials State
-	const [credentials, setCredentials] = useState({
-		username: "",
-		password: "",
+	const [credentials] = useState(() => {
+		const raw = Cookies.get("credentials");
+		return raw ? JSON.parse(raw) : { username: "", password: "" };
 	});
 
 	const [formData, setFormData] = useState<Partial<Car>>({
@@ -92,11 +92,6 @@ const EditCarPage = () => {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!credentials.username || !credentials.password) {
-			alert("Please enter Admin Credentials above.");
-			return;
-		}
-
 		setIsLoading(true);
 		try {
 			// Casting to Car ensures all required fields from the interface are present
@@ -125,35 +120,6 @@ const EditCarPage = () => {
 	return (
 		<div className="mx-[20px]">
 			<BrowseHeader white={false} />
-			{/* ADMIN AUTH SECTION */}
-			<div className="mt-6 flex flex-col md:flex-row gap-4 p-6 bg-slate-100 rounded-2xl border border-slate-200">
-				<div className="flex-1">
-					<label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-						Admin Username
-					</label>
-					<input
-						type="text"
-						placeholder="Username"
-						className="w-full border p-2 rounded-lg"
-						onChange={(e) =>
-							setCredentials((p) => ({ ...p, username: e.target.value }))
-						}
-					/>
-				</div>
-				<div className="flex-1">
-					<label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-						Admin Password
-					</label>
-					<input
-						type="password"
-						placeholder="Password"
-						className="w-full border p-2 rounded-lg"
-						onChange={(e) =>
-							setCredentials((p) => ({ ...p, password: e.target.value }))
-						}
-					/>
-				</div>
-			</div>
 			<div className="my-6">
 				<label className="block text-xs font-bold uppercase text-slate-500 mb-2">
 					Copy from Existing Vehicle

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DynamicTable from "./DynamicTable";
 import { addCar, getAllCars, deleteCar } from "../lib/AdminApiCalls";
 import { Car } from "../types/CarTypes";
@@ -9,16 +9,32 @@ import LandingHeader from "../components/headers/landingHeader";
 import TitleText from "../components/text/titleText";
 import Link from "next/link";
 import BrowseHeader from "../components/headers/browseHeader";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { validateCredentials } from "../lib/AuthValidation";
 
 export default function AdminPage() {
+	const router = useRouter();
+
+	useEffect(() => {
+		const raw = Cookies.get("credentials");
+		if (!raw) {
+			router.replace("/login");
+			return;
+		}
+		const { username, password } = JSON.parse(raw);
+		validateCredentials(username, password).then((status) => {
+			if (status !== 200) router.replace("/login");
+		});
+	}, []);
+
 	const [cars, setCars] = useState<Car[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasFetched, setHasFetched] = useState(false);
 
-	// 1. Admin Credentials State
-	const [credentials, setCredentials] = useState({
-		username: "",
-		password: "",
+	const [credentials] = useState(() => {
+		const raw = Cookies.get("credentials");
+		return raw ? JSON.parse(raw) : { username: "", password: "" };
 	});
 
 	const handleFetchData = async () => {
@@ -65,36 +81,6 @@ export default function AdminPage() {
 				<div className="space-y-10 pb-20">
 					<section>
 						<TitleText className="text-[42pt]">Admin Dashboard</TitleText>
-
-						{/* ADMIN AUTH SECTION */}
-						<div className="mt-6 flex flex-col md:flex-row gap-4 p-6 bg-slate-100 rounded-2xl border border-slate-200">
-							<div className="flex-1">
-								<label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-									Admin Username
-								</label>
-								<input
-									type="text"
-									placeholder="Username"
-									className="w-full border p-2 rounded-lg"
-									onChange={(e) =>
-										setCredentials((p) => ({ ...p, username: e.target.value }))
-									}
-								/>
-							</div>
-							<div className="flex-1">
-								<label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-									Admin Password
-								</label>
-								<input
-									type="password"
-									placeholder="Password"
-									className="w-full border p-2 rounded-lg"
-									onChange={(e) =>
-										setCredentials((p) => ({ ...p, password: e.target.value }))
-									}
-								/>
-							</div>
-						</div>
 
 						<TitleText className="mt-[50px] text-[32pt]">Cars</TitleText>
 						<Link href={"/admin/editcar"} className="bg-accent text-primary px-[30px] py-[8px] text-[12pt] rounded-xl shadow">
