@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.inc.fcr.car.enums.*;
 import com.inc.fcr.errorHandling.QueryParamException;
 import jakarta.persistence.Id;
+import joptsimple.internal.Strings;
 
 public class ParsedQueryParams {
 
@@ -24,6 +25,7 @@ public class ParsedQueryParams {
     // ---------------------
 
     private void mapClassFields() {
+        Set<String> searchFields = new LinkedHashSet<>();
         Set<String> numericSet = new LinkedHashSet<>();
         Map<String, String> fieldMap = new LinkedHashMap<>();
         Map<String, String> alphaFieldMap = new LinkedHashMap<>();
@@ -39,6 +41,7 @@ public class ParsedQueryParams {
             final Class<?> type = field.getType();
 
             if (field.isAnnotationPresent(Id.class)) sortBy = name;
+            if (field.isAnnotationPresent(SearchField.class)) searchFields.add(name);
 
             fieldMap.put(name.toLowerCase(), name);
             if (isNumericClass(type)) numericSet.add(name);
@@ -50,6 +53,7 @@ public class ParsedQueryParams {
                 filterValidValues.put(name, String.join(",", Arrays.stream(eType.getEnumConstants()).map(Enum::name).toList()));
             }
         }
+        SEARCH_FIELDS = Collections.unmodifiableSet(searchFields);
         NUMERIC_FIELDS = Collections.unmodifiableSet(numericSet);
         FIELD_MAP = Collections.unmodifiableMap(fieldMap);
         ALPHA_FIELD_MAP = Collections.unmodifiableMap(alphaFieldMap);
@@ -76,8 +80,10 @@ public class ParsedQueryParams {
     private String sortBy;
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
+    private String searchText;
 
     private final Class<?> clazz;
+    private Set<String> SEARCH_FIELDS;
     private Set<String> NUMERIC_FIELDS; // numeric only
     private Map<String, String> FIELD_MAP; // contains alpha & numeric
     private Map<String, String> ALPHA_FIELD_MAP; // strings only
@@ -109,6 +115,7 @@ public class ParsedQueryParams {
                 case "sortdir" -> sortDir = val.equalsIgnoreCase("desc") ? SortStyle.DESCENDING : SortStyle.ASCENDING;
                 case "page" -> page = Math.max(1, Integer.parseInt(val));
                 case "pagesize" -> pageSize = Integer.parseInt(val) < 1 ? DEFAULT_PAGE_SIZE : Integer.parseInt(val);
+                case "search" -> searchText = parseSearchText(val);
                 default -> {
                     if (key.startsWith("min") || key.startsWith("max")) {
                         String field = FIELD_MAP.get(key.substring(3).toLowerCase());
@@ -175,6 +182,13 @@ public class ParsedQueryParams {
             filterFields.put(properKey, val);
     }
 
+    private String parseSearchText(String rawSearchText) {
+        rawSearchText = rawSearchText.trim().toLowerCase();
+        if (rawSearchText.contains(";"))
+            rawSearchText = rawSearchText.substring(0, rawSearchText.indexOf(";"));
+        return rawSearchText;
+    }
+
     // Getters
     // -------
 
@@ -186,34 +200,53 @@ public class ParsedQueryParams {
 
     public String getFilterClause() throws QueryParamException {
         StringBuilder sb = new StringBuilder(" WHERE 1=1");
-        if (filterFields == null)
-            return sb.toString();
-        for (Map.Entry<String, String> entry : filterFields.entrySet()) {
-            String field = entry.getKey(), value = entry.getValue();
-            if (field.startsWith("min_")) {
-                sb.append(" AND c.").append(field.substring(4)).append(" >= ").append(value);
-            } else if (field.startsWith("max_")) {
-                sb.append(" AND c.").append(field.substring(4)).append(" <= ").append(value);
-            } else if (field.startsWith("exact_")) {
-                sb.append(" AND c.").append(field.substring(6)).append(" = ").append(value);
-            } else if (FILTER_PARSERS.containsKey(field)) {
-                if (FILTER_VALID_VALUES.get(field).contains(value.toUpperCase())) {
-                    sb.append(" AND c.").append(field).append(" = ");
-                    sb.append(FILTER_PARSERS.get(field).apply(value));
-                } else if (STRICT_QUERY_PARAMS) {
-                    throw new QueryParamException(
-                            "Invalid value '" + value + "' for '" + field + "'. Valid options: "
-                                    + FILTER_VALID_VALUES.get(field));
+        if (filterFields != null) {
+            for (Map.Entry<String, String> entry : filterFields.entrySet()) {
+                String field = entry.getKey(), value = entry.getValue();
+                if (field.startsWith("min_")) {
+                    sb.append(" AND c.").append(field.substring(4)).append(" >= ").append(value);
+                } else if (field.startsWith("max_")) {
+                    sb.append(" AND c.").append(field.substring(4)).append(" <= ").append(value);
+                } else if (field.startsWith("exact_")) {
+                    sb.append(" AND c.").append(field.substring(6)).append(" = ").append(value);
+                } else if (FILTER_PARSERS.containsKey(field)) {
+                    if (FILTER_VALID_VALUES.get(field).contains(value.toUpperCase())) {
+                        sb.append(" AND c.").append(field).append(" = ");
+                        sb.append(FILTER_PARSERS.get(field).apply(value));
+                    } else if (STRICT_QUERY_PARAMS) {
+                        throw new QueryParamException(
+                                "Invalid value '" + value + "' for '" + field + "'. Valid options: "
+                                        + FILTER_VALID_VALUES.get(field));
+                    }
+                } else {
+                    sb.append(" AND c.").append(field).append(" = '").append(value).append("'");
                 }
-            } else {
-                sb.append(" AND c.").append(field).append(" = '").append(value).append("'");
             }
         }
+        if (searchText != null) sb.append(" AND " + getSearchClause() + " > 0");
         return sb.toString();
     }
 
+    private String getSearchClause() {
+        if (searchText == null) return "";
+        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->
+                " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) ").toList(), " + ");
+//                "+ MATCH ("+searchFieldsToStr()+") AGAINST ('"+searchText+"' IN BOOLEAN MODE) ";
+    }
+
+    // Helper function for search field processing
+    private String searchFieldsToStr() {
+        return Strings.join(SEARCH_FIELDS.stream().map(e -> "c."+e).toList(), ", ");
+    }
+
     public String getSortClause() {
-        return " ORDER BY c." + sortBy + (sortDir == SortStyle.DESCENDING ? " DESC" : " ASC");
+        return (searchText == null) ?
+                " ORDER BY c." + sortBy + getSortDirClause()
+                : " ORDER BY "+getSearchClause()+" DESC";
+    }
+
+    private String getSortDirClause() {
+        return (sortDir == SortStyle.DESCENDING) ? " DESC" : " ASC";
     }
 
     public boolean isSelecting() {
@@ -253,6 +286,7 @@ public class ParsedQueryParams {
     public void printParams() {
         System.out.println("selectFields: " + selectFields);
         System.out.println("filterFields: " + filterFields);
+        System.out.println("searchClause: " + getSearchClause());
         System.out.println("sortDir:      " + sortDir);
         System.out.println("sortBy:       " + sortBy);
         System.out.println("page:         " + page);
