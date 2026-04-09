@@ -6,14 +6,18 @@ import smallLogo from "../../media/smallLogo.svg";
 import HeaderMenuButton from "../buttons/headerMenuButton";
 import Link from "next/link";
 import SmallSearchBar from "../searchBars/smallSearchBar";
-import FilterButton from "@/app/browse/components/filterButton";
 
 const COMPACT_SCROLL_THRESHOLD = 30;
 const COMPACT_SCROLL_HYSTERESIS = 30;
 
-const BrowseHeader = ({ white = true }: { white?: boolean }) => {
+interface BrowseHeaderProps {
+    white?: boolean;
+}
+
+const BrowseHeader = ({ white = true }: BrowseHeaderProps) => {
 	const [isExpanded, setIsExpanded] = useState(true);
 	const logoLinkRef = useRef<HTMLAnchorElement>(null);
+
 
 	useEffect(() => {
 		if (white === true) {

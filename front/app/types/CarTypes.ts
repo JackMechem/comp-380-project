@@ -62,6 +62,7 @@ export interface CarApiParams {
     maxGears?: number;
     minPricePerDay?: number;
     maxPricePerDay?: number;
+    search?: string;
 }
 
 
@@ -96,4 +97,5 @@ export interface FilterAndSelectFields {
 	maxGears?: string;
 	minPricePerDay?: string;
 	maxPricePerDay?: string;
+    search?: string;
 }
