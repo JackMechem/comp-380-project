@@ -78,6 +78,7 @@ public class ParsedQueryParams {
     private Map<String, String> filterFields = null;
     private SortStyle sortDir = SortStyle.ASCENDING;
     private String sortBy;
+    private boolean sortBySet = false;
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private String searchText;
@@ -109,8 +110,10 @@ public class ParsedQueryParams {
             switch (key) {
                 case "select" -> parseSelect(entry.getValue());
                 case "sortby" -> {
-                    if (FIELD_MAP.containsKey(val.toLowerCase()))
+                    if (FIELD_MAP.containsKey(val.toLowerCase())) {
                         sortBy = FIELD_MAP.get(val.toLowerCase());
+                        sortBySet = true;
+                    }
                 }
                 case "sortdir" -> sortDir = val.equalsIgnoreCase("desc") ? SortStyle.DESCENDING : SortStyle.ASCENDING;
                 case "page" -> page = Math.max(1, Integer.parseInt(val));
@@ -229,9 +232,12 @@ public class ParsedQueryParams {
 
     private String getSearchClause() {
         if (searchText == null) return "";
-        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->
-                " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) ").toList(), " + ");
-//                "+ MATCH ("+searchFieldsToStr()+") AGAINST ('"+searchText+"' IN BOOLEAN MODE) ";
+        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->{
+            boolean invertedMatch = e.startsWith("-");
+            if (invertedMatch) e = e.substring(1);
+            return " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) "
+                    + (invertedMatch ? "*-10" : ""); // large negative weight against inverted matches
+        }).toList(), " + ");
     }
 
     // Helper function for search field processing
@@ -240,7 +246,7 @@ public class ParsedQueryParams {
     }
 
     public String getSortClause() {
-        return (searchText == null) ?
+        return (sortBySet || searchText == null) ?
                 " ORDER BY c." + sortBy + getSortDirClause()
                 : " ORDER BY "+getSearchClause()+" DESC";
     }
