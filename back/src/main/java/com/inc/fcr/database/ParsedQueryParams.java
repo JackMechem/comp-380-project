@@ -78,6 +78,7 @@ public class ParsedQueryParams {
     private Map<String, String> filterFields = null;
     private SortStyle sortDir = SortStyle.ASCENDING;
     private String sortBy;
+    private boolean sortBySet = false;
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private String searchText;
@@ -109,8 +110,10 @@ public class ParsedQueryParams {
             switch (key) {
                 case "select" -> parseSelect(entry.getValue());
                 case "sortby" -> {
-                    if (FIELD_MAP.containsKey(val.toLowerCase()))
+                    if (FIELD_MAP.containsKey(val.toLowerCase())) {
                         sortBy = FIELD_MAP.get(val.toLowerCase());
+                        sortBySet = true;
+                    }
                 }
                 case "sortdir" -> sortDir = val.equalsIgnoreCase("desc") ? SortStyle.DESCENDING : SortStyle.ASCENDING;
                 case "page" -> page = Math.max(1, Integer.parseInt(val));
@@ -240,7 +243,7 @@ public class ParsedQueryParams {
     }
 
     public String getSortClause() {
-        return (searchText == null) ?
+        return (sortBySet || searchText == null) ?
                 " ORDER BY c." + sortBy + getSortDirClause()
                 : " ORDER BY "+getSearchClause()+" DESC";
     }
