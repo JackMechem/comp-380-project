@@ -232,9 +232,12 @@ public class ParsedQueryParams {
 
     private String getSearchClause() {
         if (searchText == null) return "";
-        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->
-                " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) ").toList(), " + ");
-//                "+ MATCH ("+searchFieldsToStr()+") AGAINST ('"+searchText+"' IN BOOLEAN MODE) ";
+        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->{
+            boolean invertedMatch = e.startsWith("-");
+            if (invertedMatch) e = e.substring(1);
+            return " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) "
+                    + (invertedMatch ? "*-10" : ""); // large negative weight against inverted matches
+        }).toList(), " + ");
     }
 
     // Helper function for search field processing
