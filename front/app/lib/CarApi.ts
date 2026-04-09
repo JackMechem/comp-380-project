@@ -50,6 +50,7 @@ export const getFilteredCars = async (p: CarApiParams): Promise<CarPages> => {
     set("maxGears",       p.maxGears);
     set("minPricePerDay", p.minPricePerDay);
     set("maxPricePerDay", p.maxPricePerDay);
+    set("search", p.search);
 
     const res = await fetch(
         `${process.env.API_BASE_URL}/cars?${params.toString()}`,

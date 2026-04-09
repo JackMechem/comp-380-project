@@ -52,6 +52,7 @@ const BrowsePage = async ({
 		bodyType: str(p.bodyType),
 		roofType: str(p.roofType),
 		vehicleClass: str(p.vehicleClass),
+		search: str(p.search),
 	});
 
 	return (
