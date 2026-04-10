@@ -4,4 +4,6 @@ export interface CartProps {
     model: string;
     pricePerDay: number;
     image?: string;
+    startDate?: string;
+    endDate?: string;
 }

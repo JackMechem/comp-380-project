@@ -59,7 +59,7 @@ const HeaderMenu = () => {
 
 			{/* Cart section */}
 			<div className="flex flex-col flex-1 overflow-y-auto py-[15px] px-[15px]">
-				<div className="flex mb-[10px] font-[400] text-accent font-titillium gap-[10px] items-center">
+				<div className="flex mb-[10px] font-[400] text-[16pt] text-accent font-titillium gap-[10px] items-center">
 					{cartCount > 0 ? (
 						<>
 							<BsCart />
@@ -74,36 +74,42 @@ const HeaderMenu = () => {
 				</div>
 
 				{cartCount > 0 && (
-					<div className="flex flex-col gap-[5px]">
+					<div className="flex flex-col gap-[12px]">
 						{carData.map((car: CartProps) => (
-							<div
-								key={car.vin}
-								className="w-full flex gap-[10px] text-[12pt] border border-third rounded-xl py-[0px] pr-[0px] group"
-							>
-								{car.image && (
-									<Image
-										src={car.image}
-										alt="Car Photo"
-										width={100}
-										height={100}
-										className="h-[80px] w-[80px] object-cover rounded-l-lg"
-									/>
-								)}
-								<div className="flex flex-col h-fill w-full justify-between py-[5px]">
-									<p className="text-foreground text-[12pt]">
-										{car.make} {car.model}
+							<div key={car.vin} className="flex flex-col gap-[4px]">
+								{car.startDate && car.endDate && (
+									<p className="text-accent text-[11pt] font-[400] px-[2px]">
+										{new Date(car.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+										{" – "}
+										{new Date(car.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
 									</p>
-									<h3 className="text-accent text-[14pt]">
-										${car.pricePerDay}
-										<span className="opacity-[0.5] text-[10pt]">/day</span>
-									</h3>
+								)}
+								<div className="w-full flex gap-[10px] text-[12pt] border border-third rounded-xl py-[0px] pr-[0px] group">
+									{car.image && (
+										<Image
+											src={car.image}
+											alt="Car Photo"
+											width={100}
+											height={100}
+											className="h-[80px] w-[80px] object-cover rounded-l-lg"
+										/>
+									)}
+									<div className="flex flex-col h-fill w-full justify-between py-[5px]">
+										<p className="text-foreground text-[12pt]">
+											{car.make} {car.model}
+										</p>
+										<h3 className="text-accent text-[14pt]">
+											${car.pricePerDay}
+											<span className="opacity-[0.5] text-[10pt]">/day</span>
+										</h3>
+									</div>
+									<button
+										onClick={() => removeCar(car.vin)}
+										className="hover:text-primary text-foreground-light text-[14pt] px-[10px] h-fill hover:bg-accent/70 rounded-r-xl cursor-pointer ml-auto duration-[200ms]"
+									>
+										<BiTrash />
+									</button>
 								</div>
-								<button
-									onClick={() => removeCar(car.vin)}
-									className="hover:text-primary text-foreground-light text-[14pt] px-[10px] h-fill hover:bg-accent/70 rounded-r-xl cursor-pointer ml-auto duration-[200ms]"
-								>
-									<BiTrash />
-								</button>
 							</div>
 						))}
 					</div>

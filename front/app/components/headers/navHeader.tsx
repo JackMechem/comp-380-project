@@ -31,13 +31,18 @@ const NavHeader = ({
 	activeFilters,
 }: NavHeaderProps) => {
 	const [isExpanded, setIsExpanded] = useState(true);
-	const [searchText, setSearchText] = useState("");
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [untilDate, setUntilDate] = useState<Date | undefined>(undefined);
 
 	const router = useRouter();
 	const pathname = usePathname();
-	const { set } = useFilterParams();
+	const { set, params } = useFilterParams();
+
+	const [searchText, setSearchText] = useState(() => params.search?.toString() ?? "");
+
+	useEffect(() => {
+		setSearchText(params.search?.toString() ?? "");
+	}, [params.search]);
 
 	const isWhite = white && isExpanded;
 
@@ -58,11 +63,12 @@ const NavHeader = ({
 	}, [white]);
 
 	const handleSearch = () => {
-		if (!searchText.trim()) return;
 		if (pathname === "/browse") {
-			set({ search: searchText });
+			set({ search: searchText || undefined });
 		} else {
-			router.push(`/browse?search=${encodeURIComponent(searchText)}`);
+			const params = new URLSearchParams();
+			if (searchText.trim()) params.set("search", searchText);
+			router.push(`/browse${params.size ? `?${params}` : ""}`);
 		}
 	};
 

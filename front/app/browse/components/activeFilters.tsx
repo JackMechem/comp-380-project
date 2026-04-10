@@ -31,7 +31,15 @@ const LABELS: Record<string, string> = {
 	maxPricePerDay: "Max Price",
 };
 
-const SKIP = new Set(["page", "pageSize", "sortBy", "sortDir", "select"]);
+const SKIP = new Set([
+	"page",
+	"pageSize",
+	"sortBy",
+	"sortDir",
+	"select",
+	"layout",
+	"search",
+]);
 
 const ActiveFilters = ({ className }: { className: string }) => {
 	const { params, remove } = useFilterParams();
@@ -41,9 +49,7 @@ const ActiveFilters = ({ className }: { className: string }) => {
 	if (entries.length === 0) return null;
 
 	return (
-		<div
-			className={"flex flex-wrap gap-[6px] items-center" + className}
-		>
+		<div className={"flex flex-wrap gap-[6px] items-center" + className}>
 			{entries.map(([key, value]) => (
 				<button
 					key={key}

@@ -2,30 +2,46 @@ import { Car } from "@/app/types/CarTypes";
 import Image from "next/image";
 import Link from "next/link";
 import { BiCar } from "react-icons/bi";
-import { BsCart } from "react-icons/bs";
 import { GiCarSeat } from "react-icons/gi";
-import { PiEngine, PiSeat, PiSeatbelt } from "react-icons/pi";
+import { PiEngine, PiGauge, PiLightning } from "react-icons/pi";
 import { SiTransmission } from "react-icons/si";
+import { BsFuelPump } from "react-icons/bs";
 
 interface CarCardProps {
 	car: Car;
 }
 
+const fmt = (s: string) =>
+	s.charAt(0).toUpperCase() + s.slice(1).toLowerCase().replace(/_/g, " ");
+
+const Stat = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+	<div className="flex gap-[5px] items-center">
+		<span className="text-[14pt] flex-shrink-0">{icon}</span>
+		<p className="text-[10pt] font-[500]">{label}</p>
+	</div>
+);
+
 const CarCard = ({ car }: CarCardProps) => {
+	const engineLabel =
+		car.engineLayout === "DUAL_MOTOR" || car.engineLayout === "SINGLE_MOTOR"
+			? fmt(car.engineLayout)
+			: `${fmt(car.engineLayout)} ${car.cylinders}`;
+
 	return (
 		<Link
 			href={"/car/" + car.vin}
 			key={car.vin}
-			className="hover:scale-[102%] z-[0] duration-[100ms] border-third shadow-third/50 overflow-visible flex md:flex-row flex-col md:h-[200px] w-full gap-[10px]"
+			className="hover:scale-[102%] z-[0] duration-[100ms] overflow-visible flex md:flex-row flex-col md:h-[210px] w-full gap-[10px]"
 		>
 			<Image
 				src={car.images[0]}
 				alt={car.make}
 				height={500}
 				width={500}
-				className="object-cover md:w-[40%] w-full md:h-auto h-[200px] rounded-xl shadow-[0px_1px_8px_-3px] shadow-accent/30"
+				className="object-cover md:w-[38%] w-full md:h-auto h-[200px] rounded-xl shadow-[0px_1px_8px_-3px] shadow-accent/30"
 			/>
-			<div className="md:w-[60%] w-full px-[20px] py-[15px] flex flex-col justify-between md:gap-0 gap-[10px] shadow-[0px_1px_8px_-3px] shadow-accent/30 bg-accent/3 rounded-xl">
+			<div className="md:w-[62%] w-full px-[20px] py-[15px] flex flex-col justify-between md:gap-0 gap-[10px] shadow-[0px_1px_8px_-3px] shadow-accent/30 bg-accent/3 rounded-xl">
+				{/* Title row */}
 				<div>
 					<div className="flex justify-between items-center">
 						<h1 className="text-[16pt] font-[500] leading-[110%] text-foreground/90">
@@ -39,32 +55,20 @@ const CarCard = ({ car }: CarCardProps) => {
 						{car.modelYear}
 					</p>
 				</div>
-				<div className="justify-between ml-auto flex w-full items-end">
-					<div className="text-foreground-light text-[14pt] flex flex-shrink flex-col gap-y-[5px]">
-						<div className="flex gap-[5px] items-center">
-							<BiCar />
-							<p className="text-[10pt] font-[500] lowercase first-letter:uppercase">
-								{car.vehicleClass}
-							</p>
-						</div>
-						<div className="flex gap-[3px] items-center">
-							<GiCarSeat />
-							<p className="text-[10pt] font-[500]">{car.seats}</p>
-						</div>
-						<div className="flex gap-[5px] items-center">
-							<PiEngine />
-							<p className="text-[10pt] font-[500] lowercase first-letter:uppercase">
-								{car.engineLayout == "DUAL_MOTOR" ||
-								car.engineLayout == "SINGLE_MOTOR" ? (
-									car.engineLayout
-								) : (
-									<>
-										{car.engineLayout} {car.cylinders}
-									</>
-								)}
-							</p>
-						</div>
+
+				{/* Stats + price */}
+				<div className="flex justify-between items-end gap-[10px]">
+					{/* Two-column stat grid */}
+					<div className="grid xl:grid-cols-3 grid-cols-2 gap-x-[20px] gap-y-[5px] text-foreground-light">
+						<Stat icon={<BiCar />} label={fmt(car.vehicleClass)} />
+						<Stat icon={<SiTransmission />} label={fmt(car.transmission)} />
+						<Stat icon={<GiCarSeat />} label={`${car.seats} seats`} />
+						<Stat icon={<BsFuelPump />} label={fmt(car.fuel)} />
+						<Stat icon={<PiEngine />} label={engineLabel} />
+						<Stat icon={<PiGauge />} label={`${car.mpg} mpg`} />
 					</div>
+
+					{/* Price */}
 					<div className="flex flex-col items-end min-w-fit">
 						<h1 className="text-accent text-[20pt]">
 							${car.pricePerDay}

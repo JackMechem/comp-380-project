@@ -9,6 +9,7 @@ import FilterButton from "./components/filterButton";
 import SortButtons from "./components/sortButtons";
 import ActiveFilters from "./components/activeFilters";
 import InfiniteCarList from "./components/InfiniteCarList";
+import LayoutToggle from "./components/layoutToggle";
 
 type Params = { [key: string]: string | string[] | undefined };
 
@@ -45,17 +46,52 @@ const CarCardSkeleton = () => (
 	</div>
 );
 
-const CarGridSkeleton = () => (
-	<div className="grid xl:grid-cols-2 grid-cols-1 w-full gap-[20px] px-[10px]">
+const CarListSkeleton = () => (
+	<div className="grid grid-cols-1 w-full gap-[20px] px-[10px]">
 		{Array.from({ length: 8 }).map((_, i) => (
 			<CarCardSkeleton key={i} />
 		))}
 	</div>
 );
 
+const CarGridCardSkeleton = () => (
+	<div className="rounded-xl overflow-hidden bg-primary shadow-md flex flex-col">
+		<div className="w-full h-[180px] bg-third animate-pulse" />
+		<div className="px-[16px] py-[14px] flex flex-col gap-[10px]">
+			<div className="flex flex-col gap-[6px]">
+				<div className="h-[18px] w-[70%] bg-third rounded animate-pulse" />
+				<div className="h-[14px] w-[30%] bg-third rounded animate-pulse" />
+			</div>
+			<div className="flex flex-col gap-[6px]">
+				<div className="h-[13px] w-[50%] bg-third rounded animate-pulse" />
+				<div className="h-[13px] w-[40%] bg-third rounded animate-pulse" />
+				<div className="h-[13px] w-[55%] bg-third rounded animate-pulse" />
+			</div>
+			<div className="flex justify-between items-center pt-[6px]">
+				<div className="h-[22px] w-[70px] bg-third rounded animate-pulse" />
+				<div className="h-[28px] w-[80px] bg-third rounded-full animate-pulse" />
+			</div>
+		</div>
+	</div>
+);
+
+const CarGridSkeleton = () => (
+	<div className="grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 w-full gap-[16px] px-[10px]">
+		{Array.from({ length: 8 }).map((_, i) => (
+			<CarGridCardSkeleton key={i} />
+		))}
+	</div>
+);
+
 // --- Async data components ---
 
-const CarResults = async ({ p }: { p: Params }) => {
+const CarResults = async ({
+	p,
+	layout,
+}: {
+	p: Params;
+	layout: "list" | "grid";
+}) => {
 	const filterParams: CarApiParams = {
 		page: 1,
 		pageSize: num(p.pageSize),
@@ -98,6 +134,7 @@ const CarResults = async ({ p }: { p: Params }) => {
 			initialCars={carsPages.data}
 			totalPages={carsPages.totalPages}
 			filterParams={filterParams}
+			layout={layout}
 		/>
 	);
 };
@@ -119,6 +156,7 @@ const BrowsePage = async ({
 	searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
 	const p = (await searchParams) ?? {};
+	const layout = p.layout === "grid" ? "grid" : "list";
 	const paramsKey = JSON.stringify(p);
 
 	return (
@@ -138,12 +176,17 @@ const BrowsePage = async ({
 				activeFilters={<ActiveFilters className="self-center" />}
 			/>
 			<div className="2xl:px-[200px] lg:px-[50px] pt-[15px] pb-[50px] w-full h-fill bg-primary m-0">
-				<div className="mt-8 mb-4 w-full px-4 flex lg:flex-row flex-col gap-4 justify-between items-start">
-					<SortButtons />
-                    <ActiveFilters className="self-center" />
+				<ActiveFilters className="self-center mt-6 ml-6" />
+				<div className="mt-8 mb-4 w-full px-4 flex flex-row gap-4 justify-between items-start">
+					<div className="flex items-center justify-between gap-2">
+						<SortButtons />
+					</div>
+					<Suspense>
+						<LayoutToggle />
+					</Suspense>
 				</div>
-				<Suspense key={paramsKey} fallback={<CarGridSkeleton />}>
-					<CarResults p={p} />
+				<Suspense key={paramsKey} fallback={layout === "grid" ? <CarGridSkeleton /> : <CarListSkeleton />}>
+					<CarResults p={p} layout={layout} />
 				</Suspense>
 			</div>
 		</div>
