@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -14,13 +14,15 @@ import { useFilterParams } from "@/app/browse/components/useFilterParams";
 const COMPACT_SCROLL_THRESHOLD = 100;
 const COMPACT_SCROLL_HYSTERESIS = 60;
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const AUTH = "Basic " + btoa("jim:intentionallyInsecurePassword#3");
+
+interface Suggestion { vin: string; make: string; model: string; }
+
 interface NavHeaderProps {
 	white?: boolean;
-	/** Sort + full filter controls — shown on desktop in the header row (browse page) */
 	filterControls?: React.ReactNode;
-	/** Just the filter button — shown on mobile next to the search row (browse page) */
 	mobileFilterButton?: React.ReactNode;
-	/** Active filter pills — shown as a sub-row inside the sticky header */
 	activeFilters?: React.ReactNode;
 }
 
@@ -33,6 +35,13 @@ const NavHeader = ({
 	const [isExpanded, setIsExpanded] = useState(true);
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [untilDate, setUntilDate] = useState<Date | undefined>(undefined);
+	const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+	const [showSuggestions, setShowSuggestions] = useState(false);
+	const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+	const searchBarRef = useRef<HTMLDivElement>(null);
+	const lastRequestTime = useRef(0);
+	const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const router = useRouter();
 	const pathname = usePathname();
@@ -62,15 +71,125 @@ const NavHeader = ({
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, [white]);
 
+	// Suggestions fetch with 1 s cooldown between requests
+	useEffect(() => {
+		if (pendingTimer.current) clearTimeout(pendingTimer.current);
+
+		if (!searchText.trim()) {
+			setSuggestions([]);
+			setLoadingSuggestions(false);
+			return;
+		}
+
+		const doFetch = async () => {
+			lastRequestTime.current = Date.now();
+			setLoadingSuggestions(true);
+			try {
+				const p = new URLSearchParams({ search: searchText, select: "vin,make,model", pageSize: "6" });
+				const res = await fetch(`${API_BASE}/cars?${p}`, {
+					headers: { Authorization: AUTH },
+				});
+				if (res.ok) {
+					const data = await res.json();
+					setSuggestions(data.data ?? []);
+					setHighlightedIndex(-1);
+				}
+			} catch { /* ignore */ }
+			setLoadingSuggestions(false);
+		};
+
+		const elapsed = Date.now() - lastRequestTime.current;
+		const delay = elapsed >= 1000 ? 0 : 1000 - elapsed;
+		pendingTimer.current = setTimeout(doFetch, delay);
+
+		return () => {
+			if (pendingTimer.current) clearTimeout(pendingTimer.current);
+		};
+	}, [searchText]);
+
+	// Close suggestions on outside click
+	useEffect(() => {
+		const handler = (e: MouseEvent) => {
+			if (searchBarRef.current && !searchBarRef.current.contains(e.target as Node))
+				setShowSuggestions(false);
+		};
+		document.addEventListener("mousedown", handler);
+		return () => document.removeEventListener("mousedown", handler);
+	}, []);
+
 	const handleSearch = () => {
+		setShowSuggestions(false);
+		setHighlightedIndex(-1);
 		if (pathname === "/browse") {
 			set({ search: searchText || undefined });
 		} else {
-			const params = new URLSearchParams();
-			if (searchText.trim()) params.set("search", searchText);
-			router.push(`/browse${params.size ? `?${params}` : ""}`);
+			const p = new URLSearchParams();
+			if (searchText.trim()) p.set("search", searchText);
+			router.push(`/browse${p.size ? `?${p}` : ""}`);
 		}
 	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (!showSuggestions || suggestions.length === 0) {
+			if (e.key === "Enter") handleSearch();
+			return;
+		}
+		if (e.key === "Tab") {
+			e.preventDefault();
+			const next = e.shiftKey
+				? (highlightedIndex <= 0 ? suggestions.length - 1 : highlightedIndex - 1)
+				: (highlightedIndex >= suggestions.length - 1 ? 0 : highlightedIndex + 1);
+			setHighlightedIndex(next);
+		} else if (e.key === "ArrowDown") {
+			e.preventDefault();
+			setHighlightedIndex((i) => (i >= suggestions.length - 1 ? 0 : i + 1));
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			setHighlightedIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
+		} else if (e.key === "Enter") {
+			if (highlightedIndex >= 0) {
+				handleSuggestionClick(suggestions[highlightedIndex]);
+			} else {
+				handleSearch();
+			}
+		} else if (e.key === "Escape") {
+			setShowSuggestions(false);
+			setHighlightedIndex(-1);
+		}
+	};
+
+	const handleSuggestionClick = (s: Suggestion) => {
+		setSearchText(`${s.make} ${s.model}`);
+		setShowSuggestions(false);
+	};
+
+	const suggestionDropdown = showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
+		<div className="absolute top-full left-0 right-0 mt-2 bg-primary border border-third rounded-2xl shadow-xl overflow-hidden z-50">
+			{loadingSuggestions ? (
+				<div className="flex items-center justify-center py-[14px]">
+					<div className="w-[18px] h-[18px] rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+				</div>
+			) : (
+				suggestions.map((s, i) => (
+					<button
+						key={s.vin}
+						onMouseDown={(e) => {
+							e.preventDefault();
+							handleSuggestionClick(s);
+						}}
+						onMouseEnter={() => setHighlightedIndex(i)}
+						onMouseLeave={() => setHighlightedIndex(-1)}
+						className={`w-full text-left px-[16px] py-[10px] text-foreground text-[11pt] flex items-center gap-2 duration-100 cursor-pointer ${
+							highlightedIndex === i ? "bg-accent/10" : "hover:bg-accent/10"
+						}`}
+					>
+						<BiSearch className="text-foreground/40 flex-shrink-0" />
+						<span>{s.make} {s.model}</span>
+					</button>
+				))
+			)}
+		</div>
+	);
 
 	const searchButton = (
 		<button
@@ -115,10 +234,11 @@ const NavHeader = ({
 					)}
 				</Link>
 
-				{/* Desktop search bar — hidden on mobile when a mobile row is provided */}
+				{/* Desktop search bar */}
 				{!isWhite && (
 					<div
-						className={`flex-1 max-w-[500px] ${
+						ref={searchBarRef}
+						className={`relative flex-1 max-w-[500px] ${
 							mobileFilterButton ? "lg:flex hidden" : "md:flex hidden"
 						} items-center gap-3 bg-primary border border-third rounded-full pl-5 pr-[5px] h-[48px] focus-within:border-accent duration-150`}
 					>
@@ -129,8 +249,12 @@ const NavHeader = ({
 							<input
 								placeholder="Make & model"
 								value={searchText}
-								onChange={(e) => setSearchText(e.target.value)}
-								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+								onChange={(e) => {
+									setSearchText(e.target.value);
+									setShowSuggestions(true);
+								}}
+								onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+								onKeyDown={handleKeyDown}
 								className="outline-none text-foreground w-full text-sm leading-none"
 							/>
 						</div>
@@ -163,6 +287,7 @@ const NavHeader = ({
 							/>
 						</div>
 						{searchButton}
+						{suggestionDropdown}
 					</div>
 				)}
 
@@ -172,7 +297,7 @@ const NavHeader = ({
 					</div>
 				)}
 
-				{/* Right side: desktop filter controls + menu button */}
+				{/* Right side: menu button */}
 				<div
 					className={`flex items-center h-full gap-1 flex-shrink-0 ml-auto ${
 						isWhite ? "text-primary" : "text-accent"
@@ -182,16 +307,23 @@ const NavHeader = ({
 				</div>
 			</div>
 
-			{/* ── Mobile search + filter row (browse page only) ── */}
+			{/* ── Mobile search + filter row ── */}
 			{!isWhite && mobileFilterButton && (
 				<div className="lg:hidden flex items-center gap-2 px-3 pb-3">
-					<div className="flex items-center gap-2 bg-primary border border-third rounded-full pl-4 pr-1 h-[44px] focus-within:border-accent duration-150 w-full">
+					<div
+						ref={searchBarRef}
+						className="relative flex items-center gap-2 bg-primary border border-third rounded-full pl-4 pr-1 h-[44px] focus-within:border-accent duration-150 w-full"
+					>
 						<input
 							placeholder="Make & model"
 							value={searchText}
-							onChange={(e) => setSearchText(e.target.value)}
-							onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-							className="outline-none text-foreground flex-1 min-w-0 text-sm  w-full"
+							onChange={(e) => {
+								setSearchText(e.target.value);
+								setShowSuggestions(true);
+							}}
+							onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+							onKeyDown={handleKeyDown}
+							className="outline-none text-foreground flex-1 min-w-0 text-sm w-full"
 						/>
 						<div className="w-[1px] h-[24px] bg-third/50 flex-shrink-0" />
 						<div className="flex-shrink-0">
@@ -218,6 +350,7 @@ const NavHeader = ({
 							/>
 						</div>
 						{searchButton}
+						{suggestionDropdown}
 					</div>
                     {mobileFilterButton}
 				</div>

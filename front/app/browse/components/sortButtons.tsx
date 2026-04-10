@@ -7,7 +7,7 @@ const SortButtons = () => {
 	const { get, set } = useFilterParams();
 
 	return (
-		<div className="flex gap-[0px] border-transparent hover:border-third/50 hover:bg-primary-dark rounded-xl p-[5px] items-stretch">
+		<div className="flex gap-[0px] border border-transparent hover:border-third/50 hover:bg-primary-dark rounded-xl p-[5px] items-stretch">
 			<button
 				key={get("sortDir") ?? "asc"}
 				onClick={() => {

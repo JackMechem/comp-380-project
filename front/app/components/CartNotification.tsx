@@ -17,7 +17,7 @@ const CartNotification = () => {
 
     return (
         <div
-            className="fixed top-[90px] right-[24px] z-[100] w-[300px] flex flex-col gap-[4px] animate-in fade-in slide-in-from-bottom-4 duration-200"
+            className="fixed top-[90px] left-[24px] z-[100] w-[300px] flex flex-col gap-[4px] animate-in fade-in slide-in-from-bottom-4 duration-200"
             onClick={clearNotification}
         >
             <div className="w-full flex gap-[10px] text-[12pt] border border-third rounded-xl bg-primary shadow-lg cursor-pointer">
