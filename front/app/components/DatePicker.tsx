@@ -21,7 +21,10 @@ interface DatePickerProps {
 const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selected, onSelect, fromDate, disabledRanges = [] }: DatePickerProps) => {
     const [open, setOpen] = useState(false);
     const [viewMonth, setViewMonth] = useState(selected ?? new Date());
+    const [popupAlign, setPopupAlign] = useState<"center" | "left" | "right">("center");
+    const [popupAbove, setPopupAbove] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const popupRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -32,6 +35,15 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (!open || !popupRef.current) return;
+        const rect = popupRef.current.getBoundingClientRect();
+        setPopupAbove(rect.bottom > window.innerHeight - 8);
+        if (rect.right > window.innerWidth - 8) setPopupAlign("right");
+        else if (rect.left < 8) setPopupAlign("left");
+        else setPopupAlign("center");
+    }, [open]);
 
     const buildCalendarDays = () => {
         const start = startOfWeek(startOfMonth(viewMonth));
@@ -63,6 +75,8 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
                 type="button"
                 onClick={() => {
                     setViewMonth(selected ?? new Date());
+                    setPopupAlign("center");
+                    setPopupAbove(false);
                     setOpen((prev) => !prev);
                 }}
                 className="outline-none text-foreground w-full text-left text-sm truncate"
@@ -71,7 +85,18 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
             </button>
 
             {open && (
-                <div className="absolute top-full z-[10] left-1/2 -translate-x-1/2 mt-3 z-50 bg-primary border border-third rounded-2xl shadow-xl p-4 w-[280px]">
+                <div
+                    ref={popupRef}
+                    className={`absolute z-50 bg-primary border border-third rounded-2xl shadow-xl p-4 w-[280px] ${
+                        popupAbove ? "bottom-full mb-3" : "top-full mt-3"
+                    } ${
+                        popupAlign === "right"
+                            ? "right-0"
+                            : popupAlign === "left"
+                            ? "left-0"
+                            : "left-1/2 -translate-x-1/2"
+                    }`}
+                >
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                         <button
