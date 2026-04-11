@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getFilteredCars } from "../lib/CarApi";
+import { getAllMakes, getFilteredCars } from "../lib/CarApi";
 import { getAllEnums } from "../lib/EnumApi";
 import { CarPages } from "../types/CarTypes";
 import { CarApiParams } from "../types/CarTypes";
@@ -140,8 +140,8 @@ const CarResults = async ({
 };
 
 const FilterButtonWithEnums = async () => {
-	const enums: CarEnums = await getAllEnums();
-	return <FilterButton enums={enums} />;
+	const [enums, makes]: [CarEnums, string[]] = await Promise.all([getAllEnums(), getAllMakes()]);
+	return <FilterButton enums={enums} makes={makes} />;
 };
 
 const FilterButtonSkeleton = () => (

@@ -19,6 +19,7 @@ export const useFilterParams = () => {
 			isExternalChange.current = false;
 			return;
 		}
+
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setParams(
 			Object.fromEntries(searchParams.entries()) as Partial<CarApiParams>,

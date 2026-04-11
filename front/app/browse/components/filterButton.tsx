@@ -6,14 +6,16 @@ import { CarEnums } from "@/app/types/CarEnums";
 
 interface FilterButtonProps {
     enums: CarEnums;
+    makes: string[];
 }
 
-const FilterButton = ({ enums }: FilterButtonProps) => {
-    const { toggleFilter, registerEnums } = useSidebarStore();
+const FilterButton = ({ enums, makes }: FilterButtonProps) => {
+    const { toggleFilter, registerEnums, registerMakes } = useSidebarStore();
 
     useEffect(() => {
         registerEnums(enums);
-    }, [enums]);
+        registerMakes(makes);
+    }, [enums, makes]);
 
     return (
         <button
