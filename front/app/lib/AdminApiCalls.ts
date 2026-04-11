@@ -55,6 +55,30 @@ export const addCar = async (car: Car, username: string, password: string) => {
 	return res.text();
 };
 
+export const editCar = async (car: Car, username: string, password: string) => {
+
+	const token = btoa(`${username}:${password}`);
+
+	const res: Response = await fetch(
+		`${process.env.NEXT_PUBLIC_API_BASE_URL}/cars/${car.vin}`,
+		{
+			next: { revalidate: Number(process.env.NEXT_PUBLIC_REVALIDATE_SECONDS) },
+			method: "PATCH",
+            body: JSON.stringify(car),
+			headers: {
+				Authorization: `Basic ${token}`,
+				"Content-Type": "application/json",
+			},
+		},
+	);
+
+	if (!res.ok) {
+		throw new Error(await res.text());
+	}
+
+	return res.text();
+};
+
 
 export const deleteCar = async (vin: string, username: string, password: string) => {
 
