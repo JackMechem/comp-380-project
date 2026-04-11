@@ -2,6 +2,7 @@ package com.inc.fcr;
 
 import com.inc.fcr.car.Car;
 import com.inc.fcr.car.CarController;
+import com.inc.fcr.car.CarMakeController;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.reservation.ReservationController;
 import com.inc.fcr.user.User;
@@ -31,8 +32,8 @@ public class Main {
                 openApiConfig.withDefinitionConfiguration((version, definition) -> definition
                         .withInfo(info -> info
                                 .title("FCR Inc API")
-                                .description("Car rental API")
-                        ).withSecurity(security -> security.withBasicAuth()));
+                                .description("Car rental API"))
+                        .withSecurity(security -> security.withBasicAuth()));
             })
 
             );
@@ -66,6 +67,9 @@ public class Main {
                 path("cars", () -> {
                     get(cars::getAll, Role.ANYONE);
                     post(cars::create, Role.WRITE);
+                    path("/makes", () -> {
+                        get(CarMakeController::getDistinctMakes, Role.ANYONE);
+                    });
                     path("{id}", () -> {
                         get(cars::getOne, Role.ANYONE);
                         patch(cars::update, Role.WRITE);
