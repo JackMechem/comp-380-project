@@ -21,7 +21,7 @@ const LayoutToggle = () => {
 	return (
 		<button
 			onClick={toggle}
-			className="text-foreground flex items-center justify-center px-[6px] py-[5px] rounded-xl hover:bg-primary-dark text-[18pt] border border-transparent cursor-pointer duration-[200ms]"
+			className="text-foreground flex items-center justify-center px-[6px] py-[5px] rounded-xl hover:bg-primary-dark text-[18pt] border border-transparent cursor-pointer hover:border-third/80"
 			title={isGrid ? "Switch to list view" : "Switch to grid view"}
 		>
 			{isGrid ? <BsList /> : <BsGrid />}

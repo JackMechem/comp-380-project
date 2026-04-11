@@ -11,6 +11,7 @@ interface FilterBarDropdownProps {
 	options: QueryOption[];
 	defaultValue?: string;
 	showAll?: boolean;
+	className?: string;
 	onChange: (value: string | null) => void;
 }
 
@@ -19,6 +20,7 @@ const FilterBarDropdown = ({
 	options,
 	defaultValue,
 	showAll = true,
+	className,
 	onChange,
 }: FilterBarDropdownProps) => {
 	const [selected, setSelected] = useState<string>(
@@ -31,7 +33,7 @@ const FilterBarDropdown = ({
 	};
 
 	return (
-		<div className="flex flex-col gap-[4px]">
+		<div className={`flex flex-col gap-[4px] ${className ?? ""}`}>
 			{label != "" && (
 				<label className="text-foreground-light text-[8pt]">{label}</label>
 			)}
