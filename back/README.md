@@ -46,7 +46,7 @@ All endpoints support path ID selected by appending `/{id}`
 - api/users
 
 ## Query Parameters
-Endpoints also support query parameters by appending `?param1=abc&param2=50&param3=x,y,z`
+Endpoints also support query parameters by appending `?param1=abc&param2=50&param3=x,y,z` <br>
 Query params commonly supported include searching, sorting, selecting, and filtering
 
 When adding searchable fields in entities:
