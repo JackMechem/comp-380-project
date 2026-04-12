@@ -93,10 +93,10 @@ Follow these steps when creating a new entity endpoint
       }
 ```
 4. Create getters/setters that make sense
-- Warning: *All* getters will be run and returned in API get requests
-  - Use `@JsonIgnore` to prevent a getter from being returned
-- Setters provided will be used by API create/update requests
-  - Don't create setters for values that are mapped by another entity or generated
+   - Warning: *All* getters will be run and returned in API get requests
+     - Use `@JsonIgnore` to prevent a getter from being returned
+   - Setters provided will be used by API create/update requests
+     - Don't create setters for values that are mapped by another entity or generated
 5. Register your entity in the file `utils/HibernateUtil`
    - `configuration.addAnnotatedClass(YourEntityClass.class);`
 6. Register your entity APIController in Main (Long.class represents the entity's key type)
