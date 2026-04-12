@@ -95,6 +95,7 @@ Follow these steps when creating a new entity endpoint
 4. Create getters/setters that make sense
    - Warning: *All* getters will be run and returned in API get requests
      - Use `@JsonIgnore` to prevent a getter from being returned
+     - Create extra getters for the API that return foreign entity IDs (don't allow them to return nested whole)
    - Setters provided will be used by API create/update requests
      - Don't create setters for values that are mapped by another entity or generated
 5. Register your entity in the file `utils/HibernateUtil`

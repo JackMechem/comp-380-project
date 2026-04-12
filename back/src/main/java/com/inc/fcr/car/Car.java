@@ -1,5 +1,6 @@
 package com.inc.fcr.car;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
@@ -94,7 +95,7 @@ public class Car {
     private RoofType roofType;
     @Enumerated(EnumType.STRING)
     private VehicleClass vehicleClass;
-    @OneToMany(mappedBy = "car") @JsonManagedReference
+    @OneToMany(mappedBy = "car") @JsonManagedReference @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
     // --- CONSTRUCTORS ---
@@ -192,7 +193,9 @@ public class Car {
     public VehicleClass getVehicleClass() { return vehicleClass; }
     public void setVehicleClass(VehicleClass vehicleClass) { this.vehicleClass = vehicleClass; }
 
+    @JsonIgnore
     public List<Reservation> getReservations() { return reservations; }
+    public List<Long> getReservationIds() { return reservations.stream().map(Reservation::getReservationId).toList(); }
 
     // Setters with Validation
 

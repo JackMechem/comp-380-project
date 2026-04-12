@@ -1,5 +1,6 @@
 package com.inc.fcr.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
@@ -32,7 +33,7 @@ public class User {
     @Convert(converter = Converters.JsonDriversLicenseConverter.class)
     @Column(columnDefinition = "json", nullable = false)
     private DriversLicense driversLicense;
-    @OneToMany(mappedBy = "user") @JsonManagedReference
+    @OneToMany(mappedBy = "user") @JsonManagedReference @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
     @Column(nullable = false)
     private Instant dateCreated;
@@ -114,8 +115,12 @@ public class User {
         return dateCreated;
     }
 
+    @JsonIgnore
     public List<Reservation> getReservations() {
         return reservations;
+    }
+    public List<Long> getReservationIds() {
+        return reservations.stream().map(Reservation::getReservationId).toList();
     }
 }
 

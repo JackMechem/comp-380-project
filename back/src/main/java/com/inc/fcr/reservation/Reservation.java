@@ -90,6 +90,9 @@ public class Reservation {
     public User getUser() {
         return user;
     }
+    public long getUserId() {
+        return user.getUserId();
+    }
 
     public Long getReservationId() {
         return reservationId;
@@ -97,6 +100,9 @@ public class Reservation {
 
     public List<Payment> getPayments() {
         return payments;
+    }
+    public List<Long> getPaymentIds() {
+        return payments.stream().map(Payment::getPaymentId).toList();
     }
 
     public Instant getPickUpTime() {
@@ -113,6 +119,9 @@ public class Reservation {
 
     public Car getCar() {
         return car;
+    }
+    public String getCarVin() {
+        return car.getVin();
     }
 
     // Setters
