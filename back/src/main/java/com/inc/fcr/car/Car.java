@@ -20,6 +20,7 @@ import java.util.Map;
 @Table(name = "cars")
 public class Car {
 
+    // Deprecated (old API controller)
     @FunctionalInterface
     public interface ThrowingBiConsumer<T, U> {
         void accept(T t, U u) throws ValidationException;
@@ -53,70 +54,46 @@ public class Car {
             Map.entry("vehicleClass", (c, v) -> c.setVehicleClass(VehicleClass.valueOf(v.asText())))
     );
 
-    @Id 
+    @Id
     @Column(length = 17)
     private String vin;
-
     @SearchField
     @Column(nullable = false)
     private String make;
-
     @SearchField
     @Column(nullable = false)
     private String model;
-
-    @Column(name = "modelYear")
     private int modelYear;
-
     @Column(columnDefinition = "TEXT")
     private String description;
-
     @Column(name = "numCylinders")
     private int cylinders;
-
     private int gears;
     private int horsepower;
     private int torque;
     private int seats;
-
-    @Column(name = "pricePerDay")
     private double pricePerDay;
-
     private double mpg;
-
     @Convert(converter = Converters.JsonListConverter.class)
     @Column(columnDefinition = "json") @SearchField
     private ArrayList<String> features = new ArrayList<>();
-
     @Convert(converter = Converters.JsonListConverter.class)
     @Column(columnDefinition = "json")
     private ArrayList<String> images = new ArrayList<>();
-
     @Enumerated(EnumType.STRING)
     private TransmissionType transmission;
-
     @Enumerated(EnumType.STRING)
     private Drivetrain drivetrain;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "engineLayout")
     private EngineLayout engineLayout;
-
     @Enumerated(EnumType.STRING)
     private FuelType fuel;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "bodyType")
     private BodyType bodyType;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "roofType")
     private RoofType roofType;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "vehicleClass")
     private VehicleClass vehicleClass;
-
     @OneToMany(mappedBy = "car") @JsonManagedReference
     private List<Reservation> reservations = new ArrayList<>();
 
@@ -159,6 +136,7 @@ public class Car {
     }
 
     // --- GETTERS & SETTERS ---
+
     public String getVin() { return vin; }
     public void setVin(String vin) { this.vin = vin; }
 
@@ -217,6 +195,7 @@ public class Car {
     public List<Reservation> getReservations() { return reservations; }
 
     // Setters with Validation
+
     public void setModelYear(int modelYear) throws ValidationException {
         if (modelYear > 0 && modelYear < 10000) {
             this.modelYear = modelYear;
