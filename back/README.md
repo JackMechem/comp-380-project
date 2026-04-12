@@ -37,14 +37,79 @@ docker run -p 8080:8080 fcr-backend
 
 
 # API Structure
-api/cars/{vin}
+All endpoints support path ID selected by appending `/{id}`
 
-WIP
+- api/cars
+- api/enums
+- api/reservations
+- api/payments
+- api/users
 
-## Query Param Notes
+## Query Parameters
+Endpoints also support query parameters by appending `?param1=abc&param2=50&param3=x,y,z`
+Query params commonly supported include searching, sorting, selecting, and filtering
 
 When adding searchable fields in entities:
 
-1. @SearchField annotation on String attributes
-2. Manually run: `ALTER TABLE <table> ADD FULLTEXT INDEX ft_index(<columns>);`
-3. If you want to include a JSON column, you must create a hidden internal generated column converting JSON to plaintext to index it
+1. Add `@SearchField` annotation on String type attributes
+2. ~~Manually run: `ALTER TABLE <table> ADD FULLTEXT INDEX ft_index(<columns>);`~~
+3. ~~If you want to include a JSON column, you must create a hidden internal generated column converting JSON to plaintext to index it~~
+
+## Creating an Entity Endpoint
+Follow these steps when creating a new entity endpoint
+
+1. Create your entity class in its package
+2. Add `jakarta.persistence` annotations:
+   - For the class: `@Entity @Table(name = "dbTableName")`
+   - For the ID attribute (long type recommended): `@Id`
+   - For simple IDs: `@GeneratedValue(strategy = GenerationType.IDENTITY)`
+   - Required attributes: `@Column(nullable = false)`
+   - Enum attributes: `@Enumerated(EnumType.STRING)`
+   - Searchable (String) attributes: `@SearchField`
+   - JSON attributes: (requires a Converter to be made)
+     - `@Convert(converter = Converters.JsonMYOBJECTConverter.class)`
+     - `@Column(columnDefinition = "json", nullable = false)`
+   - Foreign entity reference: (from the entity referencing another)
+     - `@ManyToOne @JsonBackReference`
+     - `@JoinColumn(name = "foreignKeyAttrName", nullable = false)`
+   - Foreign entity referencing this: (from the entity being referenced) 
+     - `@OneToMany(mappedBy = "thisAttrNameOnMainEntity") @JsonManagedReference`
+   - Foreign entity reference: (ManyToMany from the entity referencing)
+```java
+      @ManyToMany @JsonBackReference
+      @JoinTable(name = "reservationPayments",
+              joinColumns = @JoinColumn(name = "mainEntityKeyAttrName"),
+              inverseJoinColumns = @JoinColumn(name = "foreignEntityKeyAttrName")
+      )
+```
+3. Create constructors:
+   - Must include an empty constructor
+   - Include a full/near full constructor (don't try to set values generated, mapped by, or otherwise managed by the database)
+   - Include an ID processing constructor:
+```java
+      public Payment(long id) throws IllegalAccessException {
+         Payment p = (Payment) DatabaseController.getOne(Payment.class, id);
+         EntityController.copyFields(p, this);
+      }
+```
+4. Create getters/setters that make sense
+- Warning: *All* getters will be run and returned in API get requests
+  - Use `@JsonIgnore` to prevent a getter from being returned
+- Setters provided will be used by API create/update requests
+  - Don't create setters for values that are mapped by another entity or generated
+5. Register your entity in the file `utils/HibernateUtil`
+   - `configuration.addAnnotatedClass(YourEntityClass.class);`
+6. Register your entity APIController in Main (Long.class represents the entity's key type)
+   - `APIController yourEntities = new APIController(YourEntityClass.class, Long.class);`
+7. Register your entity's API endpoints and access in Main
+```java
+      path("yourEntities", () -> {
+         get(yourEntities::getAll, Role.ANYONE);
+         post(yourEntities::create, Role.WRITE);
+         path("{id}", () -> {
+            get(yourEntities::getOne, Role.ANYONE);
+            patch(yourEntities::update, Role.WRITE);
+            delete(yourEntities::delete, Role.ADMIN);
+         });
+      });
+```
