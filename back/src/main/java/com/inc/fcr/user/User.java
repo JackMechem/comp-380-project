@@ -37,6 +37,8 @@ public class User {
     @Column(nullable = false)
     private Instant dateCreated;
 
+    // Constructors
+
     public User(String firstName, String lastName, String email, String phoneNumber, Address address, DriversLicense driversLicense, Instant dateCreated) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -52,8 +54,9 @@ public class User {
         EntityController.copyFields(u, this);
     }
 
-    public User() {
-    }
+    public User() {}
+
+    // Getters & Setters
 
     public long getUserId() {
         return userId;

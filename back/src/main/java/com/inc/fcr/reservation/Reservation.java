@@ -38,6 +38,8 @@ public class Reservation {
     @Column(nullable = false)
     private Instant dateBooked;
 
+    // Constructors
+
     public Reservation(Car car, User user, List<Payment> payments, Instant pickUpTime, Instant dropOffTime, Instant dateBooked) {
         this.car = car;
         this.user = user;
@@ -65,6 +67,8 @@ public class Reservation {
 
     public Reservation() {}
 
+    // Methods
+
     public int getDuration() {
         return (int) ChronoUnit.SECONDS.between(pickUpTime,dropOffTime);
     }
@@ -81,7 +85,8 @@ public class Reservation {
         return payments.stream().filter(p -> p.getPaymentId() == paymentId).findFirst().orElse(null);
     }
 
-    // Getters & Setters
+    // Getters
+
     public User getUser() {
         return user;
     }
@@ -109,6 +114,8 @@ public class Reservation {
     public Car getCar() {
         return car;
     }
+
+    // Setters
 
     public void setCar(Car car) {
         this.car = car;

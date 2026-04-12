@@ -31,6 +31,8 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
 
+    // Constructors
+
     public Payment(double totalAmount, double amountPaid, Instant date, PaymentType paymentType) {
         this.totalAmount = totalAmount;
         this.amountPaid = amountPaid;
@@ -44,6 +46,8 @@ public class Payment {
     }
 
     public Payment() {}
+
+    // Methods
 
     public boolean isPaid() {
         return amountPaid >= totalAmount;
@@ -59,6 +63,7 @@ public class Payment {
         return reservations.stream().map(Reservation::getCar).toList();
     }
 
+    // Getters
 
     public Long getPaymentId() {
         return paymentId;
@@ -83,6 +88,8 @@ public class Payment {
     public PaymentType getPaymentType() {
         return paymentType;
     }
+
+    // Setters
 
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
