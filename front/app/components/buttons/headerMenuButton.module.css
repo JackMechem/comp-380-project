@@ -1,0 +1,17 @@
+.button {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	position: relative;
+	border: 1px solid transparent;
+	border-radius: 9999px;
+	padding: 5px 5px 5px 10px;
+	transition: border-color 200ms, background-color 200ms, transform 200ms;
+	cursor: pointer;
+}
+
+.button:hover {
+	border-color: color-mix(in srgb, var(--color-third) 50%, transparent);
+	background-color: color-mix(in srgb, var(--color-primary-dark) 50%, transparent);
+	transform: scale(1.05);
+}

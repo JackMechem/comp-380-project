@@ -14,6 +14,7 @@ import { useFilterParams } from "@/app/hooks/useFilterParams";
 import { useScrollCollapse } from "@/app/hooks/useScrollCollapse";
 import { useSearchSuggestions } from "@/app/hooks/useSearchSuggestions";
 import type { Suggestion } from "@/app/hooks/useSearchSuggestions";
+import styles from "./navHeader.module.css";
 
 const COMPACT_SCROLL_THRESHOLD = 100;
 const COMPACT_SCROLL_HYSTERESIS = 60;
@@ -41,7 +42,9 @@ const NavHeader = ({
 	const pathname = usePathname();
 	const { set, params } = useFilterParams();
 
-	const [searchText, setSearchText] = useState(() => params.search?.toString() ?? "");
+	const [searchText, setSearchText] = useState(
+		() => params.search?.toString() ?? "",
+	);
 	const prevParamSearch = useRef(params.search?.toString() ?? "");
 
 	const paramSearch = params.search?.toString() ?? "";
@@ -50,15 +53,21 @@ const NavHeader = ({
 		setSearchText(paramSearch);
 	}
 
-	const isExpanded = useScrollCollapse(white, COMPACT_SCROLL_THRESHOLD, COMPACT_SCROLL_HYSTERESIS);
+	const isExpanded = useScrollCollapse(
+		white,
+		COMPACT_SCROLL_THRESHOLD,
+		COMPACT_SCROLL_HYSTERESIS,
+	);
 	const isWhite = white && isExpanded;
 
 	const { suggestions, loadingSuggestions } = useSearchSuggestions(searchText);
 
-	// Close suggestions on outside click
 	useEffect(() => {
 		const handler = (e: MouseEvent) => {
-			if (searchBarRef.current && !searchBarRef.current.contains(e.target as Node))
+			if (
+				searchBarRef.current &&
+				!searchBarRef.current.contains(e.target as Node)
+			)
 				setShowSuggestions(false);
 		};
 		document.addEventListener("mousedown", handler);
@@ -90,8 +99,12 @@ const NavHeader = ({
 		if (e.key === "Tab") {
 			e.preventDefault();
 			const next = e.shiftKey
-				? highlightedIndex <= 0 ? suggestions.length - 1 : highlightedIndex - 1
-				: highlightedIndex >= suggestions.length - 1 ? 0 : highlightedIndex + 1;
+				? highlightedIndex <= 0
+					? suggestions.length - 1
+					: highlightedIndex - 1
+				: highlightedIndex >= suggestions.length - 1
+					? 0
+					: highlightedIndex + 1;
 			setHighlightedIndex(next);
 		} else if (e.key === "ArrowDown") {
 			e.preventDefault();
@@ -100,7 +113,8 @@ const NavHeader = ({
 			e.preventDefault();
 			setHighlightedIndex((i) => (i <= 0 ? suggestions.length - 1 : i - 1));
 		} else if (e.key === "Enter") {
-			if (highlightedIndex >= 0) handleSuggestionClick(suggestions[highlightedIndex]);
+			if (highlightedIndex >= 0)
+				handleSuggestionClick(suggestions[highlightedIndex]);
 			else handleSearch();
 		} else if (e.key === "Escape") {
 			setShowSuggestions(false);
@@ -109,38 +123,32 @@ const NavHeader = ({
 	};
 
 	const searchButton = (
-		<button
-			onClick={handleSearch}
-			className="flex-shrink-0 flex items-center justify-center w-[34px] h-[34px] text-[15pt] bg-accent text-primary rounded-full cursor-pointer hover:brightness-110 transition"
-		>
-			<BiSearch />
-		</button>
+		<div className={styles.searchBtnContainer}>
+			<button onClick={handleSearch} className={styles.searchBtn}>
+				<BiSearch />
+			</button>
+		</div>
 	);
 
-	const separator = (
-		<div className="w-[1px] h-[28px] bg-third/50 self-center flex-shrink-0" />
-	);
+	const separator = <div className={styles.separator} />;
 
 	return (
 		<div
-			className={`sticky top-0 z-[10] transition-all duration-200 [overflow-anchor:none] ${
-				isWhite
-					? "border border-transparent"
-					: "bg-primary backdrop-blur-md border-b border-third/30 shadow-sm h-auto"
-			}`}
+			className={`${styles.header} ${isWhite ? styles.headerWhite : styles.headerCompact}`}
 		>
 			{/* ── Main header row ── */}
 			<div
-				className={`relative flex items-center gap-3 mb-0 h-full py-[10px] ${
-					isWhite
-						? "md:px-[100px] px-[40px] md:py-[20px] py-3"
-						: "h-[64px] px-4"
-				}`}
+				className={`${styles.mainRow} ${isWhite ? styles.mainRowWhite : styles.mainRowCompact}`}
 			>
 				{/* Logo */}
-				<Link href="/" className="flex-shrink-0">
+				<Link href="/" className={styles.logoLink}>
 					{isWhite ? (
-						<Image width={200} height={60} src={bigLogoImageWhite} alt="FCR Logo" />
+						<Image
+							width={200}
+							height={80}
+							src={bigLogoImageWhite}
+							alt="FCR Logo"
+						/>
 					) : (
 						<Image width={50} height={50} src={smallLogo} alt="FCR Logo" />
 					)}
@@ -149,16 +157,11 @@ const NavHeader = ({
 				{/* Desktop search bar + filter (centered) */}
 				{!isWhite && (
 					<div
-						className={`absolute left-1/2 -translate-x-1/2 ${
-							mobileFilterButton ? "lg:flex hidden" : "md:flex hidden"
-						} items-center gap-2`}
+						className={`${styles.desktopSearch} ${mobileFilterButton ? styles.desktopSearchHideLg : styles.desktopSearchHideMd}`}
 					>
-						<div
-							ref={searchBarRef}
-							className="relative flex items-center gap-3 bg-primary border border-third rounded-full pl-5 pr-[5px] h-[48px] focus-within:border-accent duration-150 w-[500px]"
-						>
-							<div className="flex-1 min-w-0">
-								<p className="text-[9pt] text-foreground/50 leading-none mb-[2px]">What</p>
+						<div ref={searchBarRef} className={styles.searchBar}>
+							<div className={styles.searchField}>
+								<p className={styles.searchFieldLabel}>What</p>
 								<input
 									placeholder="Make & model"
 									value={searchText}
@@ -166,27 +169,30 @@ const NavHeader = ({
 										setSearchText(e.target.value);
 										setShowSuggestions(true);
 									}}
-									onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+									onFocus={() => {
+										if (suggestions.length > 0) setShowSuggestions(true);
+									}}
 									onKeyDown={handleKeyDown}
-									className="outline-none text-foreground w-full text-sm leading-none"
+									className={styles.searchInput}
 								/>
 							</div>
 							{separator}
-							<div className="w-[110px] flex-shrink-0">
-								<p className="text-[9pt] text-foreground/50 leading-none mb-[2px]">From</p>
+							<div className={styles.datepickerSlot110}>
+								<p className={styles.searchFieldLabel}>From</p>
 								<DatePicker
 									label="From"
 									showLabel={false}
 									selected={fromDate}
 									onSelect={(d) => {
 										setFromDate(d);
-										if (untilDate && d && d > untilDate) setUntilDate(undefined);
+										if (untilDate && d && d > untilDate)
+											setUntilDate(undefined);
 									}}
 								/>
 							</div>
 							{separator}
-							<div className="w-[100px] flex-shrink-0">
-								<p className="text-[9pt] text-foreground/50 leading-none mb-[2px]">Until</p>
+							<div className={styles.datepickerSlot100}>
+								<p className={styles.searchFieldLabel}>Until</p>
 								<DatePicker
 									label="Until"
 									showLabel={false}
@@ -196,27 +202,28 @@ const NavHeader = ({
 								/>
 							</div>
 							{searchButton}
-							{showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
-								<SuggestionsDropdown
-									suggestions={suggestions}
-									loading={loadingSuggestions}
-									highlightedIndex={highlightedIndex}
-									onSelect={handleSuggestionClick}
-									onHover={setHighlightedIndex}
-								/>
-							)}
+							{showSuggestions &&
+								(loadingSuggestions || suggestions.length > 0) && (
+									<SuggestionsDropdown
+										suggestions={suggestions}
+										loading={loadingSuggestions}
+										highlightedIndex={highlightedIndex}
+										onSelect={handleSuggestionClick}
+										onHover={setHighlightedIndex}
+									/>
+								)}
 						</div>
 						{filterControls && (
-							<div className="flex items-center justify-center">{filterControls}</div>
+							<div className={styles.filterControlsWrapper}>
+								{filterControls}
+							</div>
 						)}
 					</div>
 				)}
 
 				{/* Right side: menu button */}
 				<div
-					className={`flex items-center h-full gap-1 flex-shrink-0 ml-auto ${
-						isWhite ? "text-primary" : "text-accent"
-					} text-[20pt]`}
+					className={`${styles.rightSide} ${isWhite ? styles.rightSideWhite : styles.rightSideCompact}`}
 				>
 					<HeaderMenuButton />
 				</div>
@@ -224,11 +231,8 @@ const NavHeader = ({
 
 			{/* ── Mobile search + filter row ── */}
 			{!isWhite && mobileFilterButton && (
-				<div className="lg:hidden flex items-center gap-2 px-3 pb-3">
-					<div
-						ref={searchBarRef}
-						className="relative flex items-center gap-2 bg-primary border border-third rounded-full pl-4 pr-1 h-[44px] focus-within:border-accent duration-150 w-full"
-					>
+				<div className={`${styles.mobileRow} ${styles.mobileRowHideDesktop}`}>
+					<div ref={searchBarRef} className={styles.mobileSearchBar}>
 						<input
 							placeholder="Make & model"
 							value={searchText}
@@ -236,12 +240,14 @@ const NavHeader = ({
 								setSearchText(e.target.value);
 								setShowSuggestions(true);
 							}}
-							onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+							onFocus={() => {
+								if (suggestions.length > 0) setShowSuggestions(true);
+							}}
 							onKeyDown={handleKeyDown}
-							className="outline-none text-foreground flex-1 min-w-0 text-sm w-full"
+							className={styles.mobileSearchInput}
 						/>
-						<div className="w-[1px] h-[24px] bg-third/50 flex-shrink-0" />
-						<div className="flex-shrink-0">
+						<div className={styles.mobileSeparator} />
+						<div className={styles.datepickerSlot}>
 							<DatePicker
 								label="From"
 								showLabel={false}
@@ -253,8 +259,8 @@ const NavHeader = ({
 								}}
 							/>
 						</div>
-						<div className="w-[1px] h-[24px] bg-third/50 flex-shrink-0" />
-						<div className="flex-shrink-0">
+						<div className={styles.mobileSeparator} />
+						<div className={styles.datepickerSlot}>
 							<DatePicker
 								label="Until"
 								showLabel={false}
@@ -265,15 +271,16 @@ const NavHeader = ({
 							/>
 						</div>
 						{searchButton}
-						{showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
-							<SuggestionsDropdown
-								suggestions={suggestions}
-								loading={loadingSuggestions}
-								highlightedIndex={highlightedIndex}
-								onSelect={handleSuggestionClick}
-								onHover={setHighlightedIndex}
-							/>
-						)}
+						{showSuggestions &&
+							(loadingSuggestions || suggestions.length > 0) && (
+								<SuggestionsDropdown
+									suggestions={suggestions}
+									loading={loadingSuggestions}
+									highlightedIndex={highlightedIndex}
+									onSelect={handleSuggestionClick}
+									onHover={setHighlightedIndex}
+								/>
+							)}
 					</div>
 					{mobileFilterButton}
 				</div>

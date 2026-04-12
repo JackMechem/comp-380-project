@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { VscSettings } from "react-icons/vsc";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { CarEnums } from "@/app/types/CarEnums";
+import styles from "./browseBar.module.css";
 
 interface FilterButtonProps {
     enums: CarEnums;
@@ -18,10 +19,7 @@ const FilterButton = ({ enums, makes }: FilterButtonProps) => {
     }, [enums, makes]);
 
     return (
-        <button
-            onClick={toggleFilter}
-            className="text-[20pt] text-accent/80 border border-transparent cursor-pointer hover:bg-primary-dark hover:border-third/70 rounded-2xl text-center px-[15px] h-full py-2"
-        >
+        <button onClick={toggleFilter} className={styles.filterBtn}>
             <VscSettings />
         </button>
     );

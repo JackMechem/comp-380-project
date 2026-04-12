@@ -1,0 +1,109 @@
+/* ── BrowseContentWrapper ────────────────────────────────────────────────────── */
+.contentWrapper {
+	padding-top: 15px;
+	padding-bottom: 50px;
+	padding-left: 20px;
+	padding-right: 20px;
+	width: 100%;
+	background-color: var(--color-primary);
+	transition: padding 200ms;
+}
+
+@media (min-width: 1024px) {
+	.contentWrapperClosed {
+		padding-left: 50px;
+		padding-right: 50px;
+	}
+}
+
+@media (min-width: 1536px) {
+	.contentWrapperClosed {
+		padding-left: 200px;
+		padding-right: 200px;
+	}
+}
+
+/* ── InfiniteCarList ─────────────────────────────────────────────────────────── */
+.listGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	width: 100%;
+	gap: 20px;
+	padding: 0 10px;
+	height: auto;
+	color: var(--color-foreground);
+}
+
+.carGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	width: 100%;
+	gap: 16px;
+	padding: 0 10px;
+	height: auto;
+	color: var(--color-foreground);
+}
+
+@media (min-width: 640px) {
+	.carGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1280px) {
+	.carGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1536px) {
+	.carGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.sentinel {
+	height: 1px;
+}
+
+/* ── BrowsePage ──────────────────────────────────────────────────────────────── */
+.page {
+	width: 100%;
+	height: 100%;
+	background-color: var(--color-primary);
+}
+
+.toolbar {
+	margin-top: 8px;
+	margin-bottom: 16px;
+	width: 100%;
+	padding: 0 16px;
+	display: flex;
+	flex-direction: row;
+	gap: 16px;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.toolbarLeft {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.layoutToggleWrap {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	.layoutToggleWrap { display: block; }
+}
+
+.filterBtnSkeleton {
+	width: 48px;
+	height: 36px;
+	border-radius: 1rem;
+	background-color: var(--color-third);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.activeFiltersMt {
+	align-self: center;
+	margin-top: 24px;
+	margin-left: 24px;
+}

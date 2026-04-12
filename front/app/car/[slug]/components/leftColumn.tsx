@@ -9,6 +9,7 @@ import { TbArrowAutofitDown, TbManualGearbox, TbWheel } from "react-icons/tb";
 import { MdRoofing } from "react-icons/md";
 import Spec from "./Spec";
 import SpecGroup from "./SpecGroup";
+import styles from "./carDetail.module.css";
 
 const LeftColumn = ({ carData }: { carData: Car }) => {
 	const engineLabel =
@@ -17,41 +18,34 @@ const LeftColumn = ({ carData }: { carData: Car }) => {
 			: `${formatEnum(carData.engineLayout)}-${carData.cylinders}`;
 
 	return (
-		<div className="w-full flex flex-col gap-[24px] mt-[20px]">
+		<div className={styles.leftCol}>
 
 			{/* Title */}
-			<div>
-				<h1 className="text-[26pt] font-[700] text-accent leading-[110%]">
+			<div className={styles.titleBlock}>
+				<h1 className={styles.carTitle}>
 					{carData.modelYear}{" "}
 					{carData.make}{" "}
 					{carData.model}
 				</h1>
-				<p className="text-foreground-light text-[11pt] mt-[4px] capitalize">
+				<p className={styles.carSubtitle}>
 					{formatEnum(carData.vehicleClass)} · {formatEnum(carData.bodyType)}
 				</p>
 			</div>
 
 			{/* Feature pills */}
 			{carData.features?.length > 0 && (
-				<div className="flex flex-wrap gap-[8px]">
+				<div className={styles.featurePills}>
 					{carData.features.map((f, i) => (
-						<span
-							key={f + i}
-							className="text-nowrap bg-accent/10 text-accent border border-accent/20 px-[14px] py-[5px] text-[9.5pt] rounded-full font-[500]"
-						>
-							{f}
-						</span>
+						<span key={f + i} className={styles.featurePill}>{f}</span>
 					))}
 				</div>
 			)}
 
 			{/* Specifications card */}
-			<div className="card p-[20px] flex flex-col gap-[16px] w-fit self-start">
-				<p className="text-foreground text-[11pt] font-[600] pb-[4px] border-b border-third/50">
-					Specifications
-				</p>
+			<div className={`card ${styles.specsCard}`}>
+				<p className={styles.specsCardTitle}>Specifications</p>
 
-				<div className="flex flex-row flex-wrap gap-[40px]">
+				<div className={styles.specsGrid}>
 					<SpecGroup title="Performance">
 						<Spec icon={<PiLightning />} label="Horsepower" value={`${carData.horsepower} hp`} />
 						<Spec icon={<TbWheel />} label="Torque" value={`${carData.torque} lb-ft`} />
@@ -75,16 +69,7 @@ const LeftColumn = ({ carData }: { carData: Car }) => {
 
 			{/* Description */}
 			{carData.description && (
-				<div
-					className="prose prose-sm max-w-none
-					[&_h1]:text-foreground [&_h1]:text-[16pt] [&_h1]:font-[700] [&_h1]:mb-[8px]
-					[&_h2]:text-foreground [&_h2]:text-[13pt] [&_h2]:font-[600] [&_h2]:mb-[6px]
-					[&_h3]:text-foreground [&_h3]:text-[11.5pt] [&_h3]:font-[600]
-					[&_p]:text-foreground [&_p]:text-[11pt] [&_p]:leading-[1.7] [&_p]:mb-[10px]
-					[&_strong]:text-foreground [&_strong]:font-[600]
-					[&_ul]:list-disc [&_ul]:pl-[20px] [&_ul]:mb-[10px]
-					[&_li]:text-foreground [&_li]:text-[11pt] [&_li]:mb-[4px]"
-				>
+				<div className={styles.description}>
 					<Markdown>{carData.description}</Markdown>
 				</div>
 			)}

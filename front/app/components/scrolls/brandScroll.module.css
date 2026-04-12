@@ -1,0 +1,14 @@
+.scroll {
+	position: relative;
+	display: flex;
+	gap: 15px;
+	padding: 10px;
+	width: 100%;
+	overflow-x: scroll;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.scroll::-webkit-scrollbar {
+	display: none;
+}

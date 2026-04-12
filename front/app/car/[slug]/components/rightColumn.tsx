@@ -6,6 +6,7 @@ import { CartProps } from "@/app/types/CartTypes";
 import { Car } from "@/app/types/CarTypes";
 import { useCartStore } from "@/stores/cartStore";
 import { useState } from "react";
+import styles from "./carDetail.module.css";
 
 const carToCartProps = (car: Car, startDate?: Date, endDate?: Date): CartProps => ({
 	vin: car.vin,
@@ -16,8 +17,6 @@ const carToCartProps = (car: Car, startDate?: Date, endDate?: Date): CartProps =
 	startDate: startDate?.toISOString(),
 	endDate: endDate?.toISOString(),
 });
-
-const labelCls = "text-[8pt] font-[700] uppercase tracking-wider text-foreground-light mb-[6px] block";
 
 const RightColumn = ({ carData }: { carData: Car }) => {
 	const { addCar, removeCar, inCart } = useCartStore();
@@ -31,26 +30,26 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 	if (!hydrated) return null;
 
 	return (
-		<div className="card flex flex-col gap-[16px] md:w-[380px] w-full flex-shrink-0 h-fit mt-[20px] p-[20px]">
+		<div className={`card ${styles.rightCol}`}>
 
 			{/* Price */}
-			<div>
-				<p className="text-accent text-[24pt] font-[500] leading-none">
+			<div className={styles.priceBlock}>
+				<p className={styles.priceMain}>
 					${carData.pricePerDay}
-					<span className="text-[14pt] font-[400] text-accent/70">/day</span>
+					<span className={styles.priceSuffix}>/day</span>
 				</p>
-				<p className="text-foreground-light text-[10pt] mt-[4px]">Before taxes</p>
+				<p className={styles.priceSub}>Before taxes</p>
 			</div>
 
-			<div className="w-full h-[1px] bg-third/60" />
+			<div className={styles.divider} />
 
 			{/* Date pickers */}
-			<div className="flex flex-col gap-[12px]">
-				<p className="text-foreground text-[11pt] font-[600]">Your Trip</p>
-				<div className="grid grid-cols-2 gap-[10px]">
+			<div className={styles.tripSection}>
+				<p className={styles.tripTitle}>Your Trip</p>
+				<div className={styles.datepickerGrid}>
 					<div>
-						<label className={labelCls}>Trip Start</label>
-						<div className="border border-third rounded-xl px-[12px] py-[10px] focus-within:border-accent/60 transition">
+						<label className={styles.datepickerLabel}>Trip Start</label>
+						<div className={styles.datepickerBox}>
 							<DatePicker
 								label="Trip Start"
 								showLabel={false}
@@ -65,8 +64,8 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 						</div>
 					</div>
 					<div>
-						<label className={labelCls}>Trip End</label>
-						<div className="border border-third rounded-xl px-[12px] py-[10px] focus-within:border-accent/60 transition">
+						<label className={styles.datepickerLabel}>Trip End</label>
+						<div className={styles.datepickerBox}>
 							<DatePicker
 								label="Trip End"
 								showLabel={false}
@@ -80,13 +79,11 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 				</div>
 			</div>
 
-			<div className="w-full h-[1px] bg-third/60" />
+			<div className={styles.divider} />
 
 			{/* Hint */}
 			{!isInCart && (!startDate || !endDate) && (
-				<p className="text-center text-[9.5pt] text-foreground-light/70">
-					Select trip dates to add to cart
-				</p>
+				<p className={styles.hint}>Select trip dates to add to cart</p>
 			)}
 
 			{/* CTA */}
@@ -97,12 +94,7 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 						? removeCar(carData.vin)
 						: addCar(carToCartProps(carData, startDate, endDate))
 				}
-				className={`w-full py-[12px] rounded-xl font-[600] text-[11pt] transition duration-[100ms] cursor-pointer
-					disabled:opacity-40 disabled:cursor-not-allowed
-					${isInCart
-						? "bg-third text-foreground hover:bg-accent/20 hover:text-accent/80 border border-third"
-						: "bg-accent text-primary hover:brightness-110 hover:scale-[101%]"
-					}`}
+				className={`${styles.ctaBtn} ${isInCart ? styles.ctaBtnRemove : styles.ctaBtnAdd}`}
 			>
 				{isInCart ? "Remove from cart" : "Add to cart"}
 			</button>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { BiX } from "react-icons/bi";
-import { inputCls } from "./Field";
+import styles from "./adminForm.module.css";
 
 interface FeatureTagsProps {
 	features: string[];
@@ -33,30 +33,27 @@ const FeatureTags = ({ features, onChange }: FeatureTagsProps) => {
 	};
 
 	return (
-		<div className="flex flex-col gap-[8px]">
+		<div className={styles.featureTagsWrapper}>
 			<div
-				className={`${inputCls} flex flex-wrap gap-[6px] items-center min-h-[44px] h-auto py-[8px] cursor-text`}
+				className={styles.featureTagsBox}
 				onClick={(e) =>
 					(e.currentTarget.querySelector("input") as HTMLInputElement)?.focus()
 				}
 			>
 				{features.map((tag, index: number) => (
-					<span
-						key={tag + index.toString()}
-						className="flex items-center gap-[4px] bg-accent/10 text-accent text-[9.5pt] font-[500] px-[10px] py-[3px] rounded-full"
-					>
+					<span key={tag + index.toString()} className={styles.featureTag}>
 						{tag}
 						<button
 							type="button"
 							onClick={() => remove(tag)}
-							className="cursor-pointer hover:text-accent/60 transition-colors leading-none"
+							className={styles.featureTagRemove}
 						>
-							<BiX className="text-[11pt]" />
+							<BiX />
 						</button>
 					</span>
 				))}
 				<input
-					className="outline-none bg-transparent text-foreground text-[10.5pt] placeholder:text-foreground-light/60 flex-1 min-w-[140px]"
+					className={styles.featureTagInput}
 					placeholder={
 						features.length === 0
 							? "e.g. Heated seats — press Enter to add"

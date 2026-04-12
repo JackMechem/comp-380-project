@@ -1,0 +1,27 @@
+.pillGroup {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.pill {
+	padding: 8px 14px;
+	border-radius: 9999px;
+	border: 1px solid var(--color-third);
+	font-size: 10pt;
+	cursor: pointer;
+	transition: border-color 150ms, background-color 150ms, color 150ms;
+	background: none;
+	color: var(--color-foreground);
+}
+
+.pill:hover {
+	border-color: var(--color-foreground);
+}
+
+.pillActive {
+	border-color: var(--color-foreground);
+	background-color: var(--color-foreground);
+	color: var(--color-primary);
+	font-weight: 500;
+}

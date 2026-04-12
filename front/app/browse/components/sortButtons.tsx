@@ -2,28 +2,21 @@
 import FilterBarDropdown from "./filterBarDropdown";
 import { PiSortAscending, PiSortDescending } from "react-icons/pi";
 import { useFilterParams } from "./useFilterParams";
+import styles from "./browseBar.module.css";
 
 const SortButtons = () => {
 	const { get, set } = useFilterParams();
 
 	return (
-		<div className="flex gap-[0px] border border-transparent hover:border-third/50 hover:bg-primary-dark rounded-xl p-[5px] items-stretch">
+		<div className={styles.sortGroup}>
 			<button
 				key={get("sortDir") ?? "asc"}
 				onClick={() => {
 					set({ sortDir: get("sortDir") == "desc" ? "asc" : "desc" });
 				}}
-				className="text-foreground flex items-center justify-center w-auto px-[6px] mr-[-10px] z-1 h-auto rounded-xl hover:bg-accent/10 text-[18pt] border border-transparent cursor-pointer duration-[200ms]"
+				className={styles.sortDirBtn}
 			>
-				{get("sortDir") == "desc" ? (
-					<>
-						<PiSortAscending />
-					</>
-				) : (
-					<>
-						<PiSortDescending />
-					</>
-				)}
+				{get("sortDir") == "desc" ? <PiSortAscending /> : <PiSortDescending />}
 			</button>
 			{get("sortBy") !== null && (
 				<FilterBarDropdown

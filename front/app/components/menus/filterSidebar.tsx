@@ -4,13 +4,13 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useFilterParams } from "@/app/browse/components/useFilterParams";
 import FilterBarDropdown from "@/app/browse/components/filterBarDropdown";
 import FilterBarNumberRangeInline from "@/app/browse/components/filterBarNumberRangeInline";
-import FilterBarInput from "@/app/browse/components/filterBarInput";
 import PillSelect from "@/app/browse/components/pillSelect";
 import { BiX } from "react-icons/bi";
+import styles from "./filterSidebar.module.css";
 
-const Divider = () => <div className="w-full h-[1px] bg-third/50" />;
+const Divider = () => <div className={styles.divider} />;
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-	<p className="text-foreground text-[13pt] font-[600]">{children}</p>
+	<p className={styles.sectionTitle}>{children}</p>
 );
 
 const toOptions = (values: string[] = []) =>
@@ -26,39 +26,32 @@ const FilterSidebar = () => {
 	const isOpen = openPanel === "filter";
 
 	return (
-		<div
-			className={`fixed top-0 right-0 h-full z-50 w-full md:w-[380px] bg-primary border-l border-third shadow-xl flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
-		>
+		<div className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`}>
 			{/* Header */}
-			<div className="flex items-center justify-between px-5 py-4 border-b border-third/50 flex-shrink-0">
-				<button
-					onClick={close}
-					className="w-[32px] h-[32px] flex items-center justify-center rounded-full hover:bg-third/30 text-foreground text-[16pt] transition-colors"
-				>
+			<div className={styles.headerRow}>
+				<button onClick={close} className={styles.closeBtn}>
 					<BiX />
 				</button>
-				<h2 className="text-foreground text-[12pt] font-[600]">Filters</h2>
-				<div className="w-[32px]" />
+				<h2 className={styles.panelTitle}>Filters</h2>
+				<div className={styles.placeholder} />
 			</div>
 
 			{/* Scrollable content */}
-			<div className="flex-1 overflow-y-auto flex flex-col gap-[28px] px-6 py-6">
+			<div className={styles.scrollable}>
 				{filterEnums && (
 					<>
-						<div className="flex flex-col gap-[16px]">
+						<div className={styles.section}>
 							<SectionTitle>Make</SectionTitle>
-							<div className="flex gap-[12px]">
-								<FilterBarDropdown
-									label="Make"
-									className="w-full"
-									defaultValue={get("make")}
-									onChange={(v) => set({ make: v ?? undefined })}
-									options={(makes ?? []).map((m) => ({
-										paramId: m,
-										displayText: m,
-									}))}
-								/>
-							</div>
+							<FilterBarDropdown
+								label="Make"
+								className="w-full"
+								defaultValue={get("make")}
+								onChange={(v) => set({ make: v ?? undefined })}
+								options={(makes ?? []).map((m) => ({
+									paramId: m,
+									displayText: m,
+								}))}
+							/>
 						</div>
 
 						<Divider />
@@ -95,7 +88,7 @@ const FilterSidebar = () => {
 
 						<Divider />
 
-						<div className="flex flex-col gap-[16px]">
+						<div className={styles.section}>
 							<SectionTitle>Body type</SectionTitle>
 							<PillSelect
 								selected={get("bodyType")}
@@ -106,7 +99,7 @@ const FilterSidebar = () => {
 
 						<Divider />
 
-						<div className="flex flex-col gap-[16px]">
+						<div className={styles.section}>
 							<SectionTitle>Vehicle class</SectionTitle>
 							<PillSelect
 								selected={get("vehicleClass")}
@@ -117,7 +110,7 @@ const FilterSidebar = () => {
 
 						<Divider />
 
-						<div className="flex flex-col gap-[16px]">
+						<div className={styles.section}>
 							<SectionTitle>Roof type</SectionTitle>
 							<PillSelect
 								selected={get("roofType")}
@@ -128,9 +121,9 @@ const FilterSidebar = () => {
 
 						<Divider />
 
-						<div className="flex flex-col gap-[16px]">
+						<div className={styles.section}>
 							<SectionTitle>Drivetrain</SectionTitle>
-							<div className="grid grid-cols-2 gap-[12px]">
+							<div className={styles.grid2}>
 								<FilterBarDropdown
 									label="Transmission"
 									defaultValue={get("transmission")}
@@ -160,7 +153,7 @@ const FilterSidebar = () => {
 
 						<Divider />
 
-						<div className="flex flex-col gap-[28px]">
+						<div className={styles.perfSection}>
 							<SectionTitle>Performance</SectionTitle>
 							<FilterBarNumberRangeInline
 								label="Horsepower"
@@ -239,20 +232,17 @@ const FilterSidebar = () => {
 			</div>
 
 			{/* Footer */}
-			<div className="flex items-center justify-between px-5 py-4 border-t border-third/50 flex-shrink-0">
+			<div className={styles.footer}>
 				<button
 					onClick={() => {
 						clear();
 						close();
 					}}
-					className="text-foreground text-[11pt] font-[500] underline underline-offset-2 hover:text-accent transition-colors"
+					className={styles.clearBtn}
 				>
 					Clear all
 				</button>
-				<button
-					onClick={close}
-					className="bg-accent/90 text-primary font-[500] text-[11pt] px-[20px] py-[10px] rounded-xl hover:brightness-110 transition"
-				>
+				<button onClick={close} className={styles.showBtn}>
 					Show results
 				</button>
 			</div>

@@ -1,0 +1,19 @@
+.mainContent {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+}
+
+.sectionHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 20px;
+}
+
+.seeMore {
+	color: var(--color-accent);
+	font-size: 12pt;
+	font-weight: 500;
+	text-decoration: none;
+}

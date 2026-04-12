@@ -1,0 +1,146 @@
+/* ── FilterBar ───────────────────────────────────────────────────────────────── */
+.filterBar {
+	width: 100%;
+	background-color: var(--color-primary);
+	border-top: 1px solid var(--color-third);
+	border-bottom: 1px solid var(--color-third);
+	box-shadow: 0 1px 3px 0 color-mix(in srgb, var(--color-third) 30%, transparent);
+	padding: 10px;
+	color: var(--color-foreground);
+	display: flex;
+	gap: 15px;
+	align-items: stretch;
+	justify-content: flex-start;
+	height: fit-content;
+	position: sticky;
+	top: 72px;
+	z-index: 1;
+}
+
+.filterBarRight {
+	display: flex;
+	gap: 10px;
+	margin-left: auto;
+	width: 100%;
+	height: 100%;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+/* ── FilterButton ────────────────────────────────────────────────────────────── */
+.filterBtn {
+	font-size: 20pt;
+	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+	border: 1px solid transparent;
+	cursor: pointer;
+	border-radius: 1rem;
+	text-align: center;
+	padding: 8px 15px;
+	height: 100%;
+	background: none;
+	transition: background-color 150ms, border-color 150ms;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filterBtn:hover {
+	background-color: var(--color-primary-dark);
+	border-color: color-mix(in srgb, var(--color-third) 70%, transparent);
+}
+
+/* ── SortButtons ─────────────────────────────────────────────────────────────── */
+.sortGroup {
+	display: flex;
+	gap: 0;
+	border: 1px solid transparent;
+	border-radius: 0.75rem;
+	padding: 5px;
+	align-items: stretch;
+	transition: border-color 150ms, background-color 150ms;
+}
+
+.sortGroup:hover {
+	border-color: color-mix(in srgb, var(--color-third) 50%, transparent);
+	background-color: var(--color-primary-dark);
+}
+
+.sortDirBtn {
+	color: var(--color-foreground);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: auto;
+	padding: 0 6px;
+	margin-right: -10px;
+	z-index: 1;
+	height: auto;
+	border-radius: 0.75rem;
+	border: 1px solid transparent;
+	cursor: pointer;
+	font-size: 18pt;
+	background: none;
+	transition: background-color 200ms;
+}
+
+.sortDirBtn:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+/* ── ActiveFilters ───────────────────────────────────────────────────────────── */
+.activeFilters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+}
+
+.activeFilterChip {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+	font-size: 9pt;
+	border-radius: 9999px;
+	padding: 4px 10px;
+	cursor: pointer;
+	border: none;
+	font-weight: 500;
+	transition: background-color 150ms;
+    border: solid color-mix(in srgb, var(--color-accent) 60%, transparent) 1px;
+    text-transform: capitalize;
+}
+
+.activeFilterChip:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.activeFilterKey {
+	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+}
+
+.activeFilterX {
+	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+	margin-left: 2px;
+}
+
+/* ── LayoutToggle ────────────────────────────────────────────────────────────── */
+.layoutToggleBtn {
+	color: var(--color-foreground);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 5px 6px;
+	border-radius: 0.75rem;
+	border: 1px solid transparent;
+	cursor: pointer;
+	font-size: 18pt;
+	background: none;
+	transition: background-color 150ms, border-color 150ms;
+}
+
+.layoutToggleBtn:hover {
+	background-color: var(--color-primary-dark);
+	border-color: color-mix(in srgb, var(--color-third) 80%, transparent);
+}

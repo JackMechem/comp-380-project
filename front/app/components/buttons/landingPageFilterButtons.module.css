@@ -1,0 +1,22 @@
+.wrapper {
+	display: flex;
+	width: fit-content;
+	gap: 20px;
+	align-self: center;
+}
+
+.filterBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	border-radius: 9999px;
+	padding: 6px 20px;
+	color: var(--color-foreground);
+	font-weight: 500;
+}
+
+.filterBtnActive {
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+}

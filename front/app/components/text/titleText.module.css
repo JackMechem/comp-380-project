@@ -1,0 +1,9 @@
+.titleText {
+	display: flex;
+	align-items: center;
+	font-family: var(--font-titillium), sans-serif;
+	font-size: 20pt;
+	font-weight: 700;
+	letter-spacing: 0;
+	color: var(--color-accent);
+}

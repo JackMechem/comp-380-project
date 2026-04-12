@@ -12,10 +12,8 @@ import Image from "next/image";
 import { BiTrash } from "react-icons/bi";
 import { CartProps } from "@/app/types/CartTypes";
 import { BsCart2, BsCart3 } from "react-icons/bs";
-import { HiOutlineShoppingCart } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
-import { FaShoppingCart } from "react-icons/fa";
-import { RiShoppingCart2Line } from "react-icons/ri";
+import styles from "./headerMenu.module.css";
 
 const HeaderMenu = () => {
 	const { openPanel, close } = useSidebarStore();
@@ -55,55 +53,38 @@ const HeaderMenu = () => {
 
 	return (
 		<>
-			{/* Panel */}
-			<div
-				className={`fixed top-0 right-0 h-full z-50 w-full md:w-[380px] md:border-l md:border-third bg-primary flex flex-col overflow-y-auto transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
-			>
+			<div className={`${styles.panel} ${isOpen ? styles.panelOpen : styles.panelClosed}`}>
 				{/* Header */}
-				<div className="flex items-center justify-between px-[20px] py-[20px] border-b border-third/50">
-					<button
-						onClick={close}
-						className="text-[18pt] text-foreground-light hover:text-foreground transition-colors cursor-pointer"
-					>
+				<div className={styles.headerRow}>
+					<button onClick={close} className={styles.closeBtn}>
 						<IoClose />
 					</button>
-					<p className="text-[12pt] font-[600] text-foreground mr-auto ml-auto">Menu</p>
+					<p className={styles.menuTitle}>Menu</p>
 				</div>
 
 				{/* Profile section */}
-				<div className="flex items-center gap-[14px] px-[20px] py-[20px] border-b border-third/50">
-					<div className="border-2 border-accent/30 rounded-full p-[2px]">
+				<div className={styles.profileRow}>
+					<div className={styles.avatarBorder}>
 						<DefaultProfilePhoto totalHeight={48} headSize={16} />
 					</div>
-					<div className="flex-1 min-w-0">
-						<p className="text-foreground font-[600] text-[12pt] truncate">
+					<div className={styles.profileInfo}>
+						<p className={styles.profileName}>
 							{isAdmin && username ? username : "Guest"}
 						</p>
-						<p className="text-foreground-light text-[9pt]">
+						<p className={styles.profileRole}>
 							{isAdmin ? "Administrator" : "Not signed in"}
 						</p>
 					</div>
 					{isAdmin ? (
-						<button
-							onClick={handleLogout}
-							className="text-[9.5pt] font-[500] text-foreground-light hover:text-accent transition-colors cursor-pointer"
-						>
+						<button onClick={handleLogout} className={styles.signOutBtn}>
 							Sign out
 						</button>
 					) : (
-						<div className="flex gap-[8px]">
-							<Link
-								href="/login"
-								onClick={close}
-								className="text-[9.5pt] font-[500] px-[12px] py-[6px] rounded-lg border border-third hover:border-accent/40 hover:text-accent text-foreground transition-colors"
-							>
+						<div className={styles.authBtns}>
+							<Link href="/login" onClick={close} className={styles.loginBtn}>
 								Login
 							</Link>
-							<Link
-								href="/signup"
-								onClick={close}
-								className="text-[9.5pt] font-[500] px-[12px] py-[6px] rounded-lg bg-accent text-primary hover:brightness-110 transition-all"
-							>
+							<Link href="/signup" onClick={close} className={styles.signupBtn}>
 								Sign up
 							</Link>
 						</div>
@@ -111,47 +92,42 @@ const HeaderMenu = () => {
 				</div>
 
 				{/* Cart section */}
-				<div className="flex flex-col overflow-y-auto px-[20px] py-[20px] gap-[16px]">
-					<div className="flex items-center gap-[8px] text-foreground">
-						<BsCart2 className="text-[18pt] text-foreground" />
-						<p className="text-[14pt] font-[500] text-foreground">
-							Cart
-						</p>
+				<div className={styles.cartSection}>
+					<div className={styles.cartHeader}>
+						<BsCart2 className={styles.cartIcon} />
+						<p className={styles.cartTitle}>Cart</p>
 						{cartCount > 0 && (
-							<span className="ml-auto text-[9pt] font-[500] text-foreground-light">
+							<span className={styles.cartCount}>
 								{cartCount} {cartCount === 1 ? "car" : "cars"}
 							</span>
 						)}
 					</div>
 
 					{cartCount === 0 ? (
-						<div className="flex flex-col items-center justify-center gap-[8px] py-[40px] text-foreground-light/40">
-							<BsCart3 className="text-[32pt]" />
-							<p className="text-[10pt]">Your cart is empty</p>
+						<div className={styles.emptyCart}>
+							<BsCart3 className={styles.emptyCartIcon} />
+							<p className={styles.emptyCartText}>Your cart is empty</p>
 						</div>
 					) : (
-						<div className="flex flex-col gap-[10px]">
+						<div className={styles.cartItems}>
 							{carData.map((car: CartProps) => (
-								<div
-									key={car.vin}
-									className="card flex gap-[0px] overflow-hidden"
-								>
+								<div key={car.vin} className={`card ${styles.cartItem}`}>
 									{car.image && (
 										<Image
 											src={car.image}
 											alt="Car Photo"
 											width={124}
 											height={124}
-											className="h-[90px] w-[90px] object-cover flex-shrink-0"
+											className={styles.cartItemImage}
 										/>
 									)}
-									<div className="flex flex-col justify-between flex-1 min-w-0 px-[12px] py-[10px]">
+									<div className={styles.cartItemBody}>
 										<div>
-											<p className="text-foreground text-[10.5pt] font-[500] truncate">
+											<p className={styles.cartItemName}>
 												{car.make} {car.model}
 											</p>
 											{car.startDate && car.endDate && (
-												<p className="text-foreground-light text-[8.5pt] mt-[2px]">
+												<p className={styles.cartItemDates}>
 													{new Date(car.startDate).toLocaleDateString("en-US", {
 														month: "short",
 														day: "numeric",
@@ -165,18 +141,16 @@ const HeaderMenu = () => {
 												</p>
 											)}
 										</div>
-										<p className="text-accent text-[12pt] font-[500]">
+										<p className={styles.cartItemPrice}>
 											${car.pricePerDay}
-											<span className="text-[9pt] text-accent/60 font-[400]">
-												/day
-											</span>
+											<span className={styles.cartItemPriceUnit}>/day</span>
 										</p>
 									</div>
 									<button
 										onClick={() => removeCar(car.vin)}
-										className="px-[12px] text-foreground-light/50 hover:text-accent hover:bg-accent/5 transition-colors cursor-pointer flex-shrink-0"
+										className={styles.cartItemRemove}
 									>
-										<BiTrash className="text-[14pt]" />
+										<BiTrash className={styles.cartItemRemoveIcon} />
 									</button>
 								</div>
 							))}
@@ -185,22 +159,14 @@ const HeaderMenu = () => {
 				</div>
 
 				{/* Footer */}
-				<div className="px-[20px] py-[16px] border-t border-third/50 flex flex-col gap-[10px]">
+				<div className={styles.footer}>
 					{cartCount > 0 && (
-						<Link
-							href="/checkout"
-							onClick={close}
-							className="w-full text-center py-[10px] bg-accent text-primary text-[11pt] font-[600] rounded-xl hover:brightness-110 hover:scale-[101%] transition-all duration-100 cursor-pointer"
-						>
+						<Link href="/checkout" onClick={close} className={styles.checkoutBtn}>
 							Checkout
 						</Link>
 					)}
 					{isAdmin && (
-						<Link
-							href="/admin"
-							onClick={close}
-							className="w-full text-center py-[9px] border border-third rounded-xl text-foreground text-[10.5pt] font-[500] hover:border-accent/40 hover:text-accent transition-colors"
-						>
+						<Link href="/admin" onClick={close} className={styles.adminBtn}>
 							Admin Dashboard
 						</Link>
 					)}

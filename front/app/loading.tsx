@@ -1,7 +1,10 @@
+import loadingStyle from "./loading.module.css"
+
 const Loading = () => {
+
 	return (
-		<div className="w-full h-full fixed flex items-center justify-center">
-			<div className="animate-spin rounded-full h-[80px] w-[80px]">
+		<div className={loadingStyle.parent}>
+			<div className={loadingStyle.logoContainer}>
 				<svg
                     className="h-full w-full"
 					viewBox="0 0 102 102"

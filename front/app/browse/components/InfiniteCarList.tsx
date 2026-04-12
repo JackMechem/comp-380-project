@@ -6,6 +6,7 @@ import CarCard from "@/app/components/cars/CarListCard";
 import CarGridCard from "@/app/components/cars/carGridCard";
 import CarListCardSkeleton from "@/app/components/skeletons/CarListCardSkeleton";
 import CarGridCardSkeleton from "@/app/components/skeletons/CarGridCardSkeleton";
+import styles from "./browseContent.module.css";
 
 interface InfiniteCarListProps {
 	initialCars: Car[];
@@ -66,13 +67,7 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 
 	return (
 		<>
-			<div
-				className={
-					isList
-						? "grid xl:grid-cols-1 grid-cols-1 w-full gap-[20px] px-[10px] h-auto text-foreground"
-						: "grid 2xl:grid-cols-4 xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 w-full gap-[16px] px-[10px] h-auto text-foreground"
-				}
-			>
+			<div className={isList ? styles.listGrid : styles.carGrid}>
 				{cars.map((car) =>
 					isList ? (
 						<CarCard key={car.vin} car={car} />
@@ -96,7 +91,7 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 					)
 				)}
 			</div>
-			{hasMore && <div ref={sentinelRef} className="h-[1px]" />}
+			{hasMore && <div ref={sentinelRef} className={styles.sentinel} />}
 		</>
 	);
 };

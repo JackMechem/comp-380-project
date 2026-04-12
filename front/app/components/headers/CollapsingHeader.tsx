@@ -7,6 +7,7 @@ import smallLogo from "../../media/smallLogo.svg";
 import HeaderMenuButton from "../buttons/headerMenuButton";
 import SmallSearchBar from "../searchBars/smallSearchBar";
 import { useScrollCollapse } from "@/app/hooks/useScrollCollapse";
+import styles from "./CollapsingHeader.module.css";
 
 const THRESHOLD = 30;
 const HYSTERESIS = 30;
@@ -15,25 +16,13 @@ interface CollapsingHeaderProps {
 	white?: boolean;
 }
 
-/**
- * A header that starts expanded (white logo, no background) and collapses
- * into a compact bar with a search bar once the user scrolls past `THRESHOLD`.
- *
- * Replaces the old `LandingHeader` and `BrowseHeader` which were identical.
- */
 const CollapsingHeader = ({ white = true }: CollapsingHeaderProps) => {
 	const logoLinkRef = useRef<HTMLAnchorElement>(null);
 	const isExpanded = useScrollCollapse(white, THRESHOLD, HYSTERESIS);
 	const isWhite = white && isExpanded;
 
 	return (
-		<div
-			className={`relative sticky z-1 float-top top-0 flex items-center justify-between duration-[200ms] ${
-				!isWhite
-					? "bg-primary/90 shadow-md shadow-third/10 border-third top-[0px] h-[72px] py-[8px] pl-[8px] pr-[20px] backdrop-blur-md"
-					: "md:px-[100px] px-[40px] md:py-[20px] py-0 border border-transparent"
-			}`}
-		>
+		<div className={`${styles.header} ${isWhite ? styles.headerWhite : styles.headerCompact}`}>
 			<Link ref={logoLinkRef} href="/">
 				{isWhite ? (
 					<Image
@@ -48,9 +37,7 @@ const CollapsingHeader = ({ white = true }: CollapsingHeaderProps) => {
 				)}
 			</Link>
 			{!isWhite && <SmallSearchBar />}
-			<div
-				className={`${isWhite ? "text-primary" : "text-accent"} text-[20pt] duration-300`}
-			>
+			<div className={isWhite ? styles.menuIconWhite : styles.menuIconCompact}>
 				<HeaderMenuButton />
 			</div>
 		</div>

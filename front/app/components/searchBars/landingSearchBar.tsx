@@ -7,6 +7,7 @@ import DatePicker from "@/app/components/DatePicker";
 import SuggestionsDropdown from "@/app/components/ui/SuggestionsDropdown";
 import { useSearchSuggestions } from "@/app/hooks/useSearchSuggestions";
 import type { Suggestion } from "@/app/hooks/useSearchSuggestions";
+import styles from "./landingSearchBar.module.css";
 
 const LandingSearchBar = () => {
 	const [searchText, setSearchText] = useState("");
@@ -59,7 +60,6 @@ const LandingSearchBar = () => {
 		}
 	};
 
-	// Close on outside click
 	useEffect(() => {
 		const handler = (e: MouseEvent) => {
 			if (containerRef.current && !containerRef.current.contains(e.target as Node))
@@ -70,11 +70,11 @@ const LandingSearchBar = () => {
 	}, []);
 
 	return (
-		<div className="w-full flex flex-col md:px-0 px-[20px] items-center">
-			<div ref={containerRef} className="relative md:w-auto w-full">
-				<div className="flex md:flex-row md:w-auto w-full flex-col gap-[10px] h-auto md:p-[10px] p-[15px] md:pl-[25px] bg-primary md:rounded-full rounded-3xl shadow focus-within:border-accent duration-150">
+		<div className={styles.outer}>
+			<div ref={containerRef} className={styles.relative}>
+				<div className={styles.bar}>
 					<div>
-						<p className="text-[10pt]">What</p>
+						<p className={styles.fieldLabel}>What</p>
 						<input
 							placeholder="Make, model, or year"
 							value={searchText}
@@ -84,10 +84,10 @@ const LandingSearchBar = () => {
 							}}
 							onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
 							onKeyDown={handleKeyDown}
-							className="outline-none text-foreground"
+							className={styles.input}
 						/>
 					</div>
-					<div className="w-[120px]">
+					<div className={styles.datepickerSlot}>
 						<DatePicker
 							label="From"
 							selected={fromDate}
@@ -97,7 +97,7 @@ const LandingSearchBar = () => {
 							}}
 						/>
 					</div>
-					<div className="w-[120px]">
+					<div className={styles.datepickerSlot}>
 						<DatePicker
 							label="Until"
 							selected={untilDate}
@@ -105,10 +105,7 @@ const LandingSearchBar = () => {
 							fromDate={fromDate}
 						/>
 					</div>
-					<button
-						onClick={handleSearch}
-						className="cursor-pointer flex justify-center items-center text-center md:h-fill md:py-0 md:mt-0 mt-[10px] py-[10px] px-[10px] text-[18pt] bg-accent text-primary rounded-full"
-					>
+					<button onClick={handleSearch} className={styles.searchBtn}>
 						<BiSearch />
 					</button>
 				</div>

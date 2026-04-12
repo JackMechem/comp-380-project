@@ -1,0 +1,163 @@
+.wrapper {
+	position: relative;
+}
+
+.label {
+	font-size: 10pt;
+}
+
+.trigger {
+	outline: none;
+	color: var(--color-foreground);
+	width: 100%;
+	text-align: left;
+	font-size: 0.875rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.placeholder {
+	color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+}
+
+.popup {
+	position: absolute;
+	z-index: 50;
+	background-color: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 1rem;
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+	padding: 1rem;
+	width: 280px;
+}
+
+.popupBelow {
+	top: 100%;
+	margin-top: 12px;
+}
+
+.popupAbove {
+	bottom: 100%;
+	margin-bottom: 12px;
+}
+
+.popupCenter {
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.popupLeft {
+	left: 0;
+}
+
+.popupRight {
+	right: 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.navBtn {
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	color: var(--color-foreground);
+	transition: background-color 150ms;
+}
+
+.navBtn:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.monthLabel {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--color-foreground);
+}
+
+.weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	margin-bottom: 4px;
+}
+
+.weekday {
+	text-align: center;
+	font-size: 10px;
+	font-weight: 500;
+	color: color-mix(in srgb, var(--color-foreground) 40%, transparent);
+	padding: 4px 0;
+}
+
+.daysGrid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	row-gap: 4px;
+}
+
+.day {
+	width: 32px;
+	height: 32px;
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	font-size: 0.875rem;
+	transition: background-color 150ms, color 150ms;
+	cursor: pointer;
+}
+
+.dayOutsideMonth {
+	opacity: 0.25;
+}
+
+.dayDisabled {
+	cursor: not-allowed;
+	opacity: 0.2;
+}
+
+.daySelected {
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	font-weight: 600;
+}
+
+.dayToday {
+	border: 1px solid var(--color-accent);
+	color: var(--color-accent);
+	font-weight: 600;
+}
+
+.dayToday:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.dayNormal {
+	color: var(--color-foreground);
+}
+
+.dayNormal:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.clearBtn {
+	margin-top: 12px;
+	width: 100%;
+	text-align: center;
+	font-size: 0.75rem;
+	color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+	transition: color 150ms;
+}
+
+.clearBtn:hover {
+	color: var(--color-accent);
+}

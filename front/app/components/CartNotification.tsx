@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/stores/cartStore";
+import styles from "./CartNotification.module.css";
 
 const CartNotification = () => {
     const { notification, clearNotification } = useCartStore();
@@ -16,27 +17,24 @@ const CartNotification = () => {
     if (!notification) return null;
 
     return (
-        <div
-            className="fixed top-[90px] left-[24px] z-[100] w-[300px] flex flex-col gap-[4px] animate-in fade-in slide-in-from-bottom-4 duration-200"
-            onClick={clearNotification}
-        >
-            <div className="w-full flex gap-[10px] text-[12pt] border border-third rounded-xl bg-primary shadow-lg cursor-pointer">
+        <div className={styles.wrapper} onClick={clearNotification}>
+            <div className={styles.card}>
                 {notification.image && (
                     <Image
                         src={notification.image}
                         alt="Car Photo"
                         width={100}
                         height={100}
-                        className="h-[80px] w-[80px] object-cover rounded-l-lg flex-shrink-0"
+                        className={styles.image}
                     />
                 )}
-                <div className="flex flex-col justify-between py-[5px]">
-                    <p className="text-foreground text-[12pt]">
+                <div className={styles.body}>
+                    <p className={styles.carName}>
                         {notification.make} {notification.model}
                     </p>
-                    <h3 className="text-accent text-[14pt]">
+                    <h3 className={styles.price}>
                         ${notification.pricePerDay}
-                        <span className="opacity-[0.5] text-[10pt]">/day</span>
+                        <span className={styles.priceUnit}>/day</span>
                     </h3>
                 </div>
             </div>

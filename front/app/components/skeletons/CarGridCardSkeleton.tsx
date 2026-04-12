@@ -1,20 +1,22 @@
+import styles from "./skeletons.module.css";
+
 /** Skeleton for a single grid-view car card on the browse page. */
 const CarGridCardSkeleton = () => (
-	<div className="rounded-xl overflow-hidden bg-primary shadow-md flex flex-col">
-		<div className="w-full h-[180px] bg-third animate-pulse" />
-		<div className="px-[16px] py-[14px] flex flex-col gap-[10px]">
-			<div className="flex flex-col gap-[6px]">
-				<div className="h-[18px] w-[70%] bg-third rounded animate-pulse" />
-				<div className="h-[14px] w-[30%] bg-third rounded animate-pulse" />
+	<div className={styles.gridCard}>
+		<div className={styles.gridCardImageArea} />
+		<div className={styles.gridCardBody}>
+			<div className={styles.gridCardTitleGroup}>
+				<div className={`${styles.pulse} ${styles.h18w70}`} />
+				<div className={`${styles.pulse} ${styles.h14w30}`} />
 			</div>
-			<div className="flex flex-col gap-[6px]">
-				<div className="h-[13px] w-[50%] bg-third rounded animate-pulse" />
-				<div className="h-[13px] w-[40%] bg-third rounded animate-pulse" />
-				<div className="h-[13px] w-[55%] bg-third rounded animate-pulse" />
+			<div className={styles.gridCardStats}>
+				<div className={`${styles.pulse} ${styles.h14w50}`} />
+				<div className={`${styles.pulse} ${styles.h14w40}`} />
+				<div className={`${styles.pulse} ${styles.h14w55}`} />
 			</div>
-			<div className="flex justify-between items-center pt-[6px]">
-				<div className="h-[22px] w-[70px] bg-third rounded animate-pulse" />
-				<div className="h-[28px] w-[80px] bg-third rounded-full animate-pulse" />
+			<div className={styles.gridCardPriceRow}>
+				<div className={`${styles.pulse} ${styles.h22w70}`} />
+				<div className={`${styles.pulse} ${styles.h28w80}`} />
 			</div>
 		</div>
 	</div>

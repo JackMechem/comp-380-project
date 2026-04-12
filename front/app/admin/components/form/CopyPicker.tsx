@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { BiCar, BiCheck, BiSearch, BiX } from "react-icons/bi";
-import { inputCls } from "./Field";
+import styles from "./adminForm.module.css";
 
 export interface CopyOption {
 	vin: string;
@@ -22,7 +22,12 @@ interface CopyPickerProps {
 	mode: "add" | "edit";
 }
 
-const CopyPicker = ({ options, selectedVin, onSelect, mode }: CopyPickerProps) => {
+const CopyPicker = ({
+	options,
+	selectedVin,
+	onSelect,
+	mode,
+}: CopyPickerProps) => {
 	const [query, setQuery] = useState("");
 
 	const filtered = options
@@ -34,27 +39,29 @@ const CopyPicker = ({ options, selectedVin, onSelect, mode }: CopyPickerProps) =
 		.slice(0, 10);
 
 	return (
-		<div className="bg-primary border border-third/60 rounded-2xl p-[20px] flex flex-col gap-[14px]">
-			<div className="flex items-center justify-between">
-				<p className="text-foreground text-[11pt] font-[600]">
-					{mode === "edit" ? "Select a vehicle to edit" : "Copy from existing vehicle"}
+		<div className={styles.copyPickerCard}>
+			<div className={styles.copyPickerHeader}>
+				<p className={styles.copyPickerTitle}>
+					{mode === "edit"
+						? "Select a vehicle to edit"
+						: "Copy from existing vehicle"}
 				</p>
 				{selectedVin && (
 					<button
 						type="button"
 						onClick={() => onSelect(null)}
-						className="flex items-center gap-[4px] text-[9pt] text-foreground-light hover:text-accent transition-colors cursor-pointer"
+						className={styles.copyPickerClearBtn}
 					>
 						<BiX /> Clear
 					</button>
 				)}
 			</div>
 
-			{/* Search */}
-			<div className="relative">
-				<BiSearch className="absolute left-[12px] top-1/2 -translate-y-1/2 text-foreground-light text-[13pt]" />
+			<div className={styles.copyPickerSearch}>
+				<BiSearch className={styles.copyPickerSearchIcon} />
 				<input
-					className={`${inputCls} pl-[36px]`}
+					className={`${styles.input} ${styles.copyPickerSearch}`}
+					style={{ paddingLeft: "36px" }}
 					placeholder={
 						mode === "edit"
 							? "Search for a vehicle to edit…"
@@ -65,12 +72,9 @@ const CopyPicker = ({ options, selectedVin, onSelect, mode }: CopyPickerProps) =
 				/>
 			</div>
 
-			{/* Card strip */}
-			<div className="flex gap-[12px] overflow-x-auto pb-[4px] scrollbar-hide">
+			<div className={`${styles.copyPickerStrip} scrollbar-hide`}>
 				{filtered.length === 0 && (
-					<p className="text-foreground-light text-[10pt] py-[8px]">
-						No vehicles found.
-					</p>
+					<p className={styles.copyPickerEmpty}>No vehicles found.</p>
 				)}
 				{filtered.map((car) => {
 					const isSelected = selectedVin === car.vin;
@@ -79,40 +83,34 @@ const CopyPicker = ({ options, selectedVin, onSelect, mode }: CopyPickerProps) =
 							key={car.vin}
 							type="button"
 							onClick={() => onSelect(isSelected ? null : car.vin)}
-							className={`flex-shrink-0 w-[160px] rounded-xl overflow-hidden border-2 transition-all cursor-pointer text-left ${
-								isSelected
-									? "border-accent shadow-md shadow-accent/20"
-									: "border-third hover:border-accent/40"
-							}`}
+							className={`${styles.copyPickerCarBtn} ${isSelected ? styles.copyPickerCarBtnSelected : ""}`}
 						>
-							{/* Image */}
-							<div className="relative w-full h-[90px] bg-third/30">
+							<div className={styles.copyPickerThumb}>
 								{car.images?.[0] ? (
 									<Image
 										src={car.images[0]}
 										alt={`${car.make} ${car.model}`}
 										fill
-										className="object-cover"
+                                        className={styles.copyPickerCarImage}
 										sizes="160px"
 									/>
 								) : (
-									<div className="w-full h-full flex items-center justify-center text-foreground-light/40">
-										<BiCar className="text-[30pt]" />
+									<div className={styles.copyPickerNoImage}>
+										<BiCar />
 									</div>
 								)}
 								{isSelected && (
-									<div className="absolute top-[6px] right-[6px] w-[22px] h-[22px] rounded-full bg-accent flex items-center justify-center text-primary">
-										<BiCheck className="text-[13px]" />
+									<div className={styles.copyPickerCheckBadge}>
+										<BiCheck className={styles.copyPickerCheckIcon} />
 									</div>
 								)}
 							</div>
-							{/* Info */}
-							<div className="px-[10px] py-[8px]">
-								<p className="text-foreground text-[9.5pt] font-[600] truncate">
+							<div className={styles.copyPickerInfo}>
+								<p className={styles.copyPickerCarName}>
 									{car.make} {car.model}
 								</p>
-								<p className="text-foreground-light text-[8.5pt]">{car.modelYear}</p>
-								<p className="text-accent text-[8.5pt] font-[500] mt-[2px]">
+								<p className={styles.copyPickerCarYear}>{car.modelYear}</p>
+								<p className={styles.copyPickerCarPrice}>
 									${car.pricePerDay}/day
 								</p>
 							</div>

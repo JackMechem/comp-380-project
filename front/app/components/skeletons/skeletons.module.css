@@ -1,0 +1,293 @@
+/* ── Shared skeleton utilities ─────────────────────────────────────────────── */
+.pulse {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	background-color: var(--color-third);
+	border-radius: 0.25rem;
+}
+
+/* ── CarCardSkeleton (home carousel) ───────────────────────────────────────── */
+.carCard {
+	min-width: 100%;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@media (min-width: 640px) {
+	.carCard { min-width: 250px; }
+}
+
+.carCardImageArea {
+	width: 100%;
+	height: 200px;
+	background-color: var(--color-third);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.carCardBody {
+	padding: 15px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.carCardTitleRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+
+.carCardTitleGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+}
+
+.h20w70 { height: 20px; width: 70%; }
+.h14w30 { height: 14px; width: 30%; }
+.w25h25 { width: 25px; height: 25px; }
+.h20w60 { height: 20px; width: 60%; }
+.h30wFull { height: 30px; width: 80px; border-radius: 9999px; }
+
+.carCardPriceRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+/* ── CarGridCardSkeleton ───────────────────────────────────────────────────── */
+.gridCard {
+	border-radius: 0.75rem;
+	overflow: hidden;
+	background-color: var(--color-primary);
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+	display: flex;
+	flex-direction: column;
+}
+
+.gridCardImageArea {
+	width: 100%;
+	height: 180px;
+	background-color: var(--color-third);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.gridCardBody {
+	padding: 14px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.gridCardTitleGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.gridCardStats {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.h18w70 { height: 18px; width: 70%; }
+.h14w50 { height: 14px; width: 50%; }
+.h14w40 { height: 14px; width: 40%; }
+.h14w55 { height: 14px; width: 55%; }
+
+.gridCardPriceRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-top: 6px;
+}
+
+.h22w70 { height: 22px; width: 70px; }
+.h28w80 { height: 28px; width: 80px; border-radius: 9999px; }
+
+/* ── CarListCardSkeleton ───────────────────────────────────────────────────── */
+.listCard {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	gap: 10px;
+}
+
+@media (min-width: 768px) {
+	.listCard {
+		flex-direction: row;
+		height: 300px;
+	}
+}
+
+.listCardImage {
+	width: 100%;
+	height: 200px;
+	border-radius: 0.75rem;
+	background-color: var(--color-third);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@media (min-width: 768px) {
+	.listCardImage { width: 40%; height: auto; }
+}
+
+.listCardBody {
+	width: 100%;
+	padding: 15px 20px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 10px;
+	box-shadow: 0px 1px 8px -3px color-mix(in srgb, var(--color-accent) 30%, transparent);
+	background-color: color-mix(in srgb, var(--color-accent) 3%, transparent);
+	border-radius: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.listCardBody { width: 60%; }
+}
+
+.listCardTitleGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.listCardTitleRow {
+	display: flex;
+	justify-content: space-between;
+}
+
+.h24w40 { height: 24px; width: 40%; }
+.h20w25 { height: 20px; width: 25%; }
+.h16w20 { height: 16px; width: 20%; }
+
+.listCardBottom {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+}
+
+.listCardStatGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.h14w80 { height: 14px; width: 80px; }
+.h14w50 { height: 14px; width: 50px; }
+.h14w70 { height: 14px; width: 70px; }
+
+.listCardPriceGroup {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 6px;
+}
+
+.h32w110 { height: 32px; width: 110px; }
+.h12w70 { height: 12px; width: 70px; }
+
+/* ── CarBrandCardSkeleton ──────────────────────────────────────────────────── */
+.brandCard {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+	min-width: 100%;
+	background-color: var(--color-primary-dark);
+	border-radius: 0.5rem;
+	padding: 25px 30px;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@media (min-width: 768px) {
+	.brandCard { min-width: 500px; width: 500px; }
+}
+
+.brandCardHeader {
+	height: 52px;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.h40w40 { height: 40px; width: 40px; }
+.h20w80 { height: 20px; width: 80px; }
+.h200wFull { height: 200px; width: 100%; }
+.h14w60 { height: 14px; width: 60px; }
+.h28w100 { height: 28px; width: 100px; }
+.h36w120 { height: 36px; width: 120px; border-radius: 9999px; }
+
+.brandCardFooter {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.brandCardPriceGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+/* ── Wrapper skeletons ─────────────────────────────────────────────────────── */
+.brandScrollWrapper {
+	display: flex;
+	gap: 15px;
+	padding: 10px;
+	width: 100%;
+	overflow: hidden;
+}
+
+.carScrollGrid {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	column-gap: 10px;
+	row-gap: 20px;
+	padding: 10px;
+}
+
+@media (min-width: 640px) {
+	.carScrollGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+	.carScrollGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+	.carScrollGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 1536px) {
+	.carScrollGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+.carGridGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	width: 100%;
+	gap: 16px;
+	padding: 10px;
+}
+
+@media (min-width: 640px) {
+	.carGridGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+	.carGridGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1536px) {
+	.carGridGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.carListGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	width: 100%;
+	gap: 20px;
+	padding: 10px;
+}

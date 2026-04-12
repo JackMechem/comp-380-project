@@ -1,0 +1,63 @@
+.outer {
+	width: auto;
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 1;
+	padding: 0;
+	align-items: center;
+}
+
+.bar {
+	display: none;
+	flex-direction: row;
+	width: fit-content;
+	gap: 10px;
+	height: auto;
+	padding: 5px;
+	padding-left: 20px;
+	background-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
+	border: 1px solid var(--color-third);
+	border-radius: 9999px;
+	transition: border-color 150ms, transform 150ms;
+}
+
+.bar:focus-within {
+	border-color: var(--color-accent);
+	transform: scale(1.01);
+}
+
+@media (min-width: 1024px) {
+	.bar { display: flex; }
+}
+
+.fieldSlot {
+	width: 165px;
+}
+
+.fieldLabel {
+	font-size: 10pt;
+}
+
+.input {
+	outline: none;
+	color: var(--color-foreground);
+	width: 100%;
+	min-width: 100%;
+}
+
+.datepickerSlot {
+	width: 120px;
+}
+
+.searchBtn {
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	padding: 10px;
+	font-size: 18pt;
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	border-radius: 9999px;
+}

@@ -1,0 +1,767 @@
+/* ── Admin page layout ────────────────────────────────────────────────────────── */
+.pageContentShift {
+	transition: padding-left 300ms ease-in-out, padding-bottom 300ms ease-in-out;
+}
+
+.panelInner {
+	padding: 40px 0;
+}
+
+.panelTitle {
+	margin-bottom: 24px;
+}
+
+/* ── Shared panel wrappers ────────────────────────────────────────────────────── */
+.panelRoot {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 40px;
+}
+
+.panelRootLg {
+	display: flex;
+	flex-direction: column;
+	gap: 40px;
+	padding-bottom: 40px;
+}
+
+.panelHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.panelHeading {
+	color: var(--color-foreground);
+	font-size: 16pt;
+	font-weight: 700;
+}
+
+.panelSubheading {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+}
+
+.panelActions {
+	display: flex;
+	gap: 8px;
+}
+
+/* ── Search bar ───────────────────────────────────────────────────────────────── */
+.searchWrapper {
+	position: relative;
+}
+
+.searchIcon {
+	position: absolute;
+	left: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--color-foreground-light);
+	font-size: 13pt;
+}
+
+.searchInput {
+	width: 100%;
+	background-color: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 10px 14px 10px 40px;
+	font-size: 10.5pt;
+	color: var(--color-foreground);
+	outline: none;
+	transition: border-color 150ms;
+}
+
+.searchInput::placeholder {
+	color: color-mix(in srgb, var(--color-foreground-light) 60%, transparent);
+}
+
+.searchInput:focus {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+/* ── Action buttons ───────────────────────────────────────────────────────────── */
+.actionBtn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border-radius: 0.75rem;
+	border: 1px solid var(--color-third);
+	color: var(--color-foreground);
+	font-size: 10pt;
+	cursor: pointer;
+	background: none;
+	transition: border-color 150ms, background-color 150ms;
+}
+
+.actionBtn:disabled {
+	opacity: 0.5;
+}
+
+.actionBtn:hover:not(:disabled) {
+	border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+
+.actionBtnIcon {
+	font-size: 14pt;
+}
+
+.checkImagesBtn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border-radius: 0.75rem;
+	border: 1px solid color-mix(in srgb, #facc15 60%, transparent);
+	color: var(--color-foreground);
+	font-size: 10pt;
+	cursor: pointer;
+	background: none;
+	transition: background-color 150ms;
+}
+
+.checkImagesBtn:disabled {
+	opacity: 0.5;
+}
+
+.checkImagesBtn:hover:not(:disabled) {
+	background-color: color-mix(in srgb, #facc15 10%, transparent);
+}
+
+.warningDot {
+	width: 14px;
+	height: 14px;
+	border-radius: 9999px;
+	background-color: #facc15;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 7pt;
+	font-weight: 800;
+	color: #713f12;
+	flex-shrink: 0;
+}
+
+/* ── Loading/empty states ─────────────────────────────────────────────────────── */
+.loadingStack {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.skeletonRow {
+	height: 64px;
+	border-radius: 0.75rem;
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skeletonRowTall {
+	height: 80px;
+	border-radius: 1rem;
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.emptyState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 0;
+	color: var(--color-foreground-light);
+	gap: 8px;
+}
+
+.emptyIcon {
+	font-size: 36pt;
+	opacity: 0.3;
+}
+
+.emptyText {
+	font-size: 11pt;
+}
+
+.errorText {
+	color: #f87171;
+	font-size: 11pt;
+}
+
+/* ── Data table ───────────────────────────────────────────────────────────────── */
+.tableContainer {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	border-radius: 1rem;
+	overflow: hidden;
+}
+
+.tableHeader {
+	display: none;
+	grid-template-columns: 2fr 1fr 1fr 1fr auto;
+	gap: 16px;
+	padding: 12px 20px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+	background-color: color-mix(in srgb, var(--color-primary-dark) 30%, transparent);
+}
+
+@media (min-width: 768px) {
+	.tableHeader { display: grid; }
+}
+
+.tableHeaderCell {
+	font-size: 8pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+}
+
+.tableBody {
+	display: flex;
+	flex-direction: column;
+}
+
+.tableBodyDivided > * + * {
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+}
+
+.tableRow {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 16px;
+	padding: 14px 20px;
+	align-items: center;
+	cursor: pointer;
+	transition: background-color 150ms;
+}
+
+@media (min-width: 768px) {
+	.tableRow { grid-template-columns: 2fr 1fr 1fr 1fr auto; }
+}
+
+.tableRow:hover {
+	background-color: color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
+}
+
+/* Vehicle cell */
+.vehicleCell {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.vehicleThumb {
+	position: relative;
+	flex-shrink: 0;
+	width: 52px;
+	height: 36px;
+	border-radius: 0.5rem;
+	overflow: hidden;
+	background-color: color-mix(in srgb, var(--color-third) 30%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+}
+
+.vehicleNoImage {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: color-mix(in srgb, var(--color-foreground-light) 40%, transparent);
+	font-size: 16pt;
+}
+
+.vehicleInfo {
+	min-width: 0;
+}
+
+.vehicleInfoRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.vehicleName {
+	color: var(--color-foreground);
+	font-size: 10.5pt;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vehicleYear {
+	color: var(--color-foreground-light);
+	font-size: 9pt;
+}
+
+.imageWarnDot {
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	border-radius: 9999px;
+	background-color: #facc15;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 8pt;
+	font-weight: 800;
+	color: #713f12;
+	line-height: 1;
+}
+
+/* Table cells */
+.cellHiddenMd {
+	display: none;
+}
+
+@media (min-width: 768px) {
+	.cellHiddenMd { display: block; }
+}
+
+.vinText {
+	color: var(--color-foreground-light);
+	font-size: 9.5pt;
+	font-family: monospace;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.priceText {
+	color: var(--color-accent);
+	font-weight: 600;
+	font-size: 11pt;
+}
+
+.priceSuffix {
+	color: var(--color-foreground-light);
+	font-weight: 400;
+	font-size: 9pt;
+}
+
+.dateText {
+	color: var(--color-foreground);
+	font-size: 10pt;
+}
+
+/* Row actions */
+.rowActions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.rowActionBtn {
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	color: var(--color-foreground-light);
+	cursor: pointer;
+	background: none;
+	border: none;
+	font-size: 14pt;
+	transition: background-color 150ms, color 150ms;
+}
+
+.rowActionBtn:disabled {
+	opacity: 0.4;
+}
+
+.rowActionBtnEdit:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	color: var(--color-accent);
+}
+
+.rowActionBtnDelete:hover:not(:disabled) {
+	background-color: color-mix(in srgb, #ef4444 10%, transparent);
+	color: #ef4444;
+}
+
+.chevron {
+	color: color-mix(in srgb, var(--color-foreground-light) 40%, transparent);
+	font-size: 12pt;
+}
+
+/* Expanded row */
+.expandedRow {
+	padding: 20px;
+	background-color: color-mix(in srgb, var(--color-primary-dark) 40%, transparent);
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 20px;
+}
+
+@media (min-width: 768px) {
+	.expandedRow { grid-template-columns: repeat(3, 1fr); }
+}
+
+.expandedLeft {
+	grid-column: span 1;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+@media (min-width: 768px) {
+	.expandedLeft { grid-column: span 2; }
+}
+
+.expandedMiniLabel {
+	font-size: 8pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+	margin-bottom: 4px;
+}
+
+.expandedDescription {
+	font-size: 10pt;
+	color: var(--color-foreground);
+	line-height: 1.6;
+}
+
+.expandedSpecGrid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px 24px;
+}
+
+@media (min-width: 640px) {
+	.expandedSpecGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.expandedSpecKey {
+	font-size: 7.5pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+}
+
+.expandedSpecValue {
+	font-size: 10pt;
+	color: var(--color-foreground);
+	margin-top: 2px;
+}
+
+/* Gallery strip */
+.galleryStrip {
+	display: flex;
+	gap: 8px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.galleryThumb {
+	position: relative;
+	flex-shrink: 0;
+	width: 110px;
+	height: 74px;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	border: 1px solid var(--color-third);
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.galleryEmpty {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+}
+
+/* Badge */
+.badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	background-color: color-mix(in srgb, var(--color-third) 40%, transparent);
+	color: var(--color-foreground);
+	font-size: 8pt;
+	font-weight: 500;
+}
+
+/* ── DashboardPanel ───────────────────────────────────────────────────────────── */
+.dashHeading {
+	color: var(--color-foreground);
+	font-size: 28pt;
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.dashSubheading {
+	color: var(--color-foreground-light);
+	font-size: 11pt;
+	margin-top: 4px;
+}
+
+.statGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 16px;
+}
+
+@media (min-width: 1280px) {
+	.statGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.statCard {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	border-radius: 1rem;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.statCardHeader {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-foreground-light);
+	font-size: 11pt;
+}
+
+.statCardIcon {
+	color: var(--color-accent);
+	font-size: 16pt;
+}
+
+.statCardValue {
+	color: var(--color-foreground);
+	font-size: 22pt;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.statCardSub {
+	color: var(--color-foreground-light);
+	font-size: 9pt;
+}
+
+.breakdownGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 24px;
+}
+
+@media (min-width: 768px) {
+	.breakdownGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.breakdownCard {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	border-radius: 1rem;
+	padding: 20px;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.sectionTitle {
+	color: var(--color-foreground);
+	font-size: 13pt;
+	font-weight: 600;
+	margin-bottom: 14px;
+}
+
+.breakdownBar {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.breakdownBarHeader {
+	display: flex;
+	justify-content: space-between;
+	font-size: 9.5pt;
+}
+
+.breakdownBarLabel {
+	color: var(--color-foreground);
+	font-weight: 500;
+}
+
+.breakdownBarCount {
+	color: var(--color-foreground-light);
+}
+
+.breakdownTrack {
+	width: 100%;
+	height: 6px;
+	background-color: color-mix(in srgb, var(--color-third) 30%, transparent);
+	border-radius: 9999px;
+	overflow: hidden;
+}
+
+.breakdownFill {
+	height: 100%;
+	border-radius: 9999px;
+}
+
+/* bar fill colors */
+.barAccent    { background-color: var(--color-accent); }
+.barBlue      { background-color: #3b82f6; }
+.barEmerald   { background-color: #10b981; }
+.barAmber     { background-color: #f59e0b; }
+.barPurple    { background-color: #8b5cf6; }
+.barRose      { background-color: #f43f5e; }
+.barCyan      { background-color: #06b6d4; }
+.barOrange    { background-color: #fb923c; }
+
+.topPriceTable {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	border-radius: 1rem;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+	overflow: hidden;
+}
+
+.topPriceTableHeader {
+	padding: 16px 20px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+}
+
+.topPriceTable table {
+	width: 100%;
+	font-size: 10.5pt;
+}
+
+.topPriceTable thead tr {
+	color: var(--color-foreground-light);
+	text-align: left;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 30%, transparent);
+}
+
+.topPriceTable th {
+	padding: 10px 20px;
+	font-weight: 500;
+}
+
+.topPriceTable th:last-child {
+	text-align: right;
+}
+
+.topPriceTableRow {
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.topPriceTableRowAlt {
+	background-color: color-mix(in srgb, var(--color-third) 5%, transparent);
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.topPriceTable td {
+	padding: 12px 20px;
+}
+
+.tdVehicle {
+	font-weight: 500;
+	color: var(--color-foreground);
+}
+
+.tdLight {
+	color: var(--color-foreground-light);
+}
+
+.tdAccent {
+	color: var(--color-accent);
+	font-weight: 600;
+	text-align: right;
+}
+
+.sectionsGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 16px;
+}
+
+@media (min-width: 768px) {
+	.sectionsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.sectionNavCard {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	border-radius: 1rem;
+	overflow: hidden;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.sectionNavCardHeader {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 20px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 30%, transparent);
+	background-color: color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
+}
+
+.sectionNavCardIcon {
+	color: var(--color-accent);
+	font-size: 18pt;
+}
+
+.sectionNavCardTitle {
+	color: var(--color-foreground);
+	font-size: 12pt;
+	font-weight: 600;
+}
+
+.sectionNavItems {
+	display: flex;
+	flex-direction: column;
+}
+
+.sectionNavItems > * + * {
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.sectionNavItem {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 20px;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	text-align: left;
+	background: none;
+	border: none;
+	color: var(--color-foreground);
+	width: 100%;
+}
+
+.sectionNavItem:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	color: var(--color-accent);
+}
+
+.sectionNavItemIcon {
+	color: var(--color-foreground-light);
+	font-size: 16pt;
+	transition: color 150ms;
+}
+
+.sectionNavItem:hover .sectionNavItemIcon {
+	color: var(--color-accent);
+}
+
+.sectionNavItemLabel {
+	font-size: 11pt;
+	font-weight: 500;
+}

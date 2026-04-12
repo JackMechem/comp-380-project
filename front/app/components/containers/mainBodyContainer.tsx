@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
+import styles from "./mainBodyContainer.module.css";
 
 const MainBodyContainer = ({ children, className }: { children: ReactNode, className?: string }) => {
 	return (
-		<div className={"xl:mx-[100px] lg:mx-[50px] mx-[10px] pb-[100px] " + className}>
+		<div className={`${styles.container}${className ? " " + className : ""}`}>
 			{children}
 		</div>
 	);

@@ -21,6 +21,7 @@ import AudiCarImage from "./media/transparentCarImages/audi.png";
 import VolkswagenLogo from "./media/carBrandLogos/volkswagen.svg";
 import VolkswagenCarImage from "./media/transparentCarImages/volkswagen.png";
 import Link from "next/link";
+import styles from "./home.module.css";
 
 // --- Async data components ---
 
@@ -68,20 +69,18 @@ const Home = () => {
 		<>
 			<NavHeader />
 			<LandingHero />
-			<MainBodyContainer className="flex flex-col gap-[40px]">
+			<MainBodyContainer className={styles.mainContent}>
 				<Suspense fallback={<BrandScrollSkeleton />}>
 					<BrandScrollSection />
 				</Suspense>
 
 				<div>
 					<Link
-						href={"/browse?minPricePerDay=0&maxPricePerDay=100"}
-						className="flex justify-between items-center mt-[20px]"
+						href="/browse?minPricePerDay=0&maxPricePerDay=100"
+						className={styles.sectionHeader}
 					>
 						<TitleText>Cars Under $100/day</TitleText>
-						<p className="text-accent text-[12pt] font-[500]">
-							See more {"->"}
-						</p>
+						<p className={styles.seeMore}>See more {"->"}</p>
 					</Link>
 					<Suspense fallback={<CarScrollSkeleton />}>
 						<CheapCarsSection />

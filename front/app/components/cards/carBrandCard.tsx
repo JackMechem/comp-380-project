@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import styles from "./carBrandCard.module.css";
 
 interface CarBrandCardProps {
 	title: string;
@@ -17,30 +18,30 @@ const CarBrandCard = ({
     searchURL = "/browse?make=" + title.toLowerCase()
 }: CarBrandCardProps) => {
 	return (
-		<div className="flex flex-col gap-[40px] md:min-w-[500px] md:w-[500px] min-w-full bg-primary-dark rounded-lg px-[30px] py-[25px] shadow-md">
-			<div className="h-[52px] w-full flex p-[5px] items-center justify-between">
+		<div className={styles.card}>
+			<div className={styles.header}>
 				<Image
 					src={logoImage}
 					alt={title + " logo"}
 					width={50}
 					height={50}
-					className="h-full w-fit"
+					className={styles.logo}
 				/>
-				<p className="w-fit text-secondary text-[14pt]">{title}</p>
+				<p className={styles.brandName}>{title}</p>
 			</div>
 			<Image
 				src={carImage}
 				alt={title + " car image"}
 				width={440}
 				height={200}
-				className="h-[200px] w-full object-contain"
+				className={styles.carImage}
 			/>
-			<div className="flex justify-between items-center md:flex-row flex-col md:gap-0 gap-[20px]">
+			<div className={styles.footer}>
 				<div>
-					<p className="text-[10pt] text-secondary">Starting at</p>
-                    <h3 className="text-accent text-[18pt]">${startingPrice}<span className="text-[12pt] opacity-[0.6]">/day</span></h3>
+					<p className={styles.priceLabel}>Starting at</p>
+					<h3 className={styles.price}>${startingPrice}<span className={styles.priceUnit}>/day</span></h3>
 				</div>
-                <Link href={searchURL} className="px-[25px] py-[8px] h-fit text-center rounded-full bg-accent text-primary">Browse {title}</Link>
+				<Link href={searchURL} className={styles.browseBtn}>Browse {title}</Link>
 			</div>
 		</div>
 	);
