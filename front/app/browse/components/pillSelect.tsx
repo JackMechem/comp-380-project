@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./pillSelect.module.css";
+
 interface PillOption {
     paramId: string;
     displayText: string;
@@ -13,16 +15,12 @@ interface PillSelectProps {
 
 const PillSelect = ({ options, selected, onChange }: PillSelectProps) => {
     return (
-        <div className="flex flex-wrap gap-[10px]">
+        <div className={styles.pillGroup}>
             {options.map((opt) => (
                 <button
                     key={opt.paramId}
                     onClick={() => onChange(selected === opt.paramId ? null : opt.paramId)}
-                    className={`px-[14px] py-[8px] rounded-full border text-[10pt] transition-colors ${
-                        selected === opt.paramId
-                            ? "border-foreground bg-foreground text-primary font-[500]"
-                            : "border-third text-foreground hover:border-foreground"
-                    }`}
+                    className={`${styles.pill} ${selected === opt.paramId ? styles.pillActive : ""}`}
                 >
                     {opt.displayText}
                 </button>
@@ -32,4 +30,3 @@ const PillSelect = ({ options, selected, onChange }: PillSelectProps) => {
 };
 
 export default PillSelect;
-

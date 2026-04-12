@@ -3,6 +3,7 @@
 import { useCartStore } from "@/stores/cartStore";
 import { BsCart2, BsCartX } from "react-icons/bs";
 import { CartProps } from "@/app/types/CartTypes";
+import styles from "./cartButton.module.css";
 
 const CartButton = () => {
 	const { carData }: { carData: CartProps[] } = useCartStore();
@@ -10,11 +11,9 @@ const CartButton = () => {
 	return (
 		<>
             {cartCount > 0 ?
-			<div>
+			<div className={styles.wrapper}>
 				<BsCart2 />
-				<div
-					className={`absolute text-[8pt] font-[600] px-[8px] py-[2px] right-[52px] top-[-3px] rounded-full`}
-				>
+				<div className={styles.badge}>
 					{cartCount}
 				</div>
 			</div>

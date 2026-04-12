@@ -1,5 +1,7 @@
 "use client";
 import { ReactNode, useRef, useState, useEffect } from "react";
+import styles from "./brandScroll.module.css";
+
 const BrandScroll = ({ children }: { children: ReactNode }) => {
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const directionRef = useRef<number>(1);
@@ -34,15 +36,17 @@ const BrandScroll = ({ children }: { children: ReactNode }) => {
 		}, 4000);
 		return () => clearInterval(interval);
 	}, []);
+
 	return (
 		<div
 			ref={scrollRef}
-			onMouseEnter={() => {  hoveredRef.current = true; }}
-			onMouseLeave={() => {  hoveredRef.current = false; }}
-			className="relative flex gap-[15px] p-[10px] w-full overflow-x-scroll scrollbar-hide"
+			onMouseEnter={() => { hoveredRef.current = true; }}
+			onMouseLeave={() => { hoveredRef.current = false; }}
+			className={styles.scroll}
 		>
 			{children}
 		</div>
 	);
 };
+
 export default BrandScroll;

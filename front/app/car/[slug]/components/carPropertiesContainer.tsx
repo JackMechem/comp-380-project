@@ -1,11 +1,8 @@
 import { ReactNode } from "react";
+import styles from "./carDetail.module.css";
 
 const CarPropertiesContainer = ({ children }: { children: ReactNode }) => {
-	return (
-		<div className="flex flex-wrap gap-[10px] mt-[10px] w-fit text-nowrap">
-			{children}
-		</div>
-	);
+	return <div className={styles.carPropertiesContainer}>{children}</div>;
 };
 
 export default CarPropertiesContainer;

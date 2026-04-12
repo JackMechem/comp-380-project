@@ -4,49 +4,47 @@ import Link from "next/link";
 import { BiCar } from "react-icons/bi";
 import { GiCarSeat } from "react-icons/gi";
 import { PiEngine } from "react-icons/pi";
+import styles from "./carGridCard.module.css";
 
 const CarGridCard = ({ car }: { car: Car }) => (
-	<Link
-		href={`/car/${car.vin}`}
-		className="text-left rounded-xl overflow-hidden cursor-pointer hover:scale-[102%] duration-150 text-foreground bg-primary shadow-md flex flex-col border border-third"
-	>
+	<Link href={`/car/${car.vin}`} className={styles.card}>
 		<Image
 			width={400}
 			height={250}
 			alt={`${car.make} ${car.model}`}
 			src={car.images[0]}
-			className="w-full h-[180px] object-cover"
+			className={styles.image}
 			loading="lazy"
 		/>
-		<div className="px-[16px] py-[14px] flex flex-col gap-[10px] flex-1">
-			<div>
-				<h2 className="text-[13pt] font-[500] truncate">
+		<div className={styles.body}>
+			<div className={styles.titleGroup}>
+				<h2 className={styles.carName}>
 					{car.make} {car.model}
 				</h2>
-				<p className="text-[10pt] text-secondary">{car.modelYear}</p>
+				<p className={styles.carYear}>{car.modelYear}</p>
 			</div>
-			<div className="text-foreground-light text-[10pt] flex flex-col gap-[4px]">
-				<div className="flex gap-[5px] items-center">
+			<div className={styles.stats}>
+				<div className={styles.stat}>
 					<BiCar />
-					<p className="lowercase first-letter:uppercase">{car.vehicleClass}</p>
+					<p className={styles.statCapitalize}>{car.vehicleClass}</p>
 				</div>
-				<div className="flex gap-[5px] items-center">
+				<div className={styles.stat}>
 					<GiCarSeat />
 					<p>{car.seats} seats</p>
 				</div>
-				<div className="flex gap-[5px] items-center">
+				<div className={styles.stat}>
 					<PiEngine />
-					<p className="lowercase first-letter:uppercase">
+					<p className={styles.statCapitalize}>
 						{car.engineLayout === "DUAL_MOTOR" || car.engineLayout === "SINGLE_MOTOR"
 							? car.engineLayout
 							: `${car.engineLayout} ${car.cylinders}`}
 					</p>
 				</div>
 			</div>
-			<div className="flex justify-between items-center mt-auto pt-[6px]">
-				<h2 className="text-accent text-[15pt] font-[600]">
+			<div className={styles.priceRow}>
+				<h2 className={styles.price}>
 					${car.pricePerDay}
-					<span className="text-[10pt] opacity-60">/day</span>
+					<span className={styles.priceUnit}>/day</span>
 				</h2>
 			</div>
 		</div>

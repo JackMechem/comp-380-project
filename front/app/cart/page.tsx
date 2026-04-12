@@ -1,12 +1,13 @@
 import NavHeader from "../components/headers/navHeader";
 import TitleText from "../components/text/titleText";
 import CartContents from "./componenets/cartContents";
+import styles from "./cart.module.css";
 
 const CartPage = () => {
 	return (
 		<div>
 			<NavHeader white={false} />
-			<div className="w-full flex items-center flex-col gap-[20px] pt-[50px] pb-[100px]">
+			<div className={styles.page}>
 				<TitleText>Car Cart</TitleText>
 				<CartContents />
 			</div>

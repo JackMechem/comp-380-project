@@ -1,6 +1,7 @@
 "use client";
 import { useFilterParams } from "./useFilterParams";
 import { CarApiParams } from "@/app/types/CarTypes";
+import styles from "./browseBar.module.css";
 
 const LABELS: Record<string, string> = {
 	make: "Make",
@@ -41,7 +42,7 @@ const SKIP = new Set([
 	"search",
 ]);
 
-const ActiveFilters = ({ className }: { className: string }) => {
+const ActiveFilters = ({ className }: { className?: string }) => {
 	const { params, remove } = useFilterParams();
 
 	const entries = Object.entries(params).filter(([key]) => !SKIP.has(key));
@@ -49,16 +50,16 @@ const ActiveFilters = ({ className }: { className: string }) => {
 	if (entries.length === 0) return null;
 
 	return (
-		<div className={"flex flex-wrap gap-[6px] items-center" + className}>
+		<div className={`${styles.activeFilters} ${className ?? ""}`}>
 			{entries.map(([key, value]) => (
 				<button
 					key={key}
 					onClick={() => remove(key as keyof CarApiParams)}
-					className="flex items-center gap-[4px] bg-accent/80 text-primary text-[9pt] rounded-full px-[10px] py-[4px] hover:bg-accent/100 transition-colors font-[500]"
+					className={styles.activeFilterChip}
 				>
-					<span className="text-primary">{LABELS[key] ?? key}:</span>
-					<span>{value}</span>
-					<span className="text-primary ml-[2px]">✕</span>
+					<span className={styles.activeFilterKey}>{LABELS[key] ?? key.toLowerCase()}:</span>
+					<span>{value.toString().toLowerCase()}</span>
+					<span className={styles.activeFilterX}>✕</span>
 				</button>
 			))}
 		</div>

@@ -13,7 +13,7 @@ import Image from "next/image";
 import { BiX, BiPlus } from "react-icons/bi";
 
 import AiButton from "./form/AiButton";
-import Field, { inputCls, selectCls, labelCls } from "./form/Field";
+import Field, { formStyles } from "./form/Field";
 import SectionCard from "./form/SectionCard";
 import CopyPicker, { CopyOption } from "./form/CopyPicker";
 import MarkdownEditor from "./form/MarkdownEditor";
@@ -62,7 +62,6 @@ const CarFormPanel = ({ mode }: CarFormPanelProps) => {
 		return raw ? JSON.parse(raw) : { username: "", password: "" };
 	});
 
-	// Fetch copy options + enums on mount
 	useEffect(() => {
 		getFilteredCars({
 			select: "vin,make,model,modelYear,images,vehicleClass,pricePerDay",
@@ -83,7 +82,6 @@ const CarFormPanel = ({ mode }: CarFormPanelProps) => {
 		};
 	}, []);
 
-	// Load selected car into form
 	useEffect(() => {
 		if (selectedVin) {
 			getCar(selectedVin).then((car) => setForm(car)).catch(console.error);
@@ -91,8 +89,6 @@ const CarFormPanel = ({ mode }: CarFormPanelProps) => {
 			setForm(BLANK);
 		}
 	}, [selectedVin]);
-
-	// ── Form helpers ──────────────────────────────────────────────────────────
 
 	const setField = (key: keyof Car, value: string | number | string[] | undefined) =>
 		setForm((prev) => ({ ...prev, [key]: value }));
@@ -102,8 +98,6 @@ const CarFormPanel = ({ mode }: CarFormPanelProps) => {
 
 	const handleNum = (key: keyof Car, raw: string) =>
 		setField(key, raw === "" ? undefined : Number(raw));
-
-	// ── Submit ────────────────────────────────────────────────────────────────
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -124,8 +118,6 @@ const CarFormPanel = ({ mode }: CarFormPanelProps) => {
 			setIsLoading(false);
 		}
 	};
-
-	// ── AI helpers ────────────────────────────────────────────────────────────
 
 	const setAiField = (field: string, loading: boolean) =>
 		setAiLoading((prev) => ({ ...prev, [field]: loading }));
@@ -255,8 +247,6 @@ Reply with only the JSON object, no extra text.`,
 				})),
 		);
 
-	// ── Image helpers ─────────────────────────────────────────────────────────
-
 	const isValidUrl = (url: string) => {
 		try { new URL(url); return true; } catch { return false; }
 	};
@@ -265,11 +255,8 @@ Reply with only the JSON object, no extra text.`,
 	);
 	const filledImageCount = validPreviewImages.length;
 
-	// ── Render ────────────────────────────────────────────────────────────────
-
 	return (
-		<div className="flex flex-col gap-[20px] pb-[40px]">
-			{/* Vehicle picker (copy or edit) */}
+		<div className={formStyles.formRoot}>
 			<CopyPicker
 				options={copyOptions}
 				selectedVin={selectedVin}
@@ -278,20 +265,20 @@ Reply with only the JSON object, no extra text.`,
 			/>
 
 			{mode === "edit" && !selectedVin && (
-				<div className="flex items-center justify-center py-[60px] text-foreground-light text-[11pt]">
+				<div className={formStyles.formNoVehicle}>
 					Select a vehicle above to start editing.
 				</div>
 			)}
 
 			{(mode === "add" || selectedVin) && (
-				<form onSubmit={handleSubmit} className="flex flex-col gap-[16px]">
+				<form onSubmit={handleSubmit} className={formStyles.formRoot}>
 
 					{/* Identity */}
 					<SectionCard title="Identity">
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-[12px]">
+						<div className={formStyles.formGrid2x4}>
 							<Field label="VIN">
 								<input
-									className={`${inputCls} ${mode === "edit" ? "opacity-50 cursor-not-allowed" : ""}`}
+									className={`${formStyles.input} ${mode === "edit" ? formStyles.inputDisabled : ""}`}
 									placeholder="e.g. 1HGBH41JXMN109186"
 									value={form.vin ?? ""}
 									onChange={(e) => setField("vin", e.target.value)}
@@ -300,31 +287,31 @@ Reply with only the JSON object, no extra text.`,
 								/>
 							</Field>
 							<Field label="Make">
-								<input className={inputCls} placeholder="e.g. Toyota" value={form.make ?? ""} onChange={(e) => setField("make", e.target.value)} required />
+								<input className={formStyles.input} placeholder="e.g. Toyota" value={form.make ?? ""} onChange={(e) => setField("make", e.target.value)} required />
 							</Field>
 							<Field label="Model">
-								<input className={inputCls} placeholder="e.g. Supra" value={form.model ?? ""} onChange={(e) => setField("model", e.target.value)} required />
+								<input className={formStyles.input} placeholder="e.g. Supra" value={form.model ?? ""} onChange={(e) => setField("model", e.target.value)} required />
 							</Field>
 							<Field label="Year">
-								<input type="number" className={inputCls} placeholder="e.g. 2024" value={numVal("modelYear")} onChange={(e) => handleNum("modelYear", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 2024" value={numVal("modelYear")} onChange={(e) => handleNum("modelYear", e.target.value)} />
 							</Field>
 						</div>
 					</SectionCard>
 
 					{/* Pricing & Specs */}
 					<SectionCard title="Pricing & Specs" action={<AiButton loading={!!aiLoading["section_pricing"]} onClick={fillPricingSpecs} />}>
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-[12px]">
+						<div className={formStyles.formGrid2x4}>
 							<Field label="Price / Day ($)">
-								<input type="number" className={inputCls} placeholder="e.g. 299" value={numVal("pricePerDay")} onChange={(e) => handleNum("pricePerDay", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 299" value={numVal("pricePerDay")} onChange={(e) => handleNum("pricePerDay", e.target.value)} />
 							</Field>
 							<Field label="MPG">
-								<input type="number" className={inputCls} placeholder="e.g. 30" value={numVal("mpg")} onChange={(e) => handleNum("mpg", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 30" value={numVal("mpg")} onChange={(e) => handleNum("mpg", e.target.value)} />
 							</Field>
 							<Field label="Seats">
-								<input type="number" className={inputCls} placeholder="e.g. 4" value={numVal("seats")} onChange={(e) => handleNum("seats", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 4" value={numVal("seats")} onChange={(e) => handleNum("seats", e.target.value)} />
 							</Field>
 							<Field label="Fuel">
-								<select className={selectCls} value={form.fuel ?? "GASOLINE"} onChange={(e) => setField("fuel", e.target.value)}>
+								<select className={formStyles.select} value={form.fuel ?? "GASOLINE"} onChange={(e) => setField("fuel", e.target.value)}>
 									{(enums?.fuelType ?? ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
@@ -335,41 +322,41 @@ Reply with only the JSON object, no extra text.`,
 
 					{/* Performance */}
 					<SectionCard title="Performance" action={<AiButton loading={!!aiLoading["section_performance"]} onClick={fillPerformance} />}>
-						<div className="grid grid-cols-2 md:grid-cols-4 gap-[12px]">
+						<div className={formStyles.formGrid2x4}>
 							<Field label="Horsepower (hp)">
-								<input type="number" className={inputCls} placeholder="e.g. 500" value={numVal("horsepower")} onChange={(e) => handleNum("horsepower", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 500" value={numVal("horsepower")} onChange={(e) => handleNum("horsepower", e.target.value)} />
 							</Field>
 							<Field label="Torque (lb-ft)">
-								<input type="number" className={inputCls} placeholder="e.g. 450" value={numVal("torque")} onChange={(e) => handleNum("torque", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 450" value={numVal("torque")} onChange={(e) => handleNum("torque", e.target.value)} />
 							</Field>
 							<Field label="Cylinders">
-								<input type="number" className={inputCls} placeholder="e.g. 6" value={numVal("cylinders")} onChange={(e) => handleNum("cylinders", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 6" value={numVal("cylinders")} onChange={(e) => handleNum("cylinders", e.target.value)} />
 							</Field>
 							<Field label="Gears">
-								<input type="number" className={inputCls} placeholder="e.g. 8" value={numVal("gears")} onChange={(e) => handleNum("gears", e.target.value)} />
+								<input type="number" className={formStyles.input} placeholder="e.g. 8" value={numVal("gears")} onChange={(e) => handleNum("gears", e.target.value)} />
 							</Field>
 						</div>
 					</SectionCard>
 
 					{/* Configuration & Classification */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+					<div className={formStyles.formGrid1x2}>
 						<SectionCard title="Configuration" action={<AiButton loading={!!aiLoading["section_configuration"]} onClick={fillConfiguration} />}>
 							<Field label="Transmission">
-								<select className={selectCls} value={form.transmission ?? "AUTOMATIC"} onChange={(e) => setField("transmission", e.target.value)}>
+								<select className={formStyles.select} value={form.transmission ?? "AUTOMATIC"} onChange={(e) => setField("transmission", e.target.value)}>
 									{(enums?.transmissionType ?? ["AUTOMATIC", "MANUAL"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
 								</select>
 							</Field>
 							<Field label="Drivetrain">
-								<select className={selectCls} value={form.drivetrain ?? "AWD"} onChange={(e) => setField("drivetrain", e.target.value)}>
+								<select className={formStyles.select} value={form.drivetrain ?? "AWD"} onChange={(e) => setField("drivetrain", e.target.value)}>
 									{(enums?.drivetrain ?? ["AWD", "RWD", "FWD"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
 								</select>
 							</Field>
 							<Field label="Engine Layout">
-								<select className={selectCls} value={form.engineLayout ?? "V"} onChange={(e) => setField("engineLayout", e.target.value)}>
+								<select className={formStyles.select} value={form.engineLayout ?? "V"} onChange={(e) => setField("engineLayout", e.target.value)}>
 									{(enums?.engineLayout ?? ["V", "INLINE", "FLAT", "SINGLE_MOTOR", "DUAL_MOTOR"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
@@ -379,21 +366,21 @@ Reply with only the JSON object, no extra text.`,
 
 						<SectionCard title="Classification" action={<AiButton loading={!!aiLoading["section_classification"]} onClick={fillClassification} />}>
 							<Field label="Body Type">
-								<select className={selectCls} value={form.bodyType ?? "SEDAN"} onChange={(e) => setField("bodyType", e.target.value)}>
+								<select className={formStyles.select} value={form.bodyType ?? "SEDAN"} onChange={(e) => setField("bodyType", e.target.value)}>
 									{(enums?.bodyType ?? ["SEDAN", "SUV", "TRUCK", "CONVERTIBLE", "HATCHBACK", "FULL_SIZE", "COMPACT", "WAGON", "ELECTRIC", "COUPE"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
 								</select>
 							</Field>
 							<Field label="Roof Type">
-								<select className={selectCls} value={form.roofType ?? "HARDTOP"} onChange={(e) => setField("roofType", e.target.value)}>
+								<select className={formStyles.select} value={form.roofType ?? "HARDTOP"} onChange={(e) => setField("roofType", e.target.value)}>
 									{(enums?.roofType ?? ["HARDTOP", "SOFTTOP", "TARGA", "SLICKTOP", "PANORAMIC"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
 								</select>
 							</Field>
 							<Field label="Vehicle Class">
-								<select className={selectCls} value={form.vehicleClass ?? "LUXURY"} onChange={(e) => setField("vehicleClass", e.target.value)}>
+								<select className={formStyles.select} value={form.vehicleClass ?? "LUXURY"} onChange={(e) => setField("vehicleClass", e.target.value)}>
 									{(enums?.vehicleClass ?? ["ECONOMY", "LUXURY", "PERFORMANCE", "OFFROAD", "FULL_SIZE", "ELECTRIC"]).map((v) => (
 										<option key={v} value={v}>{formatEnum(v)}</option>
 									))}
@@ -404,7 +391,7 @@ Reply with only the JSON object, no extra text.`,
 
 					{/* Description */}
 					<SectionCard title="Description">
-						<div className="flex justify-end">
+						<div className={formStyles.descriptionActions}>
 							<AiButton
 								loading={!!aiLoading["description"]}
 								onClick={() =>
@@ -423,8 +410,8 @@ Reply with only the JSON object, no extra text.`,
 
 					{/* Media & Features */}
 					<SectionCard title="Media & Features">
-						<div className="flex items-center justify-between">
-							<label className={labelCls}>Features</label>
+						<div className={formStyles.sectionCardHeader}>
+							<label className={formStyles.label}>Features</label>
 							<AiButton loading={!!aiLoading["features"]} onClick={fillFeatures} />
 						</div>
 						<FeatureTags
@@ -432,19 +419,17 @@ Reply with only the JSON object, no extra text.`,
 							onChange={(tags) => setField("features", tags)}
 						/>
 
-						<div className="flex flex-col gap-[8px]">
-							<div className="flex items-center justify-between">
-								<label className={labelCls}>Image URLs</label>
-								<span
-									className={`text-[8.5pt] font-[500] ${filledImageCount >= MIN_IMAGES ? "text-accent" : "text-amber-400"}`}
-								>
+						<div className={formStyles.imageRowGroup}>
+							<div className={formStyles.sectionCardHeader}>
+								<label className={formStyles.label}>Image URLs</label>
+								<span className={`${formStyles.imageCountNote} ${filledImageCount >= MIN_IMAGES ? formStyles.imageCountOk : formStyles.imageCountWarn}`}>
 									{filledImageCount} / {MIN_IMAGES} required
 								</span>
 							</div>
 							{(form.images ?? [""]).map((url, i) => (
-								<div key={i} className="flex gap-[8px] items-center">
+								<div key={i} className={formStyles.imageRow}>
 									<input
-										className={`${inputCls} flex-1`}
+										className={`${formStyles.input} ${formStyles.imageRowInput}`}
 										placeholder="https://…"
 										value={url}
 										onChange={(e) => {
@@ -460,9 +445,9 @@ Reply with only the JSON object, no extra text.`,
 												const updated = (form.images ?? []).filter((_, j) => j !== i);
 												setField("images", updated);
 											}}
-											className="flex-shrink-0 w-[36px] h-[36px] flex items-center justify-center rounded-xl border border-third text-foreground-light hover:border-red-400/60 hover:text-red-400 transition-colors cursor-pointer"
+											className={formStyles.imageRemoveBtn}
 										>
-											<BiX className="text-[14pt]" />
+											<BiX />
 										</button>
 									)}
 								</div>
@@ -470,20 +455,16 @@ Reply with only the JSON object, no extra text.`,
 							<button
 								type="button"
 								onClick={() => setField("images", [...(form.images ?? []), ""])}
-								className="flex items-center gap-[6px] px-[12px] py-[8px] rounded-xl border border-dashed border-third hover:border-accent/50 hover:bg-accent/5 text-foreground-light hover:text-accent text-[10pt] transition-colors cursor-pointer w-fit"
+								className={formStyles.addImageBtn}
 							>
-								<BiPlus className="text-[13pt]" /> Add Image
+								<BiPlus className={formStyles.addImageIcon} /> Add Image
 							</button>
 						</div>
 
-						{/* Image preview */}
 						{validPreviewImages.length > 0 && (
-							<div className="flex gap-[10px] overflow-x-auto pb-[4px] scrollbar-hide">
+							<div className={`${formStyles.imagePreviewStrip} scrollbar-hide`}>
 								{validPreviewImages.map((url, i) => (
-									<div
-										key={i}
-										className="relative flex-shrink-0 w-[120px] h-[80px] rounded-xl overflow-hidden border border-third bg-third/20"
-									>
+									<div key={i} className={formStyles.imagePreviewThumb}>
 										<Image
 											src={url}
 											alt={`preview ${i + 1}`}
@@ -498,9 +479,8 @@ Reply with only the JSON object, no extra text.`,
 						)}
 					</SectionCard>
 
-					{/* Submit */}
 					{filledImageCount < MIN_IMAGES && (
-						<p className="text-amber-400 text-[9.5pt] text-center">
+						<p className={formStyles.formWarning}>
 							Add at least {MIN_IMAGES} image URLs before saving (
 							{MIN_IMAGES - filledImageCount} more needed).
 						</p>
@@ -508,7 +488,7 @@ Reply with only the JSON object, no extra text.`,
 					<button
 						type="submit"
 						disabled={isLoading || filledImageCount < MIN_IMAGES}
-						className="w-full py-[14px] bg-accent text-primary font-[600] text-[11pt] rounded-xl hover:brightness-110 transition disabled:opacity-50 cursor-pointer"
+						className={formStyles.submitBtn}
 					>
 						{isLoading
 							? "Saving…"

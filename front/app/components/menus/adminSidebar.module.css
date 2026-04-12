@@ -1,0 +1,399 @@
+/* ── Mobile bottom bar ──────────────────────────────────────────────────────── */
+.mobileBar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 20;
+	background-color: var(--color-primary);
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	padding: 6px 8px;
+}
+
+.mobileTabBtn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	padding: 6px 16px;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	transition: color 150ms;
+	background: none;
+	border: none;
+	color: var(--color-foreground-light);
+}
+
+.mobileTabBtnActive {
+	color: var(--color-accent);
+}
+
+.mobileTabIcon {
+	font-size: 20pt;
+}
+
+.mobileTabLabel {
+	font-size: 7pt;
+	font-weight: 500;
+}
+
+/* ── Bottom sheet overlay ───────────────────────────────────────────────────── */
+.overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	background-color: color-mix(in srgb, black 40%, transparent);
+	backdrop-filter: blur(2px);
+}
+
+.sheet {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 40;
+	background-color: var(--color-primary);
+	border-radius: 1rem 1rem 0 0;
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+	animation: slide-up 200ms ease-out;
+}
+
+.sheetHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px 12px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 30%, transparent);
+}
+
+.sheetTitleGroup {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-foreground);
+}
+
+.sheetTitleIcon {
+	font-size: 18pt;
+	color: var(--color-accent);
+}
+
+.sheetTitle {
+	font-size: 13pt;
+	font-weight: 600;
+}
+
+.sheetCloseBtn {
+	color: var(--color-foreground-light);
+	font-size: 18pt;
+	cursor: pointer;
+	background: none;
+	border: none;
+	transition: color 150ms;
+}
+
+.sheetCloseBtn:hover {
+	color: var(--color-foreground);
+}
+
+.sheetItems {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+}
+
+.sheetItem {
+	width: auto;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 14px 16px;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	text-align: left;
+	background: none;
+	border: none;
+	color: var(--color-foreground);
+}
+
+.sheetItem:hover {
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.sheetItemActive {
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+}
+
+.sheetItemIcon {
+	font-size: 18pt;
+	flex-shrink: 0;
+	color: var(--color-foreground-light);
+}
+
+.sheetItemIconActive {
+	color: var(--color-accent);
+}
+
+.sheetItemLabel {
+	font-size: 12pt;
+	font-weight: 500;
+}
+
+.sheetSpacer {
+	height: 16px;
+}
+
+/* ── Desktop sidebar ────────────────────────────────────────────────────────── */
+.desktop {
+	position: fixed;
+	left: 0;
+	top: 65px;
+	height: calc(100vh - 64px);
+	background-color: var(--color-primary);
+	border-right: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+	display: flex;
+	flex-direction: column;
+	transition: width 300ms ease-in-out;
+	z-index: 5;
+}
+
+.desktopCollapsed {
+	width: 64px;
+}
+
+.desktopExpanded {
+	width: 220px;
+}
+
+/* Collapsed icon stack */
+.collapsedStack {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 12px 8px;
+}
+
+.collapsedIconBtn {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 0;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	background: none;
+	border: none;
+	color: var(--color-foreground-light);
+}
+
+.collapsedIconBtn:hover {
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.collapsedIconBtnActive {
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+}
+
+.collapsedIconWrap {
+	position: relative;
+	width: 100%;
+}
+
+.collapsedBtnIcon {
+	font-size: 18pt;
+}
+
+/* Flyout panel */
+.flyout {
+	position: absolute;
+	left: calc(100% + 8px);
+	top: 0;
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	border-radius: 0.75rem;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+	padding: 8px 0;
+	width: 180px;
+	z-index: 50;
+}
+
+.flyoutLabel {
+	font-size: 8pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+	padding: 0 12px 6px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 40%, transparent);
+	margin-bottom: 4px;
+}
+
+.flyoutItem {
+    box-sizing: border-box;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	text-align: left;
+	background: none;
+	border: none;
+	color: var(--color-foreground);
+}
+
+.flyoutItem:hover {
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.flyoutItemActive {
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+}
+
+.flyoutItemIcon {
+	font-size: 14pt;
+	flex-shrink: 0;
+	color: var(--color-foreground-light);
+}
+
+.flyoutItemIconActive {
+	color: var(--color-accent);
+}
+
+.flyoutItemLabel {
+	font-size: 10.5pt;
+	font-weight: 500;
+}
+
+/* Expanded layout */
+.expandedInner {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	overflow: hidden;
+}
+
+.expandedIconStrip {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 10px;
+	overflow-x: auto;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 30%, transparent);
+	flex-shrink: 0;
+}
+
+.expandedIconBtn {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	background: none;
+	border: none;
+	color: var(--color-foreground-light);
+	font-size: 18pt;
+}
+
+.expandedIconBtn:hover {
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.expandedIconBtnActive {
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+}
+
+.expandedItems {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 10px 8px;
+	overflow-y: auto;
+}
+
+.expandedItem {
+	width: auto;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 12px 9px 16px;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	transition: background-color 150ms, color 150ms;
+	text-align: left;
+	background: none;
+	border: none;
+	color: var(--color-foreground);
+}
+
+.expandedItem:hover {
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.expandedItemActive {
+	background-color: color-mix(in srgb, var(--color-accent) 15%, transparent);
+	color: var(--color-accent);
+}
+
+.expandedItemIcon {
+	font-size: 15pt;
+	flex-shrink: 0;
+	color: var(--color-foreground-light);
+}
+
+.expandedItemIconActive {
+	color: var(--color-accent);
+}
+
+.expandedItemLabel {
+	font-size: 10.5pt;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+/* Toggle button */
+.toggleBtn {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	right: -14px;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-foreground);
+	cursor: pointer;
+	transition: background-color 150ms;
+	z-index: 30;
+}
+
+.toggleBtn:hover {
+	background-color: var(--color-primary-dark);
+}
+
+.toggleBtnIcon {
+	font-size: 14px;
+}

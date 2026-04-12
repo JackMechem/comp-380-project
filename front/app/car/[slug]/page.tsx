@@ -6,6 +6,7 @@ import ImageView from "./components/imageView";
 import BackButton from "./components/backButton";
 import MainBodyContainer from "@/app/components/containers/mainBodyContainer";
 import NavHeader from "@/app/components/headers/navHeader";
+import styles from "./components/carDetail.module.css";
 
 const CarPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
 	const { slug } = await params;
@@ -17,9 +18,9 @@ const CarPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
 			<MainBodyContainer className="mt-[20px]">
 				<BackButton />
 				<ImageView images={carData.images} />
-				<div className="flex md:flex-row flex-col gap-[20px]">
-					<LeftColumn carData={carData}></LeftColumn>
-					<RightColumn carData={carData}></RightColumn>
+				<div className={styles.twoColRow}>
+					<LeftColumn carData={carData} />
+					<RightColumn carData={carData} />
 				</div>
 			</MainBodyContainer>
 		</div>

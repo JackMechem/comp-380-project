@@ -7,6 +7,7 @@ import {
     BiCar, BiChevronLeft, BiChevronRight,
     BiPlus, BiEdit, BiTable, BiGridAlt, BiX, BiCalendar,
 } from "react-icons/bi";
+import styles from "./adminSidebar.module.css";
 
 type Section = "cars" | "reservations";
 
@@ -40,8 +41,6 @@ const SECTIONS: SectionDef[] = [
 
 // ── Mobile bottom bar + sheet ─────────────────────────────────────────────────
 
-// ── Mobile bottom bar + sheet ─────────────────────────────────────────────────
-
 const MobileSidebar = () => {
     const { activeView, setActiveView } = useAdminSidebarStore();
     const [sheetSection, setSheetSection] = useState<Section | null>(null);
@@ -56,15 +55,13 @@ const MobileSidebar = () => {
     return (
         <>
             {/* Bottom tab bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-20 bg-primary border-t border-third/50 flex items-center justify-around px-[8px] py-[6px]">
+            <div className={styles.mobileBar}>
                 <button
                     onClick={handleDashboard}
-                    className={`flex flex-col items-center gap-[2px] px-[16px] py-[6px] rounded-xl cursor-pointer transition-colors ${
-                        activeView === null && !sheetSection ? "text-accent" : "text-foreground-light"
-                    }`}
+                    className={`${styles.mobileTabBtn} ${activeView === null && !sheetSection ? styles.mobileTabBtnActive : ""}`}
                 >
-                    <BiGridAlt className="text-[20pt]" />
-                    <span className="text-[7pt] font-[500]">Dashboard</span>
+                    <BiGridAlt className={styles.mobileTabIcon} />
+                    <span className={styles.mobileTabLabel}>Dashboard</span>
                 </button>
                 {SECTIONS.map((s) => {
                     const sectionActive = s.items.some((i) => i.view === activeView) || sheetSection === s.id;
@@ -72,12 +69,10 @@ const MobileSidebar = () => {
                         <button
                             key={s.id}
                             onClick={() => openSheet(s.id)}
-                            className={`flex flex-col items-center gap-[2px] px-[16px] py-[6px] rounded-xl cursor-pointer transition-colors ${
-                                sectionActive ? "text-accent" : "text-foreground-light"
-                            }`}
+                            className={`${styles.mobileTabBtn} ${sectionActive ? styles.mobileTabBtnActive : ""}`}
                         >
-                            <span className="text-[20pt]">{s.icon}</span>
-                            <span className="text-[7pt] font-[500]">{s.label}</span>
+                            <span className={styles.mobileTabIcon}>{s.icon}</span>
+                            <span className={styles.mobileTabLabel}>{s.label}</span>
                         </button>
                     );
                 })}
@@ -86,37 +81,35 @@ const MobileSidebar = () => {
             {/* Bottom sheet */}
             {sheet && (
                 <>
-                    <div className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[2px]" onClick={closeSheet} />
-                    <div className="fixed bottom-0 left-0 right-0 z-40 bg-primary rounded-t-2xl border-t border-third/40 shadow-xl animate-slide-up">
-                        <div className="flex items-center justify-between px-[20px] pt-[16px] pb-[12px] border-b border-third/30">
-                            <div className="flex items-center gap-[8px] text-foreground">
-                                <span className="text-[18pt] text-accent">{sheet.icon}</span>
-                                <span className="text-[13pt] font-[600]">{sheet.label}</span>
+                    <div className={styles.overlay} onClick={closeSheet} />
+                    <div className={styles.sheet}>
+                        <div className={styles.sheetHeader}>
+                            <div className={styles.sheetTitleGroup}>
+                                <span className={styles.sheetTitleIcon}>{sheet.icon}</span>
+                                <span className={styles.sheetTitle}>{sheet.label}</span>
                             </div>
-                            <button onClick={closeSheet} className="text-foreground-light text-[18pt] cursor-pointer hover:text-foreground transition-colors">
+                            <button onClick={closeSheet} className={styles.sheetCloseBtn}>
                                 <BiX />
                             </button>
                         </div>
-                        <div className="flex flex-col gap-[4px] px-[12px] py-[12px]">
+                        <div className={styles.sheetItems}>
                             {sheet.items.map((item) => {
                                 const isActive = activeView === item.view;
                                 return (
                                     <button
                                         key={String(item.view)}
                                         onClick={() => pickView(item.view)}
-                                        className={`w-full flex items-center gap-[14px] px-[16px] py-[14px] rounded-xl cursor-pointer transition-colors text-left ${
-                                            isActive ? "bg-accent/15 text-accent" : "hover:bg-third/20 text-foreground"
-                                        }`}
+                                        className={`${styles.sheetItem} ${isActive ? styles.sheetItemActive : ""}`}
                                     >
-                                        <span className={`text-[18pt] flex-shrink-0 ${isActive ? "text-accent" : "text-foreground-light"}`}>
+                                        <span className={`${styles.sheetItemIcon} ${isActive ? styles.sheetItemIconActive : ""}`}>
                                             {item.icon}
                                         </span>
-                                        <span className="text-[12pt] font-[500]">{item.label}</span>
+                                        <span className={styles.sheetItemLabel}>{item.label}</span>
                                     </button>
                                 );
                             })}
                         </div>
-                        <div className="h-[16px]" />
+                        <div className={styles.sheetSpacer} />
                     </div>
                 </>
             )}
@@ -153,65 +146,53 @@ const DesktopSidebar = () => {
     const flyoutSection = SECTIONS.find((s) => s.id === flyout);
 
     return (
-        <div
-            className={`fixed left-0 top-[70px] h-[calc(100vh-64px)] bg-primary border-r border-third/50 shadow-sm flex flex-col transition-all duration-300 ease-in-out z-[5] ${
-                collapsed ? "w-[64px]" : "w-[220px]"
-            }`}
-        >
+        <div className={`${styles.desktop} ${collapsed ? styles.desktopCollapsed : styles.desktopExpanded}`}>
             {collapsed ? (
                 /* Collapsed: icon stack with hover flyouts */
-                <div className="flex flex-col items-center gap-[4px] py-[12px] px-[8px]">
+                <div className={styles.collapsedStack}>
                     {/* Dashboard */}
                     <button
                         onClick={handleDashboard}
                         title="Dashboard"
-                        className={`w-full flex items-center justify-center py-[10px] rounded-xl cursor-pointer transition-colors ${
-                            activeView === null ? "bg-accent/15 text-accent" : "text-foreground-light hover:bg-third/20"
-                        }`}
+                        className={`${styles.collapsedIconBtn} ${activeView === null ? styles.collapsedIconBtnActive : ""}`}
                     >
-                        <BiGridAlt className="text-[18pt]" />
+                        <BiGridAlt className={styles.collapsedBtnIcon} />
                     </button>
 
                     {/* Section icons */}
                     {SECTIONS.map((s) => {
                         const sectionActive = s.items.some((i) => i.view === activeView);
                         return (
-                            <div key={s.id} className="relative w-full"
+                            <div key={s.id} className={styles.collapsedIconWrap}
                                 onMouseEnter={() => openFlyout(s.id)}
                                 onMouseLeave={closeFlyout}
                             >
                                 <button
-                                    className={`w-full flex items-center justify-center py-[10px] rounded-xl cursor-pointer transition-colors ${
-                                        sectionActive ? "bg-accent/15 text-accent" : "text-foreground-light hover:bg-third/20"
-                                    }`}
+                                    className={`${styles.collapsedIconBtn} ${sectionActive ? styles.collapsedIconBtnActive : ""}`}
                                 >
-                                    <span className="text-[18pt]">{s.icon}</span>
+                                    <span className={styles.collapsedBtnIcon}>{s.icon}</span>
                                 </button>
 
                                 {/* Flyout panel */}
                                 {flyout === s.id && flyoutSection && (
                                     <div
-                                        className="absolute left-[calc(100%+8px)] top-0 bg-primary border border-third/60 rounded-xl shadow-lg py-[8px] w-[180px] z-50"
+                                        className={styles.flyout}
                                         onMouseEnter={keepFlyout}
                                         onMouseLeave={closeFlyout}
                                     >
-                                        <p className="text-[8pt] font-[600] uppercase tracking-wider text-foreground-light px-[12px] pb-[6px] border-b border-third/40 mb-[4px]">
-                                            {flyoutSection.label}
-                                        </p>
+                                        <p className={styles.flyoutLabel}>{flyoutSection.label}</p>
                                         {flyoutSection.items.map((item) => {
                                             const isActive = activeView === item.view;
                                             return (
                                                 <button
                                                     key={String(item.view)}
                                                     onClick={() => { setActiveView(item.view); setFlyout(null); }}
-                                                    className={`w-full flex items-center gap-[10px] px-[12px] py-[8px] cursor-pointer transition-colors text-left ${
-                                                        isActive ? "bg-accent/15 text-accent" : "hover:bg-third/20 text-foreground"
-                                                    }`}
+                                                    className={`${styles.flyoutItem} ${isActive ? styles.flyoutItemActive : ""}`}
                                                 >
-                                                    <span className={`text-[14pt] flex-shrink-0 ${isActive ? "text-accent" : "text-foreground-light"}`}>
+                                                    <span className={`${styles.flyoutItemIcon} ${isActive ? styles.flyoutItemIconActive : ""}`}>
                                                         {item.icon}
                                                     </span>
-                                                    <span className="text-[10.5pt] font-[500]">{item.label}</span>
+                                                    <span className={styles.flyoutItemLabel}>{item.label}</span>
                                                 </button>
                                             );
                                         })}
@@ -223,18 +204,16 @@ const DesktopSidebar = () => {
                 </div>
             ) : (
                 /* Expanded: horizontal icon strip + sub-items */
-                <div className="flex flex-col flex-1 overflow-hidden">
-                    <div className="flex items-center gap-[4px] px-[10px] py-[10px] overflow-x-auto border-b border-third/30 flex-shrink-0">
+                <div className={styles.expandedInner}>
+                    <div className={styles.expandedIconStrip}>
                         <button
                             onClick={handleDashboard}
                             title="Dashboard"
-                            className={`flex-shrink-0 w-[40px] h-[40px] flex items-center justify-center rounded-xl cursor-pointer transition-colors ${
-                                activeView === null && openSection === null
-                                    ? "bg-accent/15 text-accent"
-                                    : "text-foreground-light hover:bg-third/20"
+                            className={`${styles.expandedIconBtn} ${
+                                activeView === null && openSection === null ? styles.expandedIconBtnActive : ""
                             }`}
                         >
-                            <BiGridAlt className="text-[18pt]" />
+                            <BiGridAlt />
                         </button>
                         {SECTIONS.map((s) => {
                             const isOpen = openSection === s.id;
@@ -243,32 +222,28 @@ const DesktopSidebar = () => {
                                     key={s.id}
                                     onClick={() => handleSection(s.id)}
                                     title={s.label}
-                                    className={`flex-shrink-0 w-[40px] h-[40px] flex items-center justify-center rounded-xl cursor-pointer transition-colors ${
-                                        isOpen ? "bg-accent/15 text-accent" : "text-foreground-light hover:bg-third/20"
-                                    }`}
+                                    className={`${styles.expandedIconBtn} ${isOpen ? styles.expandedIconBtnActive : ""}`}
                                 >
-                                    <span className="text-[18pt]">{s.icon}</span>
+                                    <span>{s.icon}</span>
                                 </button>
                             );
                         })}
                     </div>
 
                     {activeSection && (
-                        <div className="flex flex-col gap-[2px] px-[8px] py-[10px] overflow-y-auto">
+                        <div className={styles.expandedItems}>
                             {activeSection.items.map((item) => {
                                 const isActive = activeView === item.view;
                                 return (
                                     <button
                                         key={item.view}
                                         onClick={() => setActiveView(item.view)}
-                                        className={`w-full flex items-center gap-[10px] pl-[16px] pr-[12px] py-[9px] rounded-xl cursor-pointer transition-colors text-left ${
-                                            isActive ? "bg-accent/15 text-accent" : "hover:bg-third/20 text-foreground"
-                                        }`}
+                                        className={`${styles.expandedItem} ${isActive ? styles.expandedItemActive : ""}`}
                                     >
-                                        <span className={`text-[15pt] flex-shrink-0 ${isActive ? "text-accent" : "text-foreground-light"}`}>
+                                        <span className={`${styles.expandedItemIcon} ${isActive ? styles.expandedItemIconActive : ""}`}>
                                             {item.icon}
                                         </span>
-                                        <span className="text-[10.5pt] font-[500] whitespace-nowrap">{item.label}</span>
+                                        <span className={styles.expandedItemLabel}>{item.label}</span>
                                     </button>
                                 );
                             })}
@@ -280,10 +255,13 @@ const DesktopSidebar = () => {
             {/* Toggle button */}
             <button
                 onClick={toggle}
-                className="absolute top-1/2 -translate-y-1/2 -right-[14px] w-[28px] h-[28px] rounded-full bg-primary border border-third/60 shadow-sm flex items-center justify-center text-foreground hover:bg-primary-dark cursor-pointer transition-colors z-30"
+                className={styles.toggleBtn}
                 title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-                {collapsed ? <BiChevronRight className="text-[14px]" /> : <BiChevronLeft className="text-[14px]" />}
+                {collapsed
+                    ? <BiChevronRight className={styles.toggleBtnIcon} />
+                    : <BiChevronLeft className={styles.toggleBtnIcon} />
+                }
             </button>
         </div>
     );

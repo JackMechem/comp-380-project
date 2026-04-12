@@ -1,0 +1,13 @@
+.wrapper {
+	position: relative;
+    margin-bottom: -6px;
+}
+
+.badge {
+	position: absolute;
+	font-size: 8pt;
+	font-weight: 600;
+	padding: 2px 8px;
+	right: 3px;
+	top: -6px;
+}

@@ -5,6 +5,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import HeaderMenu from "./menus/headerMenu";
 import FilterSidebar from "./menus/filterSidebar";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
+import styles from "./SidebarLayout.module.css";
 
 const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     const { openPanel } = useSidebarStore();
@@ -12,9 +13,9 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
     const pushContent = openPanel && (width === undefined || width >= 1110);
 
     return (
-        <div className="flex min-h-full">
+        <div className={styles.root}>
             <div
-                className="flex-1 min-w-0 transition-all duration-300 ease-in-out"
+                className={styles.content}
                 style={{ marginRight: pushContent ? 380 : 0 }}
             >
                 {children}

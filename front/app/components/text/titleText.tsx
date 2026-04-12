@@ -1,6 +1,5 @@
 import { PropsWithChildren } from "react";
-import FastLines from "../../media/fastLines.svg";
-import Image from "next/image";
+import styles from "./titleText.module.css";
 
 interface TitleTextProps extends PropsWithChildren {
 	className?: string;
@@ -8,13 +7,8 @@ interface TitleTextProps extends PropsWithChildren {
 
 const TitleText = ({ children, className }: TitleTextProps) => {
 	return (
-		<div className={className + " flex items-center font-titillium text-[20pt] font-bold tracking-[0%] text-accent "}>
-            {/*
-			<Image src={FastLines.src} alt="text decoration" width={40} height={40} />
-        */}
-			<h2 className={""}>
-				{children}
-			</h2>
+		<div className={`${styles.titleText}${className ? " " + className : ""}`}>
+			<h2>{children}</h2>
 		</div>
 	);
 };

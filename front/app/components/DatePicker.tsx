@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isAfter, isBefore, startOfDay } from "date-fns";
+import styles from "./DatePicker.module.css";
 
 interface DateRange {
     from: Date;
@@ -68,9 +69,12 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
         );
     };
 
+    const popupPositionClass = popupAbove ? styles.popupAbove : styles.popupBelow;
+    const popupAlignClass = popupAlign === "right" ? styles.popupRight : popupAlign === "left" ? styles.popupLeft : styles.popupCenter;
+
     return (
-        <div ref={ref} className="relative">
-            {showLabel && <p className="text-[10pt]">{label}</p>}
+        <div ref={ref} className={styles.wrapper}>
+            {showLabel && <p className={styles.label}>{label}</p>}
             <button
                 type="button"
                 onClick={() => {
@@ -79,61 +83,55 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
                     setPopupAbove(false);
                     setOpen((prev) => !prev);
                 }}
-                className="outline-none text-foreground w-full text-left text-sm truncate"
+                className={styles.trigger}
             >
-                {selected ? format(selected, "MMM d, yyyy") : <span className="text-foreground/50">{placeholder}</span>}
+                {selected ? format(selected, "MMM d, yyyy") : <span className={styles.placeholder}>{placeholder}</span>}
             </button>
 
             {open && (
                 <div
                     ref={popupRef}
-                    className={`absolute z-50 bg-primary border border-third rounded-2xl shadow-xl p-4 w-[280px] ${
-                        popupAbove ? "bottom-full mb-3" : "top-full mt-3"
-                    } ${
-                        popupAlign === "right"
-                            ? "right-0"
-                            : popupAlign === "left"
-                            ? "left-0"
-                            : "left-1/2 -translate-x-1/2"
-                    }`}
+                    className={`${styles.popup} ${popupPositionClass} ${popupAlignClass}`}
                 >
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-3">
+                    <div className={styles.header}>
                         <button
                             type="button"
                             onClick={() => setViewMonth(subMonths(viewMonth, 1))}
-                            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-accent/10 text-foreground transition-colors"
+                            className={styles.navBtn}
                         >
                             ‹
                         </button>
-                        <span className="text-sm font-semibold text-foreground">
+                        <span className={styles.monthLabel}>
                             {format(viewMonth, "MMMM yyyy")}
                         </span>
                         <button
                             type="button"
                             onClick={() => setViewMonth(addMonths(viewMonth, 1))}
-                            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-accent/10 text-foreground transition-colors"
+                            className={styles.navBtn}
                         >
                             ›
                         </button>
                     </div>
 
-                    {/* Weekday headers */}
-                    <div className="grid grid-cols-7 mb-1">
+                    <div className={styles.weekdays}>
                         {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-                            <div key={d} className="text-center text-[10px] font-medium text-foreground/40 py-1">
-                                {d}
-                            </div>
+                            <div key={d} className={styles.weekday}>{d}</div>
                         ))}
                     </div>
 
-                    {/* Days grid */}
-                    <div className="grid grid-cols-7 gap-y-1">
+                    <div className={styles.daysGrid}>
                         {days.map((day) => {
                             const disabled = isDisabled(day);
                             const isCurrentMonth = isSameMonth(day, viewMonth);
                             const isSelected = selected && isSameDay(day, selected);
                             const isToday = isSameDay(day, today);
+
+                            let dayClass = styles.day;
+                            if (!isCurrentMonth) dayClass += " " + styles.dayOutsideMonth;
+                            if (disabled) dayClass += " " + styles.dayDisabled;
+                            if (isSelected) dayClass += " " + styles.daySelected;
+                            else if (isToday && !disabled) dayClass += " " + styles.dayToday;
+                            else if (!disabled && isCurrentMonth) dayClass += " " + styles.dayNormal;
 
                             return (
                                 <button
@@ -144,18 +142,7 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
                                         onSelect(day);
                                         setOpen(false);
                                     }}
-                                    className={[
-                                        "w-8 h-8 mx-auto flex items-center justify-center rounded-full text-sm transition-colors",
-                                        !isCurrentMonth ? "opacity-25" : "",
-                                        disabled ? "cursor-not-allowed opacity-20" : "cursor-pointer",
-                                        isSelected
-                                            ? "bg-accent text-primary font-semibold"
-                                            : isToday && !disabled
-                                            ? "border border-accent text-accent font-semibold hover:bg-accent/10"
-                                            : !disabled && isCurrentMonth
-                                            ? "hover:bg-accent/10 text-foreground"
-                                            : "text-foreground",
-                                    ].join(" ")}
+                                    className={dayClass}
                                 >
                                     {format(day, "d")}
                                 </button>
@@ -163,7 +150,6 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
                         })}
                     </div>
 
-                    {/* Clear button */}
                     {selected && (
                         <button
                             type="button"
@@ -171,7 +157,7 @@ const DatePicker = ({ label, showLabel = true, placeholder = "Add date", selecte
                                 onSelect(undefined);
                                 setOpen(false);
                             }}
-                            className="mt-3 w-full text-center text-xs text-foreground/50 hover:text-accent transition-colors"
+                            className={styles.clearBtn}
                         >
                             Clear
                         </button>

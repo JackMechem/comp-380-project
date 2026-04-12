@@ -13,6 +13,7 @@ import LayoutToggle from "./components/layoutToggle";
 import CarListSkeleton from "../components/skeletons/CarListSkeleton";
 import CarGridSkeleton from "../components/skeletons/CarGridSkeleton";
 import BrowseContentWrapper from "./components/BrowseContentWrapper";
+import styles from "./components/browseContent.module.css";
 
 type Params = { [key: string]: string | string[] | undefined };
 
@@ -83,7 +84,7 @@ const FilterButtonWithEnums = async () => {
 };
 
 const FilterButtonSkeleton = () => (
-	<div className="w-[48px] h-[36px] rounded-2xl bg-third animate-pulse" />
+	<div className={styles.filterBtnSkeleton} />
 );
 
 // --- Page ---
@@ -98,7 +99,7 @@ const BrowsePage = async ({
 	const paramsKey = JSON.stringify(p);
 
 	return (
-		<div className="w-full h-full bg-primary">
+		<div className={styles.page}>
 			<NavHeader
 				white={false}
 				filterControls={
@@ -114,12 +115,12 @@ const BrowsePage = async ({
 				activeFilters={<ActiveFilters className="self-center" />}
 			/>
 			<BrowseContentWrapper>
-				<ActiveFilters className="self-center mt-6 ml-6" />
-				<div className="mt-2 mb-4 w-full px-4 flex flex-row gap-4 justify-between items-center">
-					<div className="flex items-center justify-between gap-2">
+				<ActiveFilters className={styles.activeFiltersMt} />
+				<div className={styles.toolbar}>
+					<div className={styles.toolbarLeft}>
 						<SortButtons />
 					</div>
-					<div className="sm:block hidden">
+					<div className={styles.layoutToggleWrap}>
 						<Suspense>
 							<LayoutToggle />
 						</Suspense>

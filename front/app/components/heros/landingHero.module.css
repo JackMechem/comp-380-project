@@ -1,0 +1,88 @@
+.hero {
+	position: relative;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	align-items: center;
+	overflow-x: clip;
+	margin-bottom: 300px;
+}
+
+@media (min-width: 768px) {
+	.hero { margin-bottom: 330px; }
+}
+
+.bgCircle {
+	position: absolute;
+	width: 550vw;
+	height: 550vw;
+	bottom: -100px;
+	left: 50%;
+	transform: translateX(-50%);
+	border-radius: 9999px;
+	overflow: hidden;
+	z-index: -1;
+}
+
+@media (min-width: 768px) {
+	.bgCircle { width: 180vw; height: 180vw; bottom: -150px; }
+}
+@media (min-width: 1024px) {
+	.bgCircle { width: 170vw; height: 170vw; }
+}
+@media (min-width: 1280px) {
+	.bgCircle { width: 140vw; height: 140vw; }
+}
+
+.bgCircleInner {
+	position: absolute;
+	inset: 0;
+	border-radius: 9999px;
+	opacity: 0.3;
+	background-size: 200px 200px;
+	mix-blend-mode: overlay;
+}
+
+.headline {
+	font-family: var(--font-titillium), sans-serif;
+	font-size: 64pt;
+	color: var(--color-primary);
+	font-weight: 700;
+	max-width: 500px;
+	text-align: center;
+	line-height: 0.9;
+	letter-spacing: -0.02em;
+	width: fit-content;
+	margin-top: 20px;
+    margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+	.headline { font-size: 76pt; margin-top: 0; }
+}
+
+.subheadline {
+	text-align: center;
+	color: var(--color-primary);
+	font-weight: 500;
+	font-size: 14pt;
+	margin-bottom: 20px;
+}
+
+.carImage {
+	position: absolute;
+	bottom: -210px;
+	width: 500px;
+	min-width: 500px;
+    height: auto;
+	transition: transform 100ms;
+}
+
+.carImage:hover {
+	transform: scale(1.05);
+}
+
+@media (min-width: 768px) {
+	.carImage { bottom: -270px; width: 600px; }
+}

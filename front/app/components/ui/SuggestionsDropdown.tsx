@@ -1,5 +1,6 @@
 import { BiSearch } from "react-icons/bi";
 import type { Suggestion } from "@/app/hooks/useSearchSuggestions";
+import styles from "./SuggestionsDropdown.module.css";
 
 interface SuggestionsDropdownProps {
 	suggestions: Suggestion[];
@@ -9,10 +10,6 @@ interface SuggestionsDropdownProps {
 	onHover: (index: number) => void;
 }
 
-/**
- * Shared autocomplete dropdown used by the landing search bar and the nav header.
- * Rendered as an `absolute`-positioned element — the parent must be `relative`.
- */
 const SuggestionsDropdown = ({
 	suggestions,
 	loading,
@@ -20,10 +17,10 @@ const SuggestionsDropdown = ({
 	onSelect,
 	onHover,
 }: SuggestionsDropdownProps) => (
-	<div className="absolute top-full left-0 right-0 mt-2 bg-primary border border-third rounded-2xl shadow-xl overflow-hidden z-50">
+	<div className={styles.dropdown}>
 		{loading ? (
-			<div className="flex items-center justify-center py-[14px]">
-				<div className="w-[18px] h-[18px] rounded-full border-2 border-accent/30 border-t-accent animate-spin" />
+			<div className={styles.loading}>
+				<div className={styles.spinner} />
 			</div>
 		) : (
 			suggestions.map((s, i) => (
@@ -35,11 +32,9 @@ const SuggestionsDropdown = ({
 					}}
 					onMouseEnter={() => onHover(i)}
 					onMouseLeave={() => onHover(-1)}
-					className={`w-full text-left px-[16px] py-[10px] text-foreground text-[11pt] flex items-center gap-2 duration-100 cursor-pointer ${
-						highlightedIndex === i ? "bg-accent/10" : "hover:bg-accent/10"
-					}`}
+					className={`${styles.item} ${highlightedIndex === i ? styles.itemHighlighted : ""}`}
 				>
-					<BiSearch className="text-foreground/40 flex-shrink-0" />
+					<BiSearch className={styles.itemIcon} />
 					<span>
 						{s.make} {s.model}
 					</span>

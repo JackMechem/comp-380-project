@@ -1,0 +1,96 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.headerLabel {
+	color: var(--color-foreground);
+	font-size: 13pt;
+	font-weight: 600;
+}
+
+.headerRange {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+}
+
+.trackWrapper {
+	position: relative;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	margin: 0 9px;
+}
+
+.trackBg {
+	position: absolute;
+	width: 100%;
+	height: 4px;
+	background-color: var(--color-third);
+	border-radius: 9999px;
+}
+
+.trackFill {
+	position: absolute;
+	height: 4px;
+	background-color: var(--color-accent);
+	border-radius: 9999px;
+}
+
+.thumb {
+	position: absolute;
+	width: 18px;
+	height: 18px;
+	background-color: var(--color-accent);
+	border-radius: 9999px;
+	transform: translateX(-50%);
+	cursor: grab;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.thumb:active {
+	cursor: grabbing;
+}
+
+.inputs {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.inputGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	flex: 1;
+}
+
+.inputLabel {
+	color: var(--color-foreground-light);
+	font-size: 8pt;
+}
+
+.input {
+	background-color: color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
+	outline: none;
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 8px 12px;
+	width: 100%;
+	font-size: 11pt;
+	color: var(--color-foreground);
+}
+
+.separator {
+	color: var(--color-foreground-light);
+	margin-top: 16px;
+}

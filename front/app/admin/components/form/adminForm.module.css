@@ -1,0 +1,660 @@
+/* Shared form primitives used across admin form components */
+
+.label {
+	display: block;
+	font-size: 8pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+	margin-bottom: 6px;
+}
+
+.fieldParent {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+}
+
+.input {
+	width: auto;
+	background-color: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 10px 14px;
+	font-size: 10.5pt;
+	color: var(--color-foreground);
+	outline: none;
+	transition: border-color 150ms;
+}
+
+.input::placeholder {
+	color: color-mix(in srgb, var(--color-foreground-light) 60%, transparent);
+}
+
+.input:focus {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.inputDisabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.select {
+	width: 100%;
+	background-color: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 10px 14px;
+	font-size: 10.5pt;
+	color: var(--color-foreground);
+	outline: none;
+	transition: border-color 150ms;
+	cursor: pointer;
+}
+
+.select:focus {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+/* ── SectionCard ─────────────────────────────────────────────────────────────── */
+.sectionCard {
+    box-sizing: border-box;
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	border-radius: 1rem;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.sectionCardHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 4px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+}
+
+.sectionCardTitle {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 600;
+}
+
+/* ── AiButton ────────────────────────────────────────────────────────────────── */
+.aiBtn {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 6px 10px;
+	border-radius: 0.5rem;
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	color: var(--color-accent);
+	font-size: 9pt;
+	font-weight: 500;
+	border: none;
+	cursor: pointer;
+	transition: background-color 150ms;
+	white-space: nowrap;
+}
+
+.aiBtn:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.aiBtn:disabled {
+	opacity: 0.5;
+	cursor: wait;
+}
+
+.aiBtnIcon {
+	font-size: 11pt;
+}
+
+/* ── CopyPicker ──────────────────────────────────────────────────────────────── */
+.copyPickerCard {
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	border-radius: 1rem;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.copyPickerHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.copyPickerTitle {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 600;
+}
+
+.copyPickerClearBtn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 9pt;
+	color: var(--color-foreground-light);
+	cursor: pointer;
+	background: none;
+	border: none;
+	transition: color 150ms;
+}
+
+.copyPickerClearBtn:hover {
+	color: var(--color-accent);
+}
+
+.copyPickerSearch {
+	position: relative;
+    display: flex;
+    width: 100%;
+}
+
+.copyPickerSearchIcon {
+	position: absolute;
+	left: 12px;
+	top: 50%;
+    z-index: 1;
+	transform: translateY(-50%);
+	color: var(--color-foreground-light);
+	font-size: 13pt;
+}
+
+.copyPickerStrip {
+	display: flex;
+	gap: 12px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.copyPickerEmpty {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+	padding: 8px 0;
+}
+
+.copyPickerCarBtn {
+	flex-shrink: 0;
+	width: 160px;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	border: 2px solid var(--color-third);
+	transition: border-color 150ms, box-shadow 150ms;
+	cursor: pointer;
+	text-align: left;
+    display: flex;
+    flex-direction: column;
+}
+
+.copyPickerCarBtn:hover {
+	border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.copyPickerCarBtnSelected {
+	border-color: var(--color-accent);
+	box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.copyPickerThumb {
+	position: relative;
+    display: flex;
+	width: 100%;
+	height: 90px;
+	background-color: color-mix(in srgb, var(--color-third) 30%, transparent);
+}
+.copyPickerCarImage {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
+.copyPickerNoImage {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: color-mix(in srgb, var(--color-foreground-light) 40%, transparent);
+	font-size: 30pt;
+}
+
+.copyPickerCheckBadge {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	width: 22px;
+	height: 22px;
+	border-radius: 9999px;
+	background-color: var(--color-accent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--color-primary);
+}
+
+.copyPickerCheckIcon {
+	font-size: 13px;
+}
+
+.copyPickerInfo {
+	padding: 8px 10px;
+}
+
+.copyPickerCarName {
+	color: var(--color-foreground);
+	font-size: 9.5pt;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.copyPickerCarYear {
+	color: var(--color-foreground-light);
+	font-size: 8.5pt;
+}
+
+.copyPickerCarPrice {
+	color: var(--color-accent);
+	font-size: 8.5pt;
+	font-weight: 500;
+	margin-top: 2px;
+}
+
+/* ── MarkdownEditor ──────────────────────────────────────────────────────────── */
+.mdEditor {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	border: 1px solid var(--color-third);
+	transition: border-color 150ms;
+}
+
+.mdEditor:focus-within {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.mdTabBar {
+	display: flex;
+	border-bottom: 1px solid var(--color-third);
+	background-color: color-mix(in srgb, var(--color-primary-dark) 30%, transparent);
+}
+
+.mdTab {
+	padding: 8px 16px;
+	font-size: 9pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	cursor: pointer;
+	background: none;
+	border: none;
+	transition: color 150ms;
+	color: var(--color-foreground-light);
+}
+
+.mdTab:hover {
+	color: var(--color-foreground);
+}
+
+.mdTabActive {
+	color: var(--color-accent);
+	border-bottom: 2px solid var(--color-accent);
+	margin-bottom: -1px;
+	background-color: var(--color-primary);
+}
+
+.mdTextarea {
+	width: 100%;
+	background-color: var(--color-primary);
+	padding: 10px 14px;
+	font-size: 10.5pt;
+	color: var(--color-foreground);
+	outline: none;
+	resize: none;
+	height: 180px;
+	font-family: monospace;
+    border: none;
+}
+
+.mdTextarea::placeholder {
+	color: color-mix(in srgb, var(--color-foreground-light) 60%, transparent);
+}
+
+.mdPreview {
+	min-height: 180px;
+	padding: 12px 16px;
+	background-color: var(--color-primary);
+}
+
+.mdPreview h1 {
+	color: var(--color-foreground);
+	font-size: 14pt;
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.mdPreview h2 {
+	color: var(--color-foreground);
+	font-size: 12pt;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.mdPreview h3 {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 600;
+}
+
+.mdPreview p {
+	color: var(--color-foreground);
+	font-size: 10.5pt;
+	line-height: 1.6;
+	margin-bottom: 8px;
+}
+
+.mdPreview strong {
+	color: var(--color-foreground);
+	font-weight: 600;
+}
+
+.mdPreview em {
+	color: var(--color-foreground-light);
+}
+
+.mdPreview ul, .mdPreview ol {
+	color: var(--color-foreground);
+	padding-left: 20px;
+	margin-bottom: 8px;
+}
+
+.mdPreview ul { list-style-type: disc; }
+.mdPreview ol { list-style-type: decimal; }
+
+.mdPreview li {
+	font-size: 10.5pt;
+	margin-bottom: 2px;
+}
+
+.mdPreview a {
+	color: var(--color-accent);
+	text-decoration: underline;
+}
+
+.mdPreview code {
+	background-color: color-mix(in srgb, var(--color-third) 40%, transparent);
+	color: var(--color-accent);
+	padding: 1px 6px;
+	border-radius: 0.25rem;
+	font-size: 9.5pt;
+}
+
+.mdPreview pre {
+	background-color: color-mix(in srgb, var(--color-third) 40%, transparent);
+	border-radius: 0.75rem;
+	padding: 12px;
+	overflow-x: auto;
+}
+
+.mdPreview blockquote {
+	border-left: 2px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+	padding-left: 12px;
+	color: var(--color-foreground-light);
+}
+
+.mdPreview hr {
+	border-color: color-mix(in srgb, var(--color-third) 50%, transparent);
+}
+
+.mdEmpty {
+	color: color-mix(in srgb, var(--color-foreground-light) 50%, transparent);
+	font-size: 10.5pt;
+	font-style: italic;
+}
+
+/* ── FeatureTags ─────────────────────────────────────────────────────────────── */
+.featureTagsWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.featureTagsBox {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	align-items: center;
+	min-height: 44px;
+	height: auto;
+	padding: 8px 14px;
+	cursor: text;
+	/* uses .input style: */
+	width: 100%;
+	background-color: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	font-size: 10.5pt;
+	color: var(--color-foreground);
+	outline: none;
+	transition: border-color 150ms;
+}
+
+.featureTagsBox:focus-within {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.featureTag {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	color: var(--color-accent);
+	font-size: 9.5pt;
+	font-weight: 500;
+	padding: 3px 10px;
+	border-radius: 9999px;
+}
+
+.featureTagRemove {
+	cursor: pointer;
+	background: none;
+	border: none;
+	color: var(--color-accent);
+	font-size: 11pt;
+	transition: color 150ms;
+	line-height: 1;
+}
+
+.featureTagRemove:hover {
+	color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.featureTagInput {
+	outline: none;
+	background: transparent;
+	color: var(--color-foreground);
+	font-size: 10.5pt;
+	flex: 1;
+	min-width: 140px;
+}
+
+.featureTagInput::placeholder {
+	color: color-mix(in srgb, var(--color-foreground-light) 60%, transparent);
+}
+
+/* ── CarFormPanel ────────────────────────────────────────────────────────────── */
+.formRoot {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 40px;
+}
+
+.formNoVehicle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 60px 0;
+	color: var(--color-foreground-light);
+	font-size: 11pt;
+}
+
+.formGrid2x4 {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+@media (min-width: 768px) {
+	.formGrid2x4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.formGrid1x2 {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 16px;
+}
+
+@media (min-width: 768px) {
+	.formGrid1x2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.descriptionActions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.imageCountNote {
+	font-size: 8.5pt;
+	font-weight: 500;
+}
+
+.imageCountOk {
+	color: var(--color-accent);
+}
+
+.imageCountWarn {
+	color: #fbbf24;
+}
+
+.imageRowGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.imageRow {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.imageRowInput {
+	flex: 1;
+}
+
+.imageRemoveBtn {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.75rem;
+	border: 1px solid var(--color-third);
+	color: var(--color-foreground-light);
+	cursor: pointer;
+	background: none;
+	font-size: 14pt;
+	transition: border-color 150ms, color 150ms;
+}
+
+.imageRemoveBtn:hover {
+	border-color: color-mix(in srgb, #ef4444 60%, transparent);
+	color: #ef4444;
+}
+
+.addImageBtn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 12px;
+	border-radius: 0.75rem;
+	border: 1px dashed var(--color-third);
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+	cursor: pointer;
+	background: none;
+	transition: border-color 150ms, background-color 150ms, color 150ms;
+	width: fit-content;
+}
+
+.addImageBtn:hover {
+	border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	color: var(--color-accent);
+}
+
+.addImageIcon {
+	font-size: 13pt;
+}
+
+.imagePreviewStrip {
+	display: flex;
+	gap: 10px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.imagePreviewThumb {
+	position: relative;
+	flex-shrink: 0;
+	width: 120px;
+	height: 80px;
+	border-radius: 0.75rem;
+	overflow: hidden;
+	border: 1px solid var(--color-third);
+	background-color: color-mix(in srgb, var(--color-third) 20%, transparent);
+}
+
+.formWarning {
+	color: #fbbf24;
+	font-size: 9.5pt;
+	text-align: center;
+}
+
+.submitBtn {
+	width: 100%;
+	padding: 14px 0;
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	font-weight: 600;
+	font-size: 11pt;
+	border-radius: 0.75rem;
+	border: none;
+	cursor: pointer;
+	transition: filter 150ms;
+}
+
+.submitBtn:hover:not(:disabled) {
+	filter: brightness(1.1);
+}
+
+.submitBtn:disabled {
+	opacity: 0.5;
+}

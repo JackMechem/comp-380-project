@@ -1,0 +1,131 @@
+.panel {
+	position: fixed;
+	top: 0;
+	right: 0;
+	height: 100%;
+	z-index: 50;
+	width: 100%;
+	background-color: var(--color-primary);
+	border-left: 1px solid var(--color-third);
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+	display: flex;
+	flex-direction: column;
+	transition: transform 300ms ease-in-out;
+}
+
+.panelOpen  { transform: translateX(0); }
+.panelClosed { transform: translateX(100%); }
+
+@media (min-width: 768px) {
+	.panel { width: 380px; }
+}
+
+.headerRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+	flex-shrink: 0;
+}
+
+.closeBtn {
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	color: var(--color-foreground);
+	font-size: 16pt;
+	transition: background-color 150ms;
+}
+
+.closeBtn:hover {
+	background-color: color-mix(in srgb, var(--color-third) 30%, transparent);
+}
+
+.panelTitle {
+	color: var(--color-foreground);
+	font-size: 12pt;
+	font-weight: 600;
+}
+
+.placeholder {
+	width: 32px;
+}
+
+.scrollable {
+	flex: 1;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+	padding: 24px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.sectionTitle {
+	color: var(--color-foreground);
+	font-size: 13pt;
+	font-weight: 600;
+}
+
+.divider {
+	width: 100%;
+	height: 1px;
+	background-color: color-mix(in srgb, var(--color-third) 50%, transparent);
+}
+
+.grid2 {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.perfSection {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-top: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+	flex-shrink: 0;
+}
+
+.clearBtn {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 500;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	transition: color 150ms;
+}
+
+.clearBtn:hover {
+	color: var(--color-accent);
+}
+
+.showBtn {
+	background-color: color-mix(in srgb, var(--color-accent) 90%, transparent);
+	color: var(--color-primary);
+	font-weight: 500;
+	font-size: 11pt;
+	padding: 10px 20px;
+	border-radius: 0.75rem;
+	transition: filter 150ms;
+}
+
+.showBtn:hover {
+	filter: brightness(1.1);
+}

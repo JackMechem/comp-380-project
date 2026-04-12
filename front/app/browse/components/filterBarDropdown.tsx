@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import styles from "./filterBarDropdown.module.css";
 
 interface QueryOption {
 	paramId: string;
@@ -33,12 +34,12 @@ const FilterBarDropdown = ({
 	};
 
 	return (
-		<div className={`flex flex-col gap-[4px] ${className ?? ""}`}>
-			{label != "" && (
-				<label className="text-foreground-light text-[8pt]">{label}</label>
+		<div className={`${styles.wrapper} ${className ?? ""}`}>
+			{label !== "" && (
+				<label className={styles.label}>{label}</label>
 			)}
 			<select
-				className={`bg-primary-dark/20 outline-none ${label != "" && "border"} border-third rounded-xl px-[12px] py-[8px] w-full text-[11pt] cursor-pointer`}
+				className={label !== "" ? styles.select : styles.selectNoLabel}
 				value={selected}
 				onChange={handleChange}
 			>

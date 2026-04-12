@@ -1,5 +1,4 @@
-@import "tailwindcss";
-
+/* ── CSS custom properties ─────────────────────────────────────────────────── */
 :root {
 	--color-foreground: #222d45;
 	--color-primary: #fdfdff;
@@ -7,38 +6,109 @@
 	--color-third: #dedede;
 	--color-accent: #993537;
 	--color-foreground-light: #585b61;
-    --color-primary-dark: #F9F3F3;
+	--color-primary-dark: #f9f3f3;
 }
 
-@theme {
-	/* colors */
-	--color-primary: var(--color-primary);
-	--color-foreground: var(--color-foreground);
-	--color-secondary: var(--color-secondary);
-	--color-third: var(--color-third);
-	--color-accent: var(--color-accent);
-	--color-foreground-light: var(--color-foreground-light);
-	--color-primary-dark: var(--color-primary-dark);
+*,
+::before,
+::after {
+	box-sizing: border-box;
+	border-width: 0;
+	border-style: solid;
+	border-color: #e5e7eb; /* default border color */
+    margin: unset;
+}
 
-	/* fonts */
-	--font-inter: var(--font-inter);
-	--font-titillium: var(--font-titillium);
+a {
+    all: unset;
+    cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-size: inherit;
+	font-weight: inherit;
+	margin: 0;
+}
+
+input {
+    background-color: none;
+    background: none;
+    margin: 0;
 }
 
 body {
-	background: var(--primary);
-	color: var(--foreground);
-	font-family: var(--font-inter), Arial;
+	background-color: var(--color-primary);
+	color: var(--color-foreground);
+	font-family: var(--font-inter), Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	overflow-x: hidden;
+	width: 100%;
+	margin: 0;
 }
 
+button {
+    all: unset;
+	box-sizing: border-box;
+	cursor: pointer;
+}
+
+/* ── Animations ────────────────────────────────────────────────────────────── */
 @keyframes slide-up {
-	from { transform: translateY(100%); }
-	to   { transform: translateY(0); }
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
 }
 .animate-slide-up {
 	animation: slide-up 0.25s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes slide-in-from-bottom {
+	from {
+		transform: translateY(1rem);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+/* ── Reusable utilities ────────────────────────────────────────────────────── */
 .scrollbar-hide {
 	scrollbar-width: none;
 	-ms-overflow-style: none;
@@ -47,35 +117,97 @@ body {
 	display: none;
 }
 
+.animate-spin {
+	animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /*
  * ── Global component utilities ────────────────────────────────────────────────
- * Shared class patterns used across many components. Prefer these over
- * repeating the same Tailwind strings inline.
+ * Shared class patterns used across many components.
  */
 
 /* Buttons */
 .btn-primary {
-	@apply px-[12px] py-[6px] rounded-full bg-accent text-primary font-[500] hover:brightness-110 transition cursor-pointer;
+	padding: 6px 12px;
+	border-radius: 9999px;
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	font-weight: 500;
+	transition: filter 150ms;
+	cursor: pointer;
 }
+.btn-primary:hover {
+	filter: brightness(1.1);
+}
+
 .btn-secondary {
-	@apply px-[12px] py-[6px] rounded-full border border-accent text-accent font-[500] hover:bg-accent/10 transition cursor-pointer;
+	padding: 6px 12px;
+	border-radius: 9999px;
+	border: 1px solid var(--color-accent);
+	color: var(--color-accent);
+	font-weight: 500;
+	transition: background-color 150ms;
+	cursor: pointer;
 }
+.btn-secondary:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
 .btn-ghost {
-	@apply px-[12px] py-[6px] rounded-full text-foreground-light hover:text-foreground hover:bg-third/40 transition cursor-pointer;
+	padding: 6px 12px;
+	border-radius: 9999px;
+	color: var(--color-foreground-light);
+	transition:
+		color 150ms,
+		background-color 150ms;
+	cursor: pointer;
+}
+.btn-ghost:hover {
+	color: var(--color-foreground);
+	background-color: color-mix(in srgb, var(--color-third) 40%, transparent);
 }
 
 /* Cards */
 .card {
-	@apply bg-primary rounded-xl border border-third shadow-sm;
+	background-color: var(--color-primary);
+	border-radius: 0.75rem;
+	border: 1px solid var(--color-third);
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 }
 
 /* Filter chips */
 .filter-chip {
-	@apply flex items-center gap-[4px] px-[10px] py-[4px] rounded-full border text-[9pt] font-[500] transition-colors cursor-pointer;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 10px;
+	border-radius: 9999px;
+	border: 1px solid;
+	font-size: 9pt;
+	font-weight: 500;
+	transition:
+		background-color 150ms,
+		border-color 150ms,
+		color 150ms;
+	cursor: pointer;
 }
 .filter-chip-active {
-	@apply bg-accent/80 text-primary border-accent/80 hover:bg-accent;
+	background-color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+	color: var(--color-primary);
+	border-color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+}
+.filter-chip-active:hover {
+	background-color: var(--color-accent);
 }
 .filter-chip-inactive {
-	@apply bg-primary text-foreground border-third hover:border-accent/50;
+	background-color: var(--color-primary);
+	color: var(--color-foreground);
+	border-color: var(--color-third);
+}
+.filter-chip-inactive:hover {
+	border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
 }

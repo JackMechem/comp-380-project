@@ -1,0 +1,43 @@
+.header {
+	position: sticky;
+	z-index: 1;
+	top: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	transition: all 200ms;
+}
+
+.headerCompact {
+	background-color: color-mix(in srgb, var(--color-primary) 90%, transparent);
+	box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--color-third) 10%, transparent);
+	border-color: var(--color-third);
+	top: 0px;
+	height: 72px;
+	padding: 8px 8px 8px 8px;
+	padding-right: 20px;
+	backdrop-filter: blur(12px);
+}
+
+.headerWhite {
+	padding: 20px 100px;
+	border: 1px solid transparent;
+}
+
+@media (max-width: 767px) {
+	.headerWhite {
+		padding: 0px 40px;
+	}
+}
+
+.menuIconWhite {
+	color: var(--color-primary);
+	font-size: 20pt;
+	transition: color 300ms;
+}
+
+.menuIconCompact {
+	color: var(--color-accent);
+	font-size: 20pt;
+	transition: color 300ms;
+}

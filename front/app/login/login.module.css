@@ -1,0 +1,83 @@
+.pageWrapper {
+    box-sizing: border-box;
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: white;
+}
+
+.card {
+    box-sizing: border-box;
+	width: 100%;
+	max-width: 384px;
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	border-radius: 1rem;
+	padding: 32px;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+	background-color: white;
+}
+
+.title {
+	font-size: 1.875rem;
+	color: var(--color-accent);
+	margin-bottom: 12px;
+}
+
+.subtitle {
+	font-size: 0.875rem;
+	color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+	margin-bottom: 24px;
+}
+
+.fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.fieldGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.input {
+	width: 100%;
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 10%, transparent);
+	border-radius: 0.75rem;
+	padding: 10px 12px;
+	color: #334155;
+	outline: none;
+	transition: box-shadow 150ms, border-color 150ms;
+}
+
+.input:focus {
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+	border-color: transparent;
+}
+
+.submitBtn {
+	width: 100%;
+	margin-top: 8px;
+	padding: 10px 0;
+	background-color: var(--color-accent);
+	color: white;
+	font-weight: 500;
+	border-radius: 0.75rem;
+	border: none;
+	cursor: pointer;
+	transition: background-color 150ms;
+}
+
+.submitBtn:hover {
+	background-color: color-mix(in srgb, var(--color-accent) 90%, transparent);
+}

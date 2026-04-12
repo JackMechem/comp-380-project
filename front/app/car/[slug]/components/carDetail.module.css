@@ -1,0 +1,472 @@
+/* ── BackButton ───────────────────────────────────────────────────────────────── */
+.backBtn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	color: color-mix(in srgb, var(--color-foreground) 70%, transparent);
+	font-size: 11pt;
+	font-weight: 500;
+	cursor: pointer;
+	transition: color 150ms;
+	margin-bottom: 20px;
+	width: 100%;
+    margin-top: 15px;
+	background: none;
+}
+
+.backBtn:hover {
+	color: var(--color-accent);
+}
+
+.backBtnIcon {
+	font-size: 16pt;
+}
+
+/* ── ImageView ────────────────────────────────────────────────────────────────── */
+.imageViewWrapper {
+	position: relative;
+	display: flex;
+	gap: 2px;
+	height: 300px;
+	border-radius: 0.75rem;
+	box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+	overflow: hidden;
+}
+
+@media (min-width: 768px) {
+	.imageViewWrapper { height: 500px; }
+}
+
+@media (min-width: 1024px) {
+	.imageViewWrapper { height: 600px; }
+}
+
+.mainImage {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.mainImageNarrow {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+@media (min-width: 1024px) {
+	.mainImageNarrow { width: 60%; }
+}
+
+.thumbnailGrid {
+	display: none;
+	grid-template-columns: repeat(2, 1fr);
+	width: 40%;
+	gap: 2px;
+}
+
+@media (min-width: 1024px) {
+	.thumbnailGrid { display: grid; }
+}
+
+.thumbnailImage {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+/* ── ShowAllImagesButton ──────────────────────────────────────────────────────── */
+.viewAllBtn {
+	position: absolute;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	bottom: 10px;
+	right: 10px;
+	background-color: var(--color-primary);
+	border-radius: 0.5rem;
+	border: 2px solid var(--color-third);
+	color: var(--color-foreground);
+	font-size: 14px;
+	box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+	padding: 5px 15px;
+	cursor: pointer;
+}
+
+.imageOverlay {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--color-primary);
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	padding: 20px;
+	gap: 20px;
+	overflow-y: scroll;
+	z-index: 10;
+	padding-top: 120px;
+}
+
+@media (min-width: 768px) {
+	.imageOverlay { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.overlayCloseBtn {
+	position: fixed;
+	top: 40px;
+	left: 40px;
+	background-color: var(--color-primary);
+	border-radius: 9999px;
+	padding: 10px;
+	cursor: pointer;
+	border: none;
+}
+
+.overlayImage {
+	width: 100%;
+	height: 100%;
+	border-radius: 0.5rem;
+	object-fit: cover;
+}
+
+/* ── Spec ─────────────────────────────────────────────────────────────────────── */
+.spec {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.specIcon {
+	color: var(--color-accent);
+	font-size: 18pt;
+	flex-shrink: 0;
+}
+
+.specLabel {
+	font-size: 7.5pt;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+	line-height: 1;
+	margin-bottom: 2px;
+}
+
+.specValue {
+	color: var(--color-foreground);
+	font-size: 10.5pt;
+	font-weight: 500;
+}
+
+/* ── SpecGroup ────────────────────────────────────────────────────────────────── */
+.specGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: fit-content;
+	flex-shrink: 0;
+}
+
+.specGroupTitle {
+	font-size: 8pt;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: color-mix(in srgb, var(--color-foreground-light) 60%, transparent);
+}
+
+.specGroupItems {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+/* ── LeftColumn ───────────────────────────────────────────────────────────────── */
+.leftCol {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	margin-top: 20px;
+}
+
+.titleBlock {}
+
+.carTitle {
+	font-size: 26pt;
+	font-weight: 700;
+	color: var(--color-accent);
+	line-height: 110%;
+}
+
+.carSubtitle {
+	color: var(--color-foreground-light);
+	font-size: 11pt;
+	margin-top: 4px;
+	text-transform: capitalize;
+}
+
+.featurePills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.featurePill {
+	white-space: nowrap;
+	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	color: var(--color-accent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+	padding: 5px 14px;
+	font-size: 9.5pt;
+	border-radius: 9999px;
+	font-weight: 500;
+}
+
+.specsCard {
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	width: fit-content;
+	align-self: flex-start;
+}
+
+.specsCardTitle {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 600;
+	padding-bottom: 4px;
+	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+}
+
+.specsGrid {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 40px;
+}
+
+.description h1 {
+	color: var(--color-foreground);
+	font-size: 16pt;
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.description h2 {
+	color: var(--color-foreground);
+	font-size: 13pt;
+	font-weight: 600;
+	margin-bottom: 6px;
+}
+
+.description h3 {
+	color: var(--color-foreground);
+	font-size: 11.5pt;
+	font-weight: 600;
+}
+
+.description p {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	line-height: 1.7;
+	margin-bottom: 10px;
+}
+
+.description strong {
+	color: var(--color-foreground);
+	font-weight: 600;
+}
+
+.description ul {
+	list-style-type: disc;
+	padding-left: 20px;
+	margin-bottom: 10px;
+}
+
+.description li {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	margin-bottom: 4px;
+}
+
+/* ── RightColumn ──────────────────────────────────────────────────────────────── */
+.rightCol {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	width: 100%;
+	flex-shrink: 0;
+	height: fit-content;
+	margin-top: 20px;
+	padding: 20px;
+}
+
+@media (min-width: 768px) {
+	.rightCol { width: 380px; }
+}
+
+.priceBlock {}
+
+.priceMain {
+	color: var(--color-accent);
+	font-size: 24pt;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.priceSuffix {
+	font-size: 14pt;
+	font-weight: 400;
+	color: color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+.priceSub {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+	margin-top: 4px;
+}
+
+.divider {
+	width: 100%;
+	height: 1px;
+	background-color: color-mix(in srgb, var(--color-third) 60%, transparent);
+}
+
+.tripSection {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.tripTitle {
+	color: var(--color-foreground);
+	font-size: 11pt;
+	font-weight: 600;
+}
+
+.datepickerGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+.datepickerLabel {
+	font-size: 8pt;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-foreground-light);
+	margin-bottom: 6px;
+	display: block;
+}
+
+.datepickerBox {
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 10px 12px;
+	transition: border-color 150ms;
+}
+
+.datepickerBox:focus-within {
+	border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+.hint {
+	text-align: center;
+	font-size: 9.5pt;
+	color: color-mix(in srgb, var(--color-foreground-light) 70%, transparent);
+}
+
+.ctaBtn {
+	width: 100%;
+	padding: 12px 0;
+	border-radius: 0.75rem;
+	font-weight: 600;
+	font-size: 11pt;
+	transition: background-color 100ms, color 100ms, filter 100ms, transform 100ms;
+	cursor: pointer;
+	border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ctaBtn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.ctaBtnAdd {
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+}
+
+.ctaBtnAdd:hover:not(:disabled) {
+	filter: brightness(1.1);
+	transform: scale(1.01);
+}
+
+.ctaBtnRemove {
+	background-color: var(--color-third);
+	color: var(--color-foreground);
+	border: 1px solid var(--color-third);
+}
+
+.ctaBtnRemove:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+}
+
+/* ── CarPage layout ───────────────────────────────────────────────────────────── */
+.twoColRow {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+@media (min-width: 768px) {
+	.twoColRow { flex-direction: row; }
+}
+
+/* ── CarProperty ──────────────────────────────────────────────────────────────── */
+.carProperty {
+	background-color: var(--color-third);
+	padding: 5px 10px;
+	border-radius: 0.375rem;
+	width: fit-content;
+	color: var(--color-foreground);
+}
+
+.carPropertiesContainer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 10px;
+	width: fit-content;
+	white-space: nowrap;
+}
+
+/* ── CarFeature ───────────────────────────────────────────────────────────────── */
+.carFeature {
+	white-space: nowrap;
+	background-color: var(--color-accent);
+	padding: 5px 15px;
+	color: var(--color-primary);
+	font-size: 14px;
+	border-radius: 9999px;
+	opacity: 0.8;
+	font-weight: 500;
+}
+
+.carFeaturesContainer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-top: 20px;
+}

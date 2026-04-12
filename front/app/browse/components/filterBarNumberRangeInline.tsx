@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import styles from "./filterBarNumberRangeInline.module.css";
 
 interface FilterBarNumberRangeInlineProps {
     label: string;
@@ -106,50 +107,50 @@ const FilterBarNumberRangeInline = ({
     };
 
     return (
-        <div className="flex flex-col gap-[16px]">
-            <div className="flex items-center justify-between">
-                <p className="text-foreground text-[13pt] font-[600]">{label}</p>
-                <span className="text-foreground-light text-[10pt]">{min} — {max}</span>
+        <div className={styles.root}>
+            <div className={styles.header}>
+                <p className={styles.headerLabel}>{label}</p>
+                <span className={styles.headerRange}>{min} — {max}</span>
             </div>
             <div
                 ref={trackRef}
-                className="relative h-[20px] flex items-center cursor-pointer mx-[9px]"
+                className={styles.trackWrapper}
                 onMouseDown={handleTrackMouseDown}
             >
-                <div className="absolute w-full h-[4px] bg-third rounded-full" />
+                <div className={styles.trackBg} />
                 <div
-                    className="absolute h-[4px] bg-accent rounded-full"
+                    className={styles.trackFill}
                     style={{ left: `${leftPct}%`, right: `${rightPct}%` }}
                 />
                 <div
-                    className="absolute w-[18px] h-[18px] bg-accent rounded-full -translate-x-1/2 cursor-grab active:cursor-grabbing shadow-md"
+                    className={styles.thumb}
                     style={{ left: `${leftPct}%` }}
                 />
                 <div
-                    className="absolute w-[18px] h-[18px] bg-accent rounded-full -translate-x-1/2 cursor-grab active:cursor-grabbing shadow-md"
+                    className={styles.thumb}
                     style={{ left: `${100 - rightPct}%` }}
                 />
             </div>
-            <div className="flex items-center justify-between gap-[12px]">
-                <div className="flex flex-col gap-[4px] flex-1">
-                    <label className="text-foreground-light text-[8pt]">Minimum</label>
+            <div className={styles.inputs}>
+                <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Minimum</label>
                     <input
                         type="text"
                         value={minInput}
                         onChange={handleMinInput}
                         onBlur={handleMinBlur}
-                        className="bg-primary-dark/20 outline-none border border-third rounded-xl px-[12px] py-[8px] w-full text-[11pt]"
+                        className={styles.input}
                     />
                 </div>
-                <span className="text-foreground-light mt-[16px]">—</span>
-                <div className="flex flex-col gap-[4px] flex-1">
-                    <label className="text-foreground-light text-[8pt]">Maximum</label>
+                <span className={styles.separator}>—</span>
+                <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Maximum</label>
                     <input
                         type="text"
                         value={maxInput}
                         onChange={handleMaxInput}
                         onBlur={handleMaxBlur}
-                        className="bg-primary-dark/20 outline-none border border-third rounded-xl px-[12px] py-[8px] w-full text-[11pt]"
+                        className={styles.input}
                     />
                 </div>
             </div>

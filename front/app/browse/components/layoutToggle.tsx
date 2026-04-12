@@ -1,6 +1,7 @@
 "use client";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { BsGrid, BsList } from "react-icons/bs";
+import styles from "./browseBar.module.css";
 
 const LayoutToggle = () => {
 	const searchParams = useSearchParams();
@@ -21,7 +22,7 @@ const LayoutToggle = () => {
 	return (
 		<button
 			onClick={toggle}
-			className="text-foreground flex items-center justify-center px-[6px] py-[5px] rounded-xl hover:bg-primary-dark text-[18pt] border border-transparent cursor-pointer hover:border-third/80"
+			className={styles.layoutToggleBtn}
 			title={isGrid ? "Switch to list view" : "Switch to grid view"}
 		>
 			{isGrid ? <BsList /> : <BsGrid />}

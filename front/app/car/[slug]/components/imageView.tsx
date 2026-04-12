@@ -1,18 +1,19 @@
 import { Car } from "@/app/types/CarTypes";
 import Image from "next/image";
 import ShowAllImagesButton from "./showAllImagesButton";
+import styles from "./carDetail.module.css";
 
 interface ImageViewProps {
 	images: Car["images"];
 }
 
-const ImageView = ({ images: images }: ImageViewProps) => {
+const ImageView = ({ images }: ImageViewProps) => {
 	return (
-		<div className="relative flex gap-[2px] lg:h-[600px] md:h-[500px] h-[300px] rounded-xl shadow-sm overflow-hidden">
+		<div className={styles.imageViewWrapper}>
 			{images.length > 1 && <ShowAllImagesButton images={images} />}
 			<Image
 				src={images[0]}
-				className={`${images.length > 4 && "lg:w-[60%]"} w-full h-full object-cover`}
+				className={images.length > 4 ? styles.mainImageNarrow : styles.mainImage}
 				alt="car image"
 				height={800}
 				width={800}
@@ -20,7 +21,7 @@ const ImageView = ({ images: images }: ImageViewProps) => {
 				loading="eager"
 			/>
 			{images.length > 5 && (
-				<div className="lg:grid hidden grid-cols-2 w-[40%] gap-[2px]">
+				<div className={styles.thumbnailGrid}>
 					{images.map((url: string, index: number) => {
 						if (index > 0 && index <= 4 && images.length > 4) {
 							return (
@@ -30,7 +31,7 @@ const ImageView = ({ images: images }: ImageViewProps) => {
 									alt="car image"
 									height={600}
 									width={600}
-									className="w-auto h-full object-cover"
+									className={styles.thumbnailImage}
 									loading="lazy"
 								/>
 							);

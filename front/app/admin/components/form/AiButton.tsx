@@ -1,4 +1,5 @@
 import { PiSparkleFill } from "react-icons/pi";
+import styles from "./adminForm.module.css";
 
 interface AiButtonProps {
 	onClick: () => void;
@@ -11,9 +12,9 @@ const AiButton = ({ onClick, loading }: AiButtonProps) => (
 		onClick={onClick}
 		disabled={loading}
 		title="Fill with AI"
-		className="flex-shrink-0 flex items-center gap-[4px] px-[10px] py-[6px] rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-[9pt] font-[500] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-wait whitespace-nowrap"
+		className={styles.aiBtn}
 	>
-		<PiSparkleFill className={`text-[11pt] ${loading ? "animate-pulse" : ""}`} />
+		<PiSparkleFill className={`${styles.aiBtnIcon} ${loading ? "animate-pulse" : ""}`} />
 		{loading ? "…" : "AI"}
 	</button>
 );
