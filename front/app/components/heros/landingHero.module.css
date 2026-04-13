@@ -23,6 +23,12 @@
 	border-radius: 9999px;
 	overflow: hidden;
 	z-index: -1;
+	background: linear-gradient(180deg, var(--color-primary) 0%, #c69192 50%, #993537 100%);
+}
+
+:global([data-theme="dark"]) .bgCircle {
+	background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent) 50%, var(--color-primary-dark) 100%);
+    /* filter: brightness(90%); */
 }
 
 @media (min-width: 768px) {
@@ -70,6 +76,11 @@
 	margin-bottom: 20px;
 }
 
+:global([data-theme="dark"]) .headline,
+:global([data-theme="dark"]) .subheadline {
+	color: #fdfdff;
+}
+
 .carImage {
 	position: absolute;
 	bottom: -210px;
@@ -77,6 +88,9 @@
 	min-width: 500px;
     height: auto;
 	transition: transform 100ms;
+}
+
+:global([data-theme="dark"]) .carImage {
 }
 
 .carImage:hover {

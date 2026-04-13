@@ -160,3 +160,8 @@
 	font-size: 10pt;
 	line-height: 1;
 }
+
+:global([data-theme="dark"]) .card {
+	background-color: var(--color-card);
+	border-color: var(--color-card-border);
+}

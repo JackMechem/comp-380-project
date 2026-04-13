@@ -6,13 +6,7 @@ import styles from "./landingHero.module.css";
 const LandingHero = () => {
 	return (
 		<div className={styles.hero}>
-			<div
-				className={styles.bgCircle}
-				style={{
-					background:
-						"linear-gradient(180deg, var(--Primary, #FDFDFF) 0%, #C69192 50%, var(--Accent, #993537) 100%)",
-				}}
-			>
+			<div className={styles.bgCircle}>
 				<div
 					className={styles.bgCircleInner}
 					style={{
@@ -23,13 +17,6 @@ const LandingHero = () => {
 			<h1 className={styles.headline}>Get a Fast Car Fast</h1>
 			<p className={styles.subheadline}>Rent any car, anytime, anywhere</p>
 			<LandingSearchBar />
-			<Image
-				src={CarTransparentBg.src}
-				alt={"Car transparent background"}
-				width={600}
-				height={600}
-				className={styles.carImage}
-			/>
 		</div>
 	);
 };

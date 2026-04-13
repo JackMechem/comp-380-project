@@ -9,6 +9,18 @@
 	--color-primary-dark: #f9f3f3;
 }
 
+[data-theme="dark"] {
+	--color-foreground: #e8eaf0;
+	--color-primary: #0d0e15;
+	--color-secondary: #8b9299;
+	--color-third: #1c1d25;
+	--color-accent: #e07072;
+	--color-foreground-light: #9aa0ab;
+	--color-primary-dark: #14151e;
+	--color-card: #161720;
+	--color-card-border: #1e1f29;
+}
+
 *,
 ::before,
 ::after {
@@ -16,12 +28,12 @@
 	border-width: 0;
 	border-style: solid;
 	border-color: #e5e7eb; /* default border color */
-    margin: unset;
+	margin: unset;
 }
 
 a {
-    all: unset;
-    cursor: pointer;
+	all: unset;
+	cursor: pointer;
 }
 
 h1,
@@ -36,9 +48,9 @@ h6 {
 }
 
 input {
-    background-color: none;
-    background: none;
-    margin: 0;
+	background-color: none;
+	background: none;
+	margin: 0;
 }
 
 body {
@@ -53,7 +65,7 @@ body {
 }
 
 button {
-    all: unset;
+	all: unset;
 	box-sizing: border-box;
 	cursor: pointer;
 }

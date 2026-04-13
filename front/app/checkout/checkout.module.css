@@ -431,3 +431,9 @@
 	text-align: center;
 	line-height: 1.5;
 }
+
+.errorNote {
+	color: var(--color-accent);
+	font-size: 9pt;
+	text-align: center;
+}

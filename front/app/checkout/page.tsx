@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import NavHeader from "../components/headers/navHeader";
 import MainBodyContainer from "../components/containers/mainBodyContainer";
 import { useCartStore } from "@/stores/cartStore";
 import { CartProps } from "../types/CartTypes";
 import { BiCar, BiCalendar, BiTrash, BiCreditCard, BiLock, BiUser, BiPhone, BiEnvelope, BiIdCard } from "react-icons/bi";
 import styles from "./checkout.module.css";
+
+const API = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -89,12 +93,15 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
-    const { carData, removeCar } = useCartStore();
+    const { carData, removeCar, clearCart } = useCartStore();
+    const router = useRouter();
 
     const [form, setForm] = useState({
         firstName: "", lastName: "", email: "", phone: "", license: "",
         cardName: "", cardNumber: "", expiry: "", cvv: "",
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const setField = (key: keyof typeof form, value: string) =>
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -112,9 +119,49 @@ export default function CheckoutPage() {
     const tax = Math.round(subtotal * 0.08);
     const total = subtotal + tax;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // placeholder — no action yet
+        setLoading(true);
+        setError(null);
+
+        try {
+            const raw = Cookies.get("credentials");
+            if (!raw) throw new Error("You must be logged in to make a reservation.");
+            const { username, password } = JSON.parse(raw);
+            const authHeader = `Basic ${btoa(`${username}:${password}`)}`;
+
+            const dateBooked = new Date().toISOString();
+
+            await Promise.all(carData.map((item) => {
+                const pickUpTime = item.startDate ? new Date(item.startDate).toISOString() : "";
+                const dropOffTime = item.endDate ? new Date(item.endDate).toISOString() : "";
+
+                const body = {
+                        pickUpTime,
+                        dropOffTime,
+                        dateBooked,
+                        car: item.vin,
+                        user: 1,
+                        payments: [1],
+                    };
+                console.log("Reservation body:", JSON.stringify(body, null, 2));
+
+                return fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/reservations`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": authHeader },
+                    body: JSON.stringify(body),
+                }).then((res) => {
+                    if (!res.ok) throw new Error(`Failed to book ${item.make} ${item.model}`);
+                });
+            }));
+
+            clearCart();
+            router.push("/");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -261,8 +308,10 @@ export default function CheckoutPage() {
                                             </div>
                                         </div>
 
-                                        <button type="submit" className={styles.confirmBtn}>
-                                            Confirm Reservation
+                                        {error && <p className={styles.errorNote}>{error}</p>}
+
+                                        <button type="submit" className={styles.confirmBtn} disabled={loading}>
+                                            {loading ? "Processing..." : "Confirm Reservation"}
                                         </button>
 
                                         <p className={styles.termsNote}>
