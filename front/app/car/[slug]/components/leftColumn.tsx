@@ -69,8 +69,11 @@ const LeftColumn = ({ carData }: { carData: Car }) => {
 
 			{/* Description */}
 			{carData.description && (
-				<div className={styles.description}>
-					<Markdown>{carData.description}</Markdown>
+				<div className={styles.descriptionSection}>
+					<p className={styles.descriptionTitle}>Description</p>
+					<div className={styles.description}>
+						<Markdown>{carData.description}</Markdown>
+					</div>
 				</div>
 			)}
 		</div>

@@ -12,6 +12,11 @@
 	transition: transform 150ms;
 }
 
+:global([data-theme="dark"]) .card {
+	background-color: var(--color-card);
+	border-color: var(--color-card-border);
+}
+
 .card:hover {
 	transform: scale(1.02);
 }

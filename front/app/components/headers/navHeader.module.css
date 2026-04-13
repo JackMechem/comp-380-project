@@ -195,6 +195,15 @@
 	color: var(--color-accent);
 }
 
+:global([data-theme="dark"]) .rightSideCompact {
+	color: #ffffff;
+}
+
+:global([data-theme="dark"]) .rightSideWhite {
+	color: #fdfdff;
+	--profile-fill: #fdfdff;
+}
+
 /* Mobile row */
 .mobileRow {
 	display: flex;
