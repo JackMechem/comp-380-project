@@ -1,5 +1,7 @@
 package com.inc.fcr.payment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.user.User;
@@ -18,7 +20,7 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
-    @ManyToMany(mappedBy = "payments")
+    @ManyToMany(mappedBy = "payments") @JsonManagedReference @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
     @Column(nullable = false)
     private double totalAmount;
@@ -28,6 +30,8 @@ public class Payment {
     private Instant date;
     @Enumerated(EnumType.STRING)
     private PaymentType paymentType;
+
+    // Constructors
 
     public Payment(double totalAmount, double amountPaid, Instant date, PaymentType paymentType) {
         this.totalAmount = totalAmount;
@@ -43,25 +47,34 @@ public class Payment {
 
     public Payment() {}
 
+    // Methods
+
     public boolean isPaid() {
         return amountPaid >= totalAmount;
     }
 
+    @JsonIgnore
     public List<User> getUsers() {
         return reservations.stream().map(Reservation::getUser).toList();
     }
 
+    @JsonIgnore
     public List<Car> getCars() {
         return reservations.stream().map(Reservation::getCar).toList();
     }
 
+    // Getters
 
     public Long getPaymentId() {
         return paymentId;
     }
 
+    @JsonIgnore
     public List<Reservation> getReservations() {
         return reservations;
+    }
+    public List<Long> getReservationIds() {
+        return reservations.stream().map(Reservation::getReservationId).toList();
     }
 
     public double getTotalAmount() {
@@ -80,6 +93,8 @@ public class Payment {
         return paymentType;
     }
 
+    // Setters
+
     public void setTotalAmount(double totalAmount) {
         this.totalAmount = totalAmount;
     }
@@ -90,5 +105,9 @@ public class Payment {
 
     public void setPaymentType(PaymentType paymentType) {
         this.paymentType = paymentType;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
     }
 }

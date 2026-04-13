@@ -89,18 +89,13 @@ public class DatabaseController {
     public static void update(Object obj) throws HibernateException { insertUpdate(obj, false); }
 
     public static void insertUpdate(Object obj, boolean inserting) throws HibernateException {
-        Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
-            transaction = session.beginTransaction();
+            var transaction = session.beginTransaction();
             session.merge(obj);
             transaction.commit();
 
             System.out.println("Object successfully " + (inserting ? "inserted" : "updated") + ".");
-
-        } catch (Exception e) {
-            if (transaction != null && transaction.isActive()) transaction.rollback();
-            throw e;
         }
     }
 
