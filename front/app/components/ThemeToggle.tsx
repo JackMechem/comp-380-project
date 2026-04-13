@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { BsSun, BsMoon } from "react-icons/bs";
+import styles from "./ThemeToggle.module.css";
 
 const ThemeToggle = () => {
 	const [dark, setDark] = useState(false);
@@ -22,8 +23,16 @@ const ThemeToggle = () => {
 	};
 
 	return (
-		<button onClick={toggle} style={{ background: "none", cursor: "pointer", display: "flex", alignItems: "center", padding: "6px" }} aria-label="Toggle theme">
-			{dark ? <BsSun /> : <BsMoon />}
+		<button
+			onClick={toggle}
+			className={`${styles.toggle} ${dark ? styles.isDark : ""}`}
+			aria-label="Toggle theme"
+		>
+			<BsSun className={styles.iconSun} />
+			<BsMoon className={styles.iconMoon} />
+			<span className={`${styles.thumb} ${dark ? styles.dark : ""}`}>
+				{dark ? <BsMoon /> : <BsSun />}
+			</span>
 		</button>
 	);
 };

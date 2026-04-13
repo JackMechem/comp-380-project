@@ -14,7 +14,6 @@ import { useFilterParams } from "@/app/hooks/useFilterParams";
 import { useScrollCollapse } from "@/app/hooks/useScrollCollapse";
 import { useSearchSuggestions } from "@/app/hooks/useSearchSuggestions";
 import type { Suggestion } from "@/app/hooks/useSearchSuggestions";
-import ThemeToggle from "../ThemeToggle";
 import styles from "./navHeader.module.css";
 
 const COMPACT_SCROLL_THRESHOLD = 100;
@@ -222,11 +221,10 @@ const NavHeader = ({
 					</div>
 				)}
 
-				{/* Right side: theme toggle + menu button */}
+				{/* Right side: menu button */}
 				<div
 					className={`${styles.rightSide} ${isWhite ? styles.rightSideWhite : styles.rightSideCompact}`}
 				>
-					<ThemeToggle />
 					<HeaderMenuButton />
 				</div>
 			</div>

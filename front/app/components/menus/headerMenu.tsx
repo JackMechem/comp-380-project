@@ -13,6 +13,7 @@ import { BiTrash } from "react-icons/bi";
 import { CartProps } from "@/app/types/CartTypes";
 import { BsCart2, BsCart3 } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
+import ThemeToggle from "../ThemeToggle";
 import styles from "./headerMenu.module.css";
 
 const HeaderMenu = () => {
@@ -60,6 +61,7 @@ const HeaderMenu = () => {
 						<IoClose />
 					</button>
 					<p className={styles.menuTitle}>Menu</p>
+					<ThemeToggle />
 				</div>
 
 				{/* Profile section */}
