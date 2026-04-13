@@ -2,6 +2,8 @@ package com.inc.fcr.database;
 
 import java.beans.Transient;
 import java.lang.reflect.Field;
+import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -52,6 +54,7 @@ public class ParsedQueryParams {
     private void mapClassFields() throws QueryParamException {
         Set<String> searchFields = new LinkedHashSet<>();
         Set<String> numericSet = new LinkedHashSet<>();
+        Set<String> temporalSet = new LinkedHashSet<>();
         Map<String, String> fieldMap = new LinkedHashMap<>();
         Map<String, String> alphaFieldMap = new LinkedHashMap<>();
         Map<String, Function<String, Object>> filterParsers = new HashMap<>();
@@ -72,7 +75,9 @@ public class ParsedQueryParams {
             if (field.isAnnotationPresent(SearchField.class)) searchFields.add(name);
 
             fieldMap.put(name.toLowerCase(), name);
+
             if (isNumericClass(type)) numericSet.add(name);
+            else if (Temporal.class.isAssignableFrom(type)) temporalSet.add(name);
             else alphaFieldMap.put(name.toLowerCase(), name);
 
             if (type.isEnum()) {
@@ -83,6 +88,7 @@ public class ParsedQueryParams {
         }
         SEARCH_FIELDS = Collections.unmodifiableSet(searchFields);
         NUMERIC_FIELDS = Collections.unmodifiableSet(numericSet);
+        TEMPORAL_FIELDS = Collections.unmodifiableSet(temporalSet);
         FIELD_MAP = Collections.unmodifiableMap(fieldMap);
         ALPHA_FIELD_MAP = Collections.unmodifiableMap(alphaFieldMap);
         FILTER_PARSERS = Collections.unmodifiableMap(filterParsers);
@@ -117,6 +123,7 @@ public class ParsedQueryParams {
     private final Class<?> clazz;
     private Set<String> SEARCH_FIELDS;
     private Set<String> NUMERIC_FIELDS; // numeric only
+    private Set<String> TEMPORAL_FIELDS; // date type fields
     private Map<String, String> FIELD_MAP; // contains alpha & numeric
     private Map<String, String> ALPHA_FIELD_MAP; // strings only
     private Map<String, Function<String, Object>> FILTER_PARSERS;
@@ -163,7 +170,7 @@ public class ParsedQueryParams {
                 default -> {
                     if (key.startsWith("min") || key.startsWith("max")) {
                         String field = FIELD_MAP.get(key.substring(3));
-                        if (field != null && NUMERIC_FIELDS.contains(field)) {
+                        if (field != null && (NUMERIC_FIELDS.contains(field) || TEMPORAL_FIELDS.contains(field))) {
                             if (filterFields != null)
                                 filterFields.remove("exact_" + field);
                             parseFilter(key.substring(3), val, key.substring(0,3));
@@ -217,13 +224,15 @@ public class ParsedQueryParams {
     }
 
     private void parseFilter(String key, String val, String rangeType) {
-        if (filterFields == null)
-            filterFields = new LinkedHashMap<>();
+        if (filterFields == null) filterFields = new LinkedHashMap<>();
+
         String properKey = FIELD_MAP.get(key);
-        if (rangeType != null)
-            filterFields.put(rangeType + "_" + properKey, val);
-        else
-            filterFields.put(properKey, val);
+        if (rangeType != null) {
+            if (TEMPORAL_FIELDS.contains(properKey))
+                filterFields.put(rangeType + "T_" + properKey, val); // Temporal type
+            else filterFields.put(rangeType + "_" + properKey, val); // Numeric type
+        }
+        else filterFields.put(properKey, val);
     }
 
     /** Parse and clean up raw search text and initialize parsedSearchText list */
@@ -273,6 +282,10 @@ public class ParsedQueryParams {
                     sb.append(" AND c.").append(field.substring(4)).append(" <= ").append(value);
                 } else if (field.startsWith("exact_")) {
                     sb.append(" AND c.").append(field.substring(6)).append(" = ").append(value);
+                } else if (field.startsWith("minT_")) {
+                    sb.append(" AND c.").append(field.substring(5)).append(" >= '").append(Instant.parse(value)).append("'");
+                } else if (field.startsWith("maxT_")) {
+                    sb.append(" AND c.").append(field.substring(5)).append(" <= '").append(Instant.parse(value)).append("'");
                 } else if (FILTER_PARSERS.containsKey(field)) {
                     if (FILTER_VALID_VALUES.get(field).contains(value.toUpperCase())) {
                         sb.append(" AND c.").append(field).append(" = ");
