@@ -2,9 +2,11 @@ package com.inc.fcr.car;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
@@ -17,7 +19,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "cars")
-public class Car {
+public class Car extends APIEntity {
 
     @Id
     @Column(length = 17)
@@ -159,7 +161,11 @@ public class Car {
 
     @JsonIgnore
     public List<Reservation> getReservations() { return reservations; }
-    public List<Long> getReservationIds() { return reservations.stream().map(Reservation::getReservationId).toList(); }
+    @JsonProperty("reservations")
+    public Object getReservationsParse() {
+        if (parseFullObjects) return reservations;
+        else return reservations.stream().map(Reservation::getReservationId).toList();
+    }
 
     // Setters with Validation
 

@@ -1,5 +1,6 @@
 package com.inc.fcr;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.payment.Payment;
 import com.inc.fcr.payment.StripeController;
@@ -14,9 +15,6 @@ import com.inc.fcr.utils.HibernateUtil;
 import io.javalin.Javalin;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
-
-import io.javalin.openapi.plugin.OpenApiPlugin;
-import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -75,11 +73,6 @@ public class Main {
                         get(users::getOne, Role.ANYONE);
                         patch(users::update, Role.WRITE);
                         delete(users::delete, Role.ADMIN);
-                        path("reservations", () -> {
-                            get(ctx -> ctx.json(
-                                    ((User) DatabaseController.getOne(User.class, ctx.pathParamAsClass("id", Long.class).get())).getReservations()
-                            ), Role.ANYONE);
-                        });
                     });
                 });
 
