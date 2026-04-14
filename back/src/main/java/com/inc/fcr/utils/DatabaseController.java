@@ -63,6 +63,15 @@ public class DatabaseController {
         }
     }
 
+    public static List<?> getAllByField(Class<?> clazz, String fieldPath, Object value) throws HibernateException {
+        String entity = clazz.getSimpleName();
+        String alias = String.valueOf(Character.toLowerCase(entity.charAt(0)));
+        String hql = "FROM " + entity + " " + alias + " WHERE " + alias + "." + fieldPath + " = :value";
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery(hql, clazz).setParameter("value", value).getResultList();
+        }
+    }
+
     public static Object getOne(Class<?> clazz, Object id) { return getOne(clazz, id, null); }
 
     public static Object getOne(Class<?> clazz, Object id, ParsedQueryParams params) throws HibernateException {

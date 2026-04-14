@@ -7,6 +7,7 @@ import com.inc.fcr.errorHandling.QueryParamException;
 import com.inc.fcr.errorHandling.ValidationException;
 import static com.inc.fcr.errorHandling.ApiErrors.*;
 import io.javalin.http.Context;
+import io.javalin.http.Handler;
 import org.hibernate.HibernateException;
 
 public class APIController {
@@ -24,6 +25,18 @@ public class APIController {
 
     // Abstract methods
     // ----------------
+    public Handler getAllByField(String fieldPath, Class<?> fieldClass, String pathParam) {
+        return ctx -> {
+            try {
+                Object value = ctx.pathParamAsClass(pathParam, fieldClass).get();
+                ctx.json(DatabaseController.getAllByField(clazz, fieldPath, value));
+            } catch (Exception e) {
+                if (e instanceof HibernateException) databaseError(ctx, e);
+                else serverError(ctx, e);
+            }
+        };
+    }
+
     public void getAll(Context ctx) {
         try {
             var parsedQueryParams = new ParsedQueryParams(clazz, ctx.queryParamMap());

@@ -26,7 +26,7 @@ public class Reservation {
     @ManyToOne @JsonBackReference("user-reservation")
     @JoinColumn(name = "userId", nullable = false)
     private User user;
-    @ManyToMany @JsonBackReference("payment-reservation")
+    @ManyToMany(fetch = FetchType.EAGER) @JsonBackReference("payment-reservation")
     @JoinTable(name = "stripe_reservation_payments",
             joinColumns = @JoinColumn(name = "reservationId"),
             inverseJoinColumns = @JoinColumn(name = "paymentId", columnDefinition = "VARCHAR(255)")

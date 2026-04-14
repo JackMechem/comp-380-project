@@ -1,13 +1,10 @@
 package com.inc.fcr;
 
 import com.inc.fcr.car.Car;
-import com.inc.fcr.car.CarController;
 import com.inc.fcr.payment.Payment;
 import com.inc.fcr.payment.StripeController;
 import com.inc.fcr.car.CarMakeController;
 import com.inc.fcr.reservation.Reservation;
-import com.inc.fcr.reservation.ReservationController;
-import com.inc.fcr.reservation.ReservationDataController;
 import com.inc.fcr.user.User;
 import com.inc.fcr.utils.APIController;
 import com.inc.fcr.car.enums.EnumController;
@@ -99,7 +96,7 @@ public class Main {
                         patch(users::update, Role.WRITE);
                         delete(users::delete, Role.ADMIN);
                         path("reservations", () -> {
-                            get(ReservationController::getReservationsByUser, Role.ANYONE);
+                            get(reservations.getAllByField("user.userId", Long.class, "id"), Role.ANYONE);
                         });
                     });
                 });
