@@ -14,9 +14,9 @@ import { useWindowSize } from "../hooks/useWindowSize";
 import { BiCheckCircle, BiX } from "react-icons/bi";
 import styles from "./dashboard.module.css";
 
-// ── Email lookup prompt ───────────────────────────────────────────────────────
+// ── Guest email lookup prompt ─────────────────────────────────────────────────
 
-function EmailPrompt() {
+function GuestEmailPrompt() {
     const { setUserId, setUserEmail } = useUserDashboardStore();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
@@ -44,8 +44,8 @@ function EmailPrompt() {
     return (
         <div className={styles.promptWrapper}>
             <div className={styles.promptCard}>
-                <p className={styles.promptTitle}>My Reservations</p>
-                <p className={styles.promptSubtitle}>Enter the email used at checkout to view your reservations</p>
+                <p className={styles.promptTitle}>Guest Dashboard</p>
+                <p className={styles.promptSubtitle}>Enter the email address used at checkout to view and manage your reservations.</p>
                 <form onSubmit={handleSubmit} className={styles.promptForm}>
                     <div className={styles.promptFieldGroup}>
                         <label className={styles.promptLabel}>Email</label>
@@ -69,10 +69,13 @@ function EmailPrompt() {
     );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+// Supports both guest mode (email lookup) and authenticated mode (future accounts).
+// To add authenticated users: set `isAuthenticated = true` and `userId` in the
+// store from your auth session, and the email prompt will be bypassed automatically.
 
 function DashboardInner() {
-    const { collapsed, activeView, userId } = useUserDashboardStore();
+    const { collapsed, activeView, userId, isAuthenticated } = useUserDashboardStore();
     const { clearCart } = useCartStore();
     const { width } = useWindowSize();
     const searchParams = useSearchParams();
@@ -97,10 +100,13 @@ function DashboardInner() {
         }
     };
 
-    if (!userId) return (
+    // ── Guest gate ────────────────────────────────────────────────────────────
+    // Authenticated users will bypass this automatically once isAuthenticated
+    // and userId are populated from a real auth session.
+    if (!isAuthenticated && !userId) return (
         <>
             <NavHeader white={false} />
-            <EmailPrompt />
+            <GuestEmailPrompt />
         </>
     );
 
@@ -114,6 +120,13 @@ function DashboardInner() {
             >
                 <MainBodyContainer>
                     <div className={styles.inner}>
+                        {/* Guest mode notice — hidden for authenticated users */}
+                        {!isAuthenticated && (
+                            <div className={styles.guestBanner}>
+                                <span className={styles.guestBannerLabel}>Guest Dashboard</span>
+                                <span className={styles.guestBannerSub}>Viewing as guest &mdash; create an account for faster access.</span>
+                            </div>
+                        )}
                         {paymentSuccess && (
                             <div className={styles.successBanner}>
                                 <div className={styles.successBannerLeft}>
