@@ -88,13 +88,13 @@ public class StripeController {
             userBody.put("dateCreated", Instant.now().toString());
 
             HttpResponse<String> response = HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:" + port + "/users"))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", auth)
-                    .POST(HttpRequest.BodyPublishers.ofString(userBody.toString()))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString()
+                    HttpRequest.newBuilder()
+                            .uri(URI.create("http://localhost:" + port + "/users"))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", auth)
+                            .POST(HttpRequest.BodyPublishers.ofString(userBody.toString()))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
             );
 
             System.out.println("findOrCreateUser: POST /users response " + response.statusCode() + ": " + response.body());
@@ -191,8 +191,8 @@ public class StripeController {
                         + " @ $" + String.format("%.2f", car.getPricePerDay()) + "/day";
 
                 SessionCreateParams.LineItem.PriceData.ProductData.Builder productBuilder =
-                    SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                        .setName(label);
+                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                .setName(label);
 
                 if (car.getImages() != null && !car.getImages().isEmpty()) {
                     for (String imageUrl : car.getImages()) {
@@ -201,16 +201,16 @@ public class StripeController {
                 }
 
                 lineItems.add(
-                    SessionCreateParams.LineItem.builder()
-                        .setQuantity(1L)
-                        .setPriceData(
-                            SessionCreateParams.LineItem.PriceData.builder()
-                                .setCurrency("usd")
-                                .setUnitAmount(amountCents)
-                                .setProductData(productBuilder.build())
+                        SessionCreateParams.LineItem.builder()
+                                .setQuantity(1L)
+                                .setPriceData(
+                                        SessionCreateParams.LineItem.PriceData.builder()
+                                                .setCurrency("usd")
+                                                .setUnitAmount(amountCents)
+                                                .setProductData(productBuilder.build())
+                                                .build()
+                                )
                                 .build()
-                        )
-                        .build()
                 );
 
                 // Store per-car details in metadata for the webhook
@@ -315,11 +315,11 @@ public class StripeController {
             metadata.put("carCount", String.valueOf(carCount));
 
             PaymentIntent intent = PaymentIntent.create(
-                PaymentIntentCreateParams.builder()
-                    .setAmount(totalCents)
-                    .setCurrency("usd")
-                    .putAllMetadata(metadata)
-                    .build()
+                    PaymentIntentCreateParams.builder()
+                            .setAmount(totalCents)
+                            .setCurrency("usd")
+                            .putAllMetadata(metadata)
+                            .build()
             );
 
             ctx.status(200).json("{\"clientSecret\": \"" + intent.getClientSecret() + "\", \"paymentIntentId\": \"" + intent.getId() + "\"}");
@@ -405,13 +405,13 @@ public class StripeController {
         System.out.println("Webhook: POST /payments body: " + paymentBody);
 
         HttpResponse<String> paymentResponse = http.send(
-            HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:" + port + "/payments"))
-                .header("Content-Type", "application/json")
-                .header("Authorization", auth)
-                .POST(HttpRequest.BodyPublishers.ofString(paymentBody))
-                .build(),
-            HttpResponse.BodyHandlers.ofString()
+                HttpRequest.newBuilder()
+                        .uri(URI.create("http://localhost:" + port + "/payments"))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", auth)
+                        .POST(HttpRequest.BodyPublishers.ofString(paymentBody))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString()
         );
 
         System.out.println("Webhook: POST /payments response " + paymentResponse.statusCode() + ": " + paymentResponse.body());
@@ -442,13 +442,13 @@ public class StripeController {
             System.out.println("Webhook: POST /reservations body: " + reservationBody);
 
             HttpResponse<String> reservationResponse = http.send(
-                HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:" + port + "/reservations"))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", auth)
-                    .POST(HttpRequest.BodyPublishers.ofString(reservationBody))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString()
+                    HttpRequest.newBuilder()
+                            .uri(URI.create("http://localhost:" + port + "/reservations"))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", auth)
+                            .POST(HttpRequest.BodyPublishers.ofString(reservationBody))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
             );
 
             System.out.println("Webhook: POST /reservations response " + reservationResponse.statusCode() + ": " + reservationResponse.body());
@@ -459,8 +459,8 @@ public class StripeController {
             // Look up the reservation ID we just created
             try (org.hibernate.Session hSession = HibernateUtil.getSessionFactory().openSession()) {
                 Long reservationId = hSession.createQuery(
-                    "SELECT r.reservationId FROM Reservation r WHERE r.user.userId = :userId AND r.car.vin = :vin AND r.pickUpTime = :pickUp",
-                    Long.class
+                        "SELECT r.reservationId FROM Reservation r WHERE r.user.userId = :userId AND r.car.vin = :vin AND r.pickUpTime = :pickUp",
+                        Long.class
                 ).setParameter("userId", userId).setParameter("vin", vin).setParameter("pickUp", pickUp).uniqueResult();
                 if (reservationId != null) createdReservationIds.add(reservationId);
             }
@@ -470,23 +470,23 @@ public class StripeController {
 
         // Step 4: Send confirmation email
         User user = (User) DatabaseController.getOne(User.class, userId);
-        if (user != null) {
-            List<Map<String, String>> carList = new java.util.ArrayList<>();
-            for (int i = 0; i < carCount; i++) {
-                String vin      = metadata.get("vin_" + i);
-                Car car = (Car) DatabaseController.getOne(Car.class, vin);
-                Map<String, String> carInfo = new java.util.HashMap<>();
-                carInfo.put("vin",         vin);
-                carInfo.put("make",        car != null ? car.getMake()  : "");
-                carInfo.put("model",       car != null ? car.getModel() : "");
-                carInfo.put("year",        car != null ? String.valueOf(car.getModelYear()) : "");
-                carInfo.put("pickUpTime",  metadata.get("pickUpTime_"  + i));
-                carInfo.put("dropOffTime", metadata.get("dropOffTime_" + i));
-                carList.add(carInfo);
-            }
-            MailController.sendReservationConfirmation(user.getEmail(), user.getFirstName(), userId, paymentId, createdReservationIds, carList);
-        } else {
-            System.err.println("Mail: user not found for userId=" + userId + ", skipping email");
-        }
+    //   if (user != null) {
+    //       List<Map<String, String>> carList = new java.util.ArrayList<>();
+    //       for (int i = 0; i < carCount; i++) {
+    //           String vin      = metadata.get("vin_" + i);
+    //           Car car = (Car) DatabaseController.getOne(Car.class, vin);
+    //           Map<String, String> carInfo = new java.util.HashMap<>();
+    //           carInfo.put("vin",         vin);
+    //           carInfo.put("make",        car != null ? car.getMake()  : "");
+    //           carInfo.put("model",       car != null ? car.getModel() : "");
+    //           carInfo.put("year",        car != null ? String.valueOf(car.getModelYear()) : "");
+    //           carInfo.put("pickUpTime",  metadata.get("pickUpTime_"  + i));
+    //           carInfo.put("dropOffTime", metadata.get("dropOffTime_" + i));
+    //           carList.add(carInfo);
+    //       }
+    //       //  MailController.sendReservationConfirmation(user.getEmail(), user.getFirstName(), userId, paymentId, createdReservationIds, carList);
+    //   } else {
+    //       System.err.println("Mail: user not found for userId=" + userId + ", skipping email");
+    //   }
     }
 }
