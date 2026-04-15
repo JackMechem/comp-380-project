@@ -30,6 +30,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * HTTP handlers for Stripe payment integration endpoints.
+ *
+ * <p>Provides three main flows:</p>
+ * <ol>
+ *   <li><strong>User lookup/creation</strong> ({@code POST /stripe/user}) — finds an existing
+ *       user by email or creates a new one, returning the user's FCR ID.</li>
+ *   <li><strong>Checkout session</strong> ({@code POST /stripe/checkout}) — creates a hosted
+ *       Stripe Checkout page with line items for one or more car rentals.</li>
+ *   <li><strong>Payment intent</strong> ({@code POST /stripe/payment-intent}) — creates a
+ *       Stripe PaymentIntent for use with a custom Stripe Elements UI.</li>
+ *   <li><strong>Webhook</strong> ({@code POST /stripe/webhook}) — receives Stripe events
+ *       ({@code checkout.session.completed}, {@code payment_intent.succeeded}) and
+ *       creates the corresponding Payment and Reservation records, then sends a
+ *       confirmation email via {@link com.inc.fcr.mail.MailController}.</li>
+ * </ol>
+ *
+ * <p>Requires the following environment variables:
+ * {@code STRIPE_SECRET_KEY}, {@code STRIPE_WEBHOOK_SECRET}.</p>
+ */
 public class StripeController {
 
     static {
@@ -382,6 +402,21 @@ public class StripeController {
         }
     }
 
+    /**
+     * Creates a {@link com.inc.fcr.payment.Payment} record and one {@link com.inc.fcr.reservation.Reservation}
+     * per car from Stripe event metadata, then sends a confirmation email.
+     *
+     * <p>Called by {@link #handleWebhook} for both {@code checkout.session.completed}
+     * and {@code payment_intent.succeeded} events. Makes internal HTTP requests to the
+     * {@code /payments} and {@code /reservations} endpoints to create records.</p>
+     *
+     * @param paymentId   the Stripe session or payment-intent ID (used as the payment primary key)
+     * @param amountCents the total payment amount in cents
+     * @param metadata    the Stripe session/intent metadata containing {@code userId},
+     *                    {@code carCount}, and per-car {@code vin_N}, {@code pickUpTime_N},
+     *                    {@code dropOffTime_N} entries
+     * @throws Exception if any HTTP sub-request or database operation fails
+     */
     private static void createPaymentAndReservations(String paymentId, long amountCents, Map<String, String> metadata) throws Exception {
         System.out.println("Webhook metadata: " + metadata);
 

@@ -6,9 +6,21 @@ import com.resend.services.emails.model.CreateEmailOptions;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Sends transactional emails for the FCR rental system using the Resend API.
+ *
+ * <p>Requires the {@code RESEND_API_KEY} environment variable to be set.
+ * The sender address is controlled by {@code MAIL_FROM} (defaults to
+ * {@code onboarding@resend.dev} if not set).</p>
+ *
+ * <p>If {@code RESEND_API_KEY} is absent, email sending is silently skipped
+ * and a warning is printed to stderr.</p>
+ */
 public class MailController {
 
+    /** Resend API key read from the {@code RESEND_API_KEY} environment variable. */
     private static final String API_KEY  = System.getenv("RESEND_API_KEY");
+    /** Sender email address read from the {@code MAIL_FROM} environment variable. */
     private static final String MAIL_FROM = System.getenv("MAIL_FROM");
 
     /**
@@ -46,6 +58,16 @@ public class MailController {
         }
     }
 
+    /**
+     * Builds the HTML email body for a reservation confirmation.
+     *
+     * @param firstName      the recipient's first name
+     * @param userId         the FCR user ID
+     * @param paymentId      the Stripe payment/session ID
+     * @param reservationIds the list of created reservation IDs
+     * @param cars           per-car detail maps (keys: vin, make, model, year, pickUpTime, dropOffTime)
+     * @return a self-contained HTML string suitable for use as the email body
+     */
     private static String buildHtml(String firstName, long userId, String paymentId, List<Long> reservationIds, List<Map<String, String>> cars) {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: sans-serif; max-width: 600px; margin: auto;'>");

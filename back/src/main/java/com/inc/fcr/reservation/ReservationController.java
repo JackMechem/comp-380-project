@@ -10,8 +10,23 @@ import static com.inc.fcr.errorHandling.ApiErrors.*;
 
 import java.time.Instant;
 
+/**
+ * HTTP request handlers for reservation-specific endpoints.
+ *
+ * <p>Handles the {@code GET /users/{id}/reservations} endpoint and the standard
+ * CRUD operations for {@code /reservations}. Database operations are delegated to
+ * {@link ReservationDataController}.</p>
+ */
 public class ReservationController {
 
+    /**
+     * Handles {@code GET /users/{id}/reservations}.
+     *
+     * <p>Returns all reservations belonging to the user identified by {@code {id}},
+     * ordered by booking date descending.</p>
+     *
+     * @param ctx the Javalin request context; {@code {id}} is the user's numeric ID
+     */
     public static void getReservationsByUser(Context ctx) {
         try {
             long userId = Long.parseLong(ctx.pathParam("id"));
@@ -22,6 +37,13 @@ public class ReservationController {
         }
     }
 
+    /**
+     * Handles {@code GET /reservations}.
+     *
+     * <p>Currently returns {@code null} (not yet implemented in {@link ReservationDataController}).</p>
+     *
+     * @param ctx the Javalin request context
+     */
     public static void getAllReservations(Context ctx) {
         try {
             ctx.json(ReservationDataController.getReservations());
@@ -32,6 +54,13 @@ public class ReservationController {
         }
     }
 
+    /**
+     * Handles {@code GET /reservations/{id}}.
+     *
+     * <p>Returns the reservation with the given ID, or 404 if not found.</p>
+     *
+     * @param ctx the Javalin request context; {@code {id}} is the reservation's numeric ID
+     */
     public static void getReservation(Context ctx) {
         try {
             long id = Long.parseLong(ctx.pathParam("id"));
@@ -45,6 +74,14 @@ public class ReservationController {
 
     }
 
+    /**
+     * Handles {@code POST /reservations}.
+     *
+     * <p>Deserializes the request body into a {@link Reservation} and persists it.
+     * Returns 201 on success.</p>
+     *
+     * @param ctx the Javalin request context; body must be a valid Reservation JSON object
+     */
     public static void createReservation(Context ctx) {
         try {
             Reservation res = ctx.bodyAsClass(Reservation.class);
@@ -57,6 +94,16 @@ public class ReservationController {
         }
     }
 
+    /**
+     * Handles {@code PATCH /reservations/{id}}.
+     *
+     * <p>Supports updating the car VIN, pick-up time, and drop-off time. When both
+     * times are provided, they are validated atomically via {@link Reservation#setTimeRange}.
+     * Returns 201 on success, 404 if not found.</p>
+     *
+     * @param ctx the Javalin request context; body may contain {@code car}, {@code pickUpTime},
+     *            and/or {@code dropOffTime} fields
+     */
     public static void updateReservation(Context ctx) {
         try {
             // Get reservation from database
@@ -88,6 +135,13 @@ public class ReservationController {
         }
     }
 
+    /**
+     * Handles {@code DELETE /reservations/{id}}.
+     *
+     * <p>Deletes the reservation with the given ID. Returns 204 on success, 404 if not found.</p>
+     *
+     * @param ctx the Javalin request context; {@code {id}} is the reservation's numeric ID
+     */
     public static void deleteReservation(Context ctx) {
         try {
             long id = Long.parseLong(ctx.pathParam("id"));
