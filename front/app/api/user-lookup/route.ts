@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
             `${process.env.API_BASE_URL}/users?email=${encodeURIComponent(email)}`,
             { headers: { "Authorization": authHeader }, cache: "no-store" }
         );
+        console.log("test");
         return NextResponse.json(await res.json());
     } catch {
         return NextResponse.json(null);

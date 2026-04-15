@@ -103,6 +103,30 @@
     color: var(--color-accent);
 }
 
+/* ── Guest mode banner ─────────────────────────────────────────────────────── */
+
+.guestBanner {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 16px;
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 20%, transparent);
+    border-radius: 10px;
+}
+
+.guestBannerLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-accent);
+    white-space: nowrap;
+}
+
+.guestBannerSub {
+    font-size: 13px;
+    color: var(--color-foreground-light);
+}
+
 /* ── Payment success banner ────────────────────────────────────────────────── */
 
 .successBanner {
