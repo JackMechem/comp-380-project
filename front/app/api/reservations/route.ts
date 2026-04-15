@@ -9,24 +9,27 @@ export async function GET(req: NextRequest) {
         : { username: "jim", password: "intentionallyInsecurePassword#3" };
     const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 
-    const params = new URLSearchParams(req.nextUrl.searchParams);
-    params.set("parseFullObjects", "true");
-
-    const userId = params.get("userId");
+    const userId = req.nextUrl.searchParams.get("userId");
 
     const res = await fetch(
-        `${process.env.API_BASE_URL}/reservations?${params.toString()}`,
+        `${process.env.API_BASE_URL}/reservations?pageSize=500&parseFullObjects=true`,
         { headers: { "Authorization": authHeader }, cache: "no-store" }
     );
 
     const result = await res.json();
+    const all: Record<string, unknown>[] = Array.isArray(result) ? result : (result.data ?? []);
 
     if (userId) {
-        // User dashboard: return flat array
-        const reservations = Array.isArray(result) ? result : (result.data ?? []);
-        return NextResponse.json(reservations);
+        const uid = Number(userId);
+        const filtered = all.filter((r) => {
+            const u = r.user;
+            return typeof u === "object" && u !== null
+                ? (u as Record<string, unknown>).userId === uid
+                : u === uid;
+        });
+        return NextResponse.json(filtered);
     }
 
-    // Admin: return full paginated response
+    // Admin: return full paginated shape
     return NextResponse.json(result);
 }
