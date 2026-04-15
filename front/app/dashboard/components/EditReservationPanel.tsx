@@ -66,7 +66,7 @@ export default function EditReservationPanel() {
                     <p className="page-subtitle">
                         {selectedReservation.car
                             ? `${selectedReservation.car.make} ${selectedReservation.car.model}`
-                            : selectedReservation.carVin}
+                            : "Unknown Vehicle"}
                     </p>
                 </div>
             </div>

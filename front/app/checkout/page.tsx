@@ -154,8 +154,8 @@ export default function CheckoutPage() {
         try {
             const res = await fetch(`/api/user-lookup?email=${encodeURIComponent(form.email)}`);
             const userRes = res.ok ? await res.json() : null;
-            const user = userRes?.data?.[0] ?? userRes ?? null;
-            console.log(user);
+            const userCandidate = userRes?.data?.[0] ?? (Array.isArray(userRes) ? userRes[0] : userRes) ?? null;
+            const user = (userCandidate?.userId ?? userCandidate?.id) ? userCandidate : null;
             if (user) {
                 setUserExists(true);
                 setForm((prev) => ({
