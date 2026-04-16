@@ -8,9 +8,33 @@ import java.util.stream.Collectors;
 
 import com.inc.fcr.car.enums.*;
 import com.inc.fcr.errorHandling.QueryParamException;
+import com.inc.fcr.utils.APIEntity;
 import jakarta.persistence.Id;
 import joptsimple.internal.Strings;
 
+/**
+ * Parses, validates, and builds SQL clauses from HTTP query parameters.
+ *
+ * <p>Constructed once per request from the Javalin query parameter map and the
+ * target entity class. Uses reflection to discover the entity's fields at runtime,
+ * building field maps and filter parsers automatically.</p>
+ *
+ * <p><strong>Supported query parameters:</strong></p>
+ * <ul>
+ *   <li>{@code select}   — comma-separated list of fields to return</li>
+ *   <li>{@code sortBy}   — field name to sort by (defaults to the entity's {@code @Id} field)</li>
+ *   <li>{@code sortDir}  — {@code asc} or {@code desc} (default: {@code asc})</li>
+ *   <li>{@code page}     — 1-based page number (default: 1)</li>
+ *   <li>{@code pageSize} — results per page (default: 10)</li>
+ *   <li>{@code search}   — full-text search across {@link SearchField}-annotated fields</li>
+ *   <li>{@code min<Field>} / {@code max<Field>} — range filter on numeric fields</li>
+ *   <li>{@code <field>}  — exact or enum match filter</li>
+ *   <li>{@code parseFullObjects} - determines if objects parse/return nested objects or just IDs (full car object vs just VIN). </li>
+ * </ul>
+ *
+ * <p>Strict mode (controlled by the {@code STRICT_QUERY_PARAMS} environment variable,
+ * default {@code true}) throws {@link QueryParamException} for unrecognized field names.</p>
+ */
 public class ParsedQueryParams {
 
     // Static Variables
@@ -24,13 +48,16 @@ public class ParsedQueryParams {
     // Initialize Field Maps
     // ---------------------
 
-    private void mapClassFields() {
+    private void mapClassFields() throws QueryParamException {
         Set<String> searchFields = new LinkedHashSet<>();
         Set<String> numericSet = new LinkedHashSet<>();
         Map<String, String> fieldMap = new LinkedHashMap<>();
         Map<String, String> alphaFieldMap = new LinkedHashMap<>();
         Map<String, Function<String, Object>> filterParsers = new HashMap<>();
         Map<String, String> filterValidValues = new HashMap<>();
+
+        if (!APIEntity.class.isAssignableFrom(clazz))
+            throw new QueryParamException("Entity does not extend APIEntity.");
 
         for (Field field : clazz.getDeclaredFields()) {
             // Filter unwanted fields
@@ -40,7 +67,7 @@ public class ParsedQueryParams {
             final String name = field.getName();
             final Class<?> type = field.getType();
 
-            if (field.isAnnotationPresent(Id.class)) sortBy = name;
+            if (field.isAnnotationPresent(Id.class)) idName = name;
             if (field.isAnnotationPresent(SearchField.class)) searchFields.add(name);
 
             fieldMap.put(name.toLowerCase(), name);
@@ -78,7 +105,9 @@ public class ParsedQueryParams {
     private Map<String, String> filterFields = null;
     private SortStyle sortDir = SortStyle.ASCENDING;
     private String sortBy;
+    private String idName;
     private boolean sortBySet = false;
+    private boolean parseFullObjects = false;
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private String searchText;
@@ -94,7 +123,16 @@ public class ParsedQueryParams {
     // Params Constructor
     // ------------------
 
-    public ParsedQueryParams(Class<?> clazz, Map<String,List<String>> queryParams) throws QueryParamException {
+    /**
+     * Constructs a {@code ParsedQueryParams} by reflecting on the entity class and
+     * parsing all provided query parameters.
+     *
+     * @param clazz       the JPA entity class to derive field metadata from
+     * @param queryParams the raw query parameter map from the HTTP request
+     * @throws QueryParamException if strict mode is enabled and an invalid field or
+     *                             enum value is encountered
+     */
+    public ParsedQueryParams(Class<?> clazz, Map<String, List<String>> queryParams) throws QueryParamException {
         this.clazz = clazz;
         mapClassFields();
         parseQueryParams(queryParams);
@@ -103,11 +141,12 @@ public class ParsedQueryParams {
     // Data Processing
     // ---------------
 
-    private void parseQueryParams(Map<String,List<String>> queryParams) throws  QueryParamException {
+    private void parseQueryParams(Map<String, List<String>> queryParams) throws QueryParamException {
         for (Map.Entry<String, List<String>> entry : queryParams.entrySet()) {
             String key = entry.getKey().trim().toLowerCase();
             String val = entry.getValue().getFirst().trim();
             switch (key) {
+                case "parsefullobjects" -> parseFullObjects = Boolean.parseBoolean(val);
                 case "select" -> parseSelect(entry.getValue());
                 case "sortby" -> {
                     if (FIELD_MAP.containsKey(val.toLowerCase())) {
@@ -195,12 +234,32 @@ public class ParsedQueryParams {
     // Getters
     // -------
 
+    /**
+     * DEPRECATED
+     * Builds the HQL {@code SELECT} clause from the parsed select fields.
+     *
+     * <p>Example output: {@code "c.vin, c.make, c.model"}</p>
+     *
+     * @return the select clause string with entity alias {@code c}
+     * @throws QueryParamException if select fields are not set
+     */
+
     public String getSelectClause() throws QueryParamException {
         return selectFields.stream()
                 .map(f -> "c." + f)
                 .collect(Collectors.joining(", "));
     }
 
+    /**
+     * Builds the HQL {@code WHERE} clause from parsed filter and search parameters.
+     *
+     * <p>Always starts with {@code WHERE 1=1} so additional {@code AND} conditions
+     * can be appended safely. Handles min/max range filters, exact numeric matches,
+     * enum matches, string matches, and the full-text search clause.</p>
+     *
+     * @return the complete WHERE clause string
+     * @throws QueryParamException if an enum filter value is invalid and strict mode is on
+     */
     public String getFilterClause() throws QueryParamException {
         StringBuilder sb = new StringBuilder(" WHERE 1=1");
         if (filterFields != null) {
@@ -232,23 +291,32 @@ public class ParsedQueryParams {
 
     private String getSearchClause() {
         if (searchText == null) return "";
-        return Strings.join(Arrays.stream(searchText.split(" ")).map(e ->{
+        return Strings.join(Arrays.stream(searchText.split(" ")).map(e -> {
             boolean invertedMatch = e.startsWith("-");
             if (invertedMatch) e = e.substring(1);
-            return " CAST( REGEXP_LIKE(CONCAT_WS(' ', "+searchFieldsToStr()+"), '"+e+"', 'i') AS int) "
+            return " CAST( REGEXP_LIKE(CONCAT_WS(' ', " + searchFieldsToStr() + "), '" + e + "', 'i') AS int) "
                     + (invertedMatch ? "*-10" : ""); // large negative weight against inverted matches
         }).toList(), " + ");
     }
 
     // Helper function for search field processing
     private String searchFieldsToStr() {
-        return Strings.join(SEARCH_FIELDS.stream().map(e -> "c."+e).toList(), ", ");
+        return Strings.join(SEARCH_FIELDS.stream().map(e -> "c." + e).toList(), ", ");
     }
 
+    /**
+     * Builds the HQL {@code ORDER BY} clause.
+     *
+     * <p>When a search is active and no explicit {@code sortBy} was given,
+     * results are ordered by search relevance score descending. Otherwise,
+     * the configured sort field and direction are used.</p>
+     *
+     * @return the ORDER BY clause string
+     */
     public String getSortClause() {
         return (sortBySet || searchText == null) ?
-                " ORDER BY c." + sortBy + getSortDirClause()
-                : " ORDER BY "+getSearchClause()+" DESC";
+                " ORDER BY c." + (sortBySet ? sortBy : idName) + getSortDirClause()
+                : " ORDER BY " + getSearchClause() + " DESC";
     }
 
     private String getSortDirClause() {
@@ -275,6 +343,10 @@ public class ParsedQueryParams {
         return sortBy;
     }
 
+    public String getIdName() {
+        return idName;
+    }
+
     public int getPage() {
         return page;
     }
@@ -283,11 +355,29 @@ public class ParsedQueryParams {
         return pageSize;
     }
 
+    public boolean getParseFullObjects() {
+        return parseFullObjects;
+    }
+
+    /**
+     * OBSOLETE / DEPRECATED
+     * Adds a VIN equality filter to the existing filter fields.
+     *
+     * <p>No longer used by {@link com.inc.fcr.utils.DatabaseController} to
+     * narrow a select query to a specific car.</p>
+     *
+     * @param vin the VIN value to filter on
+     */
+
     public void setVinFilter(String vin) {
         if (filterFields == null)
             filterFields = new LinkedHashMap<>();
         filterFields.put("vin", vin);
     }
+
+    /**
+     * Prints the current parsed parameter state to stdout for debugging.
+     */
 
     public void printParams() {
         System.out.println("selectFields: " + selectFields);

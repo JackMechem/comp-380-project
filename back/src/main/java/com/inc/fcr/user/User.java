@@ -2,9 +2,11 @@ package com.inc.fcr.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
@@ -13,9 +15,21 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA entity representing a registered user in the FCR rental system.
+ *
+ * <p>Maps to the {@code stripe_users} database table. Stores personal information,
+ * contact details, address, and driver's license data. Complex value objects
+ * ({@link Address}, {@link DriversLicense}) are serialized as JSON via
+ * {@link com.inc.fcr.database.Converters}.</p>
+ *
+ * <p>Has a one-to-many relationship with {@link com.inc.fcr.reservation.Reservation}.
+ * The reservations list is excluded from JSON serialization via {@code @JsonIgnore};
+ * unless parsing full objects is enabled, otherwise returns ID. </p>
+ */
 @Entity
 @Table(name = "stripe_users")
-public class User {
+public class User extends APIEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long userId;
@@ -40,6 +54,17 @@ public class User {
 
     // Constructors
 
+    /**
+     * Full constructor for creating a new user with all required fields.
+     *
+     * @param firstName      the user's first name
+     * @param lastName       the user's last name
+     * @param email          the user's email address (must be unique)
+     * @param phoneNumber    the user's phone number
+     * @param address        the user's physical address
+     * @param driversLicense the user's driver's license information
+     * @param dateCreated    the timestamp when the account was created
+     */
     public User(String firstName, String lastName, String email, String phoneNumber, Address address, DriversLicense driversLicense, Instant dateCreated) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -50,11 +75,18 @@ public class User {
         this.dateCreated = dateCreated;
     }
 
+    /**
+     * Loads an existing user from the database by ID and copies its fields into this instance.
+     *
+     * @param id the user's auto-generated primary key
+     * @throws IllegalAccessException if reflective field copy fails
+     */
     public User(long id) throws IllegalAccessException {
         User u = (User) DatabaseController.getOne(User.class, id);
         EntityController.copyFields(u, this);
     }
 
+    /** Default no-arg constructor required by JPA/Hibernate and Jackson. */
     public User() {}
 
     // Getters & Setters
@@ -119,8 +151,20 @@ public class User {
     public List<Reservation> getReservations() {
         return reservations;
     }
-    public List<Long> getReservationIds() {
-        return reservations.stream().map(Reservation::getReservationId).toList();
+
+    /**
+     * Returns the IDs of all reservations associated with this user.
+     *
+     * <p>Use this instead of {@link #getReservations()} when only IDs are needed,
+     * as the full list is excluded from JSON serialization unless parsing full objects is enabled. </p>
+     * @return a list of reservation IDs or objects
+     */
+
+    @JsonProperty("reservations")
+    public Object getReservationsParse() {
+        if (parseFullObjects) return reservations;
+        else return reservations.stream().map(Reservation::getReservationId).toList();
+
     }
 }
 

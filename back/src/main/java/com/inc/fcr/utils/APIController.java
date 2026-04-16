@@ -9,21 +9,42 @@ import static com.inc.fcr.errorHandling.ApiErrors.*;
 import io.javalin.http.Context;
 import org.hibernate.HibernateException;
 
+/**
+ * Generic REST API controller providing standard CRUD endpoint handlers for any JPA entity.
+ *
+ * <p>Instantiated in {@link com.inc.fcr.Main} for each resource (cars, users, reservations,
+ * payments). The entity class and its ID type are passed at construction time, allowing
+ * one implementation to serve multiple resource types.</p>
+ *
+ * <p>All methods handle Javalin {@link Context} objects and delegate to
+ * {@link DatabaseController} for persistence.</p>
+ */
 public class APIController {
 
-    // API constructor
-    // ----------------
+    /** The JPA entity class this controller manages (e.g., {@code Car.class}). */
     protected final Class<?> clazz;
+    /** The type of the entity's primary key (e.g., {@code String.class} for VIN, {@code Long.class} for auto-increment IDs). */
     protected final Class<?> idClazz;
 
-    // Creates an API Controller from a class and the class of its ID
+    /**
+     * Constructs an {@code APIController} for the given entity and ID types.
+     *
+     * @param clazz   the JPA entity class (e.g., {@code Car.class})
+     * @param idClazz the type of the primary key (e.g., {@code String.class}, {@code Long.class})
+     */
     public APIController(Class<?> clazz, Class<?> idClazz) {
         this.clazz = clazz;
         this.idClazz = idClazz;
     }
 
-    // Abstract methods
-    // ----------------
+    /**
+     * Handles {@code GET /{resource}}.
+     *
+     * <p>Parses query parameters (pagination, filtering, sorting, field selection) and
+     * returns a paginated {@link com.inc.fcr.database.PagesWrapper}.</p>
+     *
+     * @param ctx the Javalin request context
+     */
     public void getAll(Context ctx) {
         try {
             var parsedQueryParams = new ParsedQueryParams(clazz, ctx.queryParamMap());
@@ -35,6 +56,14 @@ public class APIController {
         }
     }
 
+    /**
+     * Handles {@code GET /{resource}/{id}}.
+     *
+     * <p>Returns the entity with the given ID, optionally limiting fields via the
+     * {@code select} query parameter. Returns 404 if not found.</p>
+     *
+     * @param ctx the Javalin request context; {@code {id}} is the primary key
+     */
     public void getOne(Context ctx) {
         try {
             Object id = ctx.pathParamAsClass("id", idClazz).get();
@@ -51,6 +80,14 @@ public class APIController {
         }
     }
 
+    /**
+     * Handles {@code POST /{resource}}.
+     *
+     * <p>Deserializes the request body into the entity class, checks for duplicate IDs,
+     * and persists the new entity. Returns 201 on success.</p>
+     *
+     * @param ctx the Javalin request context; body must be a valid entity JSON object
+     */
     public void create(Context ctx) {
         try {
             // Parse object
@@ -71,6 +108,17 @@ public class APIController {
         }
     }
 
+    /**
+     * Handles {@code PATCH /{resource}/{id}}.
+     *
+     * <p>Fetches the existing entity, performs a shallow JSON merge of the request body
+     * onto the existing object, then persists the result. Returns 201 on success,
+     * 404 if the entity does not exist.</p>
+     *
+     * <p><strong>Note:</strong> Nested JSON objects are overridden entirely, not merged.</p>
+     *
+     * @param ctx the Javalin request context; body is a partial entity JSON object
+     */
     public void update(Context ctx) {
         try {
             // Get from database
@@ -100,6 +148,14 @@ public class APIController {
         }
     }
 
+    /**
+     * Handles {@code DELETE /{resource}/{id}}.
+     *
+     * <p>Deletes the entity with the given primary key. Returns 204 on success,
+     * 404 if not found.</p>
+     *
+     * @param ctx the Javalin request context; {@code {id}} is the primary key
+     */
     public void delete(Context ctx) {
         try {
             Object id = ctx.pathParamAsClass("id", idClazz).get();

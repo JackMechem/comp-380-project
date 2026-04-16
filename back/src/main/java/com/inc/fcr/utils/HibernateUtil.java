@@ -8,9 +8,29 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
+/**
+ * Provides a singleton Hibernate {@link SessionFactory} for the FCR application.
+ *
+ * <p>All database connection settings are read from environment variables:
+ * {@code DB_URL}, {@code DB_USER}, {@code DB_PASSWORD}. The factory is built
+ * once at class initialization and reused throughout the application lifecycle.</p>
+ *
+ * <p>Registered entity classes: {@link com.inc.fcr.car.Car}, {@link com.inc.fcr.user.User},
+ * {@link com.inc.fcr.reservation.Reservation}, {@link com.inc.fcr.payment.Payment}.</p>
+ */
 public class HibernateUtil {
     private static final SessionFactory sessionFactory = buildSessionFactory();
 
+    /**
+     * Builds and configures the Hibernate {@link SessionFactory}.
+     *
+     * <p>Uses {@code update} DDL auto mode, meaning tables are created or altered
+     * automatically to match the entity definitions. SQL is printed to stdout for
+     * debugging.</p>
+     *
+     * @return the configured {@link SessionFactory}
+     * @throws ExceptionInInitializerError if configuration or connection fails
+     */
     private static SessionFactory buildSessionFactory() {
         try {
             Configuration configuration = new Configuration();
@@ -45,6 +65,11 @@ public class HibernateUtil {
         }
     }
 
+    /**
+     * Returns the application-wide {@link SessionFactory} singleton.
+     *
+     * @return the shared {@link SessionFactory} instance
+     */
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }

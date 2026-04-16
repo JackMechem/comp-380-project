@@ -2,60 +2,38 @@ package com.inc.fcr.car;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inc.fcr.errorHandling.*;
 import com.inc.fcr.car.enums.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+/**
+ * JPA entity representing a rental car in the FCR inventory.
+ *
+ * <p>Maps to the {@code cars} database table. Contains full vehicle specifications
+ * including performance data, pricing, enumerations for drivetrain/body/fuel types,
+ * and lists of feature tags and image URLs stored as JSON columns.</p>
+ *
+ * <p>Validation is enforced in setters: numeric fields (year, cylinders, horsepower,
+ * etc.) throw {@link com.inc.fcr.errorHandling.ValidationException} when out of range.</p>
+ *
+ * <p>Fields annotated with {@link com.inc.fcr.database.SearchField} are included in
+ * the full-text {@code search} query parameter.</p>
+ */
 
 @Entity
 @Table(name = "cars")
-public class Car {
-
-    // Deprecated (old API controller)
-    @FunctionalInterface
-    public interface ThrowingBiConsumer<T, U> {
-        void accept(T t, U u) throws ValidationException;
-    }
-
-    @Transient 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    @Transient 
-    public static final Map<String, ThrowingBiConsumer<Car, JsonNode>> setterKeyMap = Map.ofEntries(
-            Map.entry("vin", (c, v) -> c.setVin(v.asText())),
-            Map.entry("make", (c, v) -> c.setMake(v.asText())),
-            Map.entry("model", (c, v) -> c.setModel(v.asText())),
-            Map.entry("modelYear", (c, v) -> c.setModelYear(v.asInt())),
-            Map.entry("description", (c, v) -> c.setDescription(v.asText())),
-            Map.entry("cylinders", (c, v) -> c.setCylinders(v.asInt())),
-            Map.entry("gears", (c, v) -> c.setGears(v.asInt())),
-            Map.entry("horsepower", (c, v) -> c.setHorsepower(v.asInt())),
-            Map.entry("torque", (c, v) -> c.setTorque(v.asInt())),
-            Map.entry("seats", (c, v) -> c.setSeats(v.asInt())),
-            Map.entry("pricePerDay", (c, v) -> c.setPricePerDay(v.asDouble())),
-            Map.entry("mpg", (c, v) -> c.setMpg(v.asDouble())),
-            Map.entry("features", (c, v) -> c.setFeatures(mapper.convertValue(v, new TypeReference<ArrayList<String>>() {}))),
-            Map.entry("images", (c, v) -> c.setImages(mapper.convertValue(v, new TypeReference<ArrayList<String>>() {}))),
-            Map.entry("transmission", (c, v) -> c.setTransmission(TransmissionType.valueOf(v.asText()))),
-            Map.entry("drivetrain", (c, v) -> c.setDrivetrain(Drivetrain.valueOf(v.asText()))),
-            Map.entry("engineLayout", (c, v) -> c.setEngineLayout(EngineLayout.valueOf(v.asText()))),
-            Map.entry("fuel", (c, v) -> c.setFuel(FuelType.valueOf(v.asText()))),
-            Map.entry("bodyType", (c, v) -> c.setBodyType(BodyType.valueOf(v.asText()))),
-            Map.entry("roofType", (c, v) -> c.setRoofType(RoofType.valueOf(v.asText()))),
-            Map.entry("vehicleClass", (c, v) -> c.setVehicleClass(VehicleClass.valueOf(v.asText())))
-    );
+public class Car extends APIEntity {
 
     @Id
     @Column(length = 17)
@@ -102,13 +80,46 @@ public class Car {
 
     // --- CONSTRUCTORS ---
 
+    /** Default no-arg constructor required by JPA/Hibernate. */
     public Car() {}
 
+    /**
+     * Loads an existing car from the database by VIN and copies its fields into this instance.
+     *
+     * @param vin the vehicle VIN to look up
+     * @throws IllegalAccessException if reflective field copy fails
+     */
     public Car(String vin) throws IllegalAccessException {
         Car c = (Car) DatabaseController.getOne(Car.class, vin);
         EntityController.copyFields(c, this);
     }
 
+    /**
+     * Full constructor that validates and sets all car fields.
+     *
+     * @param vin           the 17-character Vehicle Identification Number (primary key)
+     * @param make          the manufacturer name (e.g., "Toyota")
+     * @param model         the model name (e.g., "Corolla")
+     * @param modelYear     the model year (must be between 1 and 9999)
+     * @param description   free-text vehicle description
+     * @param cylinders     number of engine cylinders (0–99)
+     * @param gears         number of transmission gears (1–99)
+     * @param horsepower    engine horsepower (1–99999)
+     * @param torque        engine torque in lb-ft (1–99999)
+     * @param seats         passenger seating capacity (0–99)
+     * @param pricePerDay   rental price in USD per day (0–999999)
+     * @param mpg           fuel efficiency in miles per gallon (0–999)
+     * @param features      list of feature tag strings
+     * @param images        list of image URLs
+     * @param transmission  transmission type
+     * @param drivetrain    drivetrain configuration
+     * @param engineLayout  engine/motor layout
+     * @param fuel          fuel type
+     * @param bodyType      body style
+     * @param roofType      roof style
+     * @param vehicleClass  vehicle market class
+     * @throws ValidationException if any numeric field is out of its valid range
+     */
     public Car(String vin, String make, String model, int modelYear, String description,
             int cylinders, int gears, int horsepower, int torque, int seats, double pricePerDay, double mpg,
             ArrayList<String> features, ArrayList<String> images,
@@ -197,10 +208,20 @@ public class Car {
 
     @JsonIgnore
     public List<Reservation> getReservations() { return reservations; }
-    public List<Long> getReservationIds() { return reservations.stream().map(Reservation::getReservationId).toList(); }
+    @JsonProperty("reservations")
+    public Object getReservationsParse() {
+        if (parseFullObjects) return reservations;
+        else return reservations.stream().map(Reservation::getReservationId).toList();
+    }
 
     // Setters with Validation
 
+    /**
+     * Sets the model year after validating it is in the range [1, 9999].
+     *
+     * @param modelYear the model year to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setModelYear(int modelYear) throws ValidationException {
         if (modelYear > 0 && modelYear < 10000) {
             this.modelYear = modelYear;
@@ -209,6 +230,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the cylinder count after validating it is in the range [0, 99].
+     *
+     * @param cylinders the number of cylinders to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setCylinders(int cylinders) throws ValidationException {
         if (cylinders >= 0 && cylinders < 100) {
             this.cylinders = cylinders;
@@ -217,6 +244,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the gear count after validating it is in the range [1, 99].
+     *
+     * @param gears the number of gears to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setGears(int gears) throws ValidationException {
         if (gears > 0 && gears < 100) {
             this.gears = gears;
@@ -225,6 +258,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the horsepower after validating it is in the range [1, 99999].
+     *
+     * @param horsepower the horsepower value to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setHorsepower(int horsepower) throws ValidationException {
         if (horsepower > 0 && horsepower < 100000) {
             this.horsepower = horsepower;
@@ -233,6 +272,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the torque after validating it is in the range [1, 99999].
+     *
+     * @param torque the torque value in lb-ft to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setTorque(int torque) throws ValidationException {
         if (torque > 0 && torque < 100000) {
             this.torque = torque;
@@ -241,6 +286,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the seat count after validating it is in the range [0, 99].
+     *
+     * @param seats the number of seats to set
+     * @throws ValidationException if the value is out of range
+     */
     public void setSeats(int seats) throws ValidationException {
         if (seats >= 0 && seats < 100) {
             this.seats = seats;
@@ -249,6 +300,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the rental price per day after validating it is in the range [0, 999999].
+     *
+     * @param pricePerDay the price in USD per rental day
+     * @throws ValidationException if the value is out of range
+     */
     public void setPricePerDay(double pricePerDay) throws ValidationException {
         if (pricePerDay >= 0 && pricePerDay < 1000000) {
             this.pricePerDay = pricePerDay;
@@ -257,6 +314,12 @@ public class Car {
         }
     }
 
+    /**
+     * Sets the miles-per-gallon rating after validating it is in the range [0, 999].
+     *
+     * @param mpg the fuel efficiency in MPG
+     * @throws ValidationException if the value is out of range
+     */
     public void setMpg(double mpg) throws ValidationException {
         if (mpg >= 0 && mpg < 1000) {
             this.mpg = mpg;
@@ -267,6 +330,13 @@ public class Car {
 
     // Methods
 
+    /**
+     * Returns the pick-up and drop-off time pairs for all reservations on this car.
+     *
+     * <p>Each inner list contains exactly two elements: {@code [pickUpTime, dropOffTime]}.</p>
+     *
+     * @return a list of {@code [pickUpTime, dropOffTime]} pairs, or an empty list if none exist
+     */
     public List<List<Instant>> getReservationDates() {
         if (reservations.isEmpty()) return List.of();
         else return reservations.stream().map(r -> List.of(r.getPickUpTime(), r.getDropOffTime()) ).toList();

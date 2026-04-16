@@ -2,9 +2,11 @@ package com.inc.fcr.payment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.user.User;
+import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
 import com.inc.fcr.utils.EntityController;
 import jakarta.persistence.*;
@@ -13,9 +15,18 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * JPA entity representing a payment record in the FCR rental system.
+ *
+ * <p>Maps to the {@code stripe_payments} table. The primary key ({@code paymentId}) is
+ * the Stripe session or payment-intent ID, not an auto-generated value.</p>
+ *
+ * <p>Has a many-to-many relationship with {@link com.inc.fcr.reservation.Reservation}
+ * through the {@code stripe_reservation_payments} join table.</p>
+ */
 @Entity
 @Table(name = "stripe_payments")
-public class Payment {
+public class Payment extends APIEntity {
 
     @Id
     @Column(length = 255)
@@ -33,6 +44,14 @@ public class Payment {
 
     // Constructors
 
+    /**
+     * Creates a new payment record with the specified amounts and type.
+     *
+     * @param totalAmount the full amount due in USD
+     * @param amountPaid  the amount actually paid in USD
+     * @param date        the timestamp when the payment was recorded
+     * @param paymentType the method of payment
+     */
     public Payment(double totalAmount, double amountPaid, Instant date, PaymentType paymentType) {
         this.totalAmount = totalAmount;
         this.amountPaid = amountPaid;
@@ -40,15 +59,27 @@ public class Payment {
         this.paymentType = paymentType;
     }
 
+    /**
+     * Loads an existing payment from the database by its Stripe payment ID.
+     *
+     * @param id the Stripe payment/session ID (primary key)
+     * @throws IllegalAccessException if reflective field copy fails
+     */
     public Payment(String id) throws IllegalAccessException {
         Payment p = (Payment) DatabaseController.getOne(Payment.class, id);
         EntityController.copyFields(p, this);
     }
 
+    /** Default no-arg constructor required by JPA/Hibernate and Jackson. */
     public Payment() {}
 
     // Methods
 
+    /**
+     * Returns whether the full amount has been collected.
+     *
+     * @return {@code true} if {@code amountPaid >= totalAmount}
+     */
     public boolean isPaid() {
         return amountPaid >= totalAmount;
     }
@@ -69,12 +100,18 @@ public class Payment {
         return paymentId;
     }
 
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+
     @JsonIgnore
     public List<Reservation> getReservations() {
         return reservations;
     }
-    public List<Long> getReservationIds() {
-        return reservations.stream().map(Reservation::getReservationId).toList();
+    @JsonProperty("reservations")
+    public Object getReservationsParse() {
+        if (parseFullObjects) return reservations;
+        else return reservations.stream().map(Reservation::getReservationId).toList();
     }
 
     public double getTotalAmount() {
