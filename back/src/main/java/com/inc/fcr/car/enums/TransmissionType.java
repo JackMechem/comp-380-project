@@ -1,5 +1,11 @@
 package com.inc.fcr.car.enums;
 
+/**
+ * Represents the transmission of a vehicle.
+ */
 public enum TransmissionType {
-    AUTOMATIC, MANUAL
+    /** Automatic transmission. */
+    AUTOMATIC,
+    /** Manual (stick-shift) transmission. */
+    MANUAL
 }

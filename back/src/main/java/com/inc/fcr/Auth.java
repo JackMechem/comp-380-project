@@ -10,9 +10,30 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Handles HTTP Basic authentication and role-based access control for the FCR API.
+ *
+ * <p>This class is registered as a Javalin {@code beforeMatched} handler in {@link Main}.
+ * Every incoming request passes through {@link #handleAccess(Context)} before reaching
+ * its route handler.</p>
+ *
+ * <p><strong>Note:</strong> The credential store ({@link #userRolesMap}) is a temporary
+ * hard-coded map and is intended to be replaced with a proper authentication mechanism
+ * (API keys or user logins) in the future.</p>
+ */
 public class Auth {
 
-    // Authentication starts here
+    /**
+     * Javalin {@code beforeMatched} handler that enforces role-based access control.
+     *
+     * <p>If the matched route permits {@link Role#ANYONE}, the request passes through
+     * immediately. Otherwise, the caller's Basic auth credentials are checked against
+     * {@link #userRolesMap}. A {@code 401 Unauthorized} response is sent if the user
+     * has no matching role.</p>
+     *
+     * @param ctx the Javalin request context
+     * @throws UnauthorizedResponse if the caller lacks a required role
+     */
     public static void handleAccess(Context ctx) {
         Set<RouteRole> permittedRoles = ctx.routeRoles();
         // check if context requires (permitted) roles
@@ -27,7 +48,15 @@ public class Auth {
         throw new UnauthorizedResponse();
     }
 
-    // Validate credentials from Basic auth header, returns 200 or 401
+    /**
+     * Route handler for {@code GET /auth/validate}.
+     *
+     * <p>Returns {@code 200 OK} if the provided Basic auth credentials are valid,
+     * or {@code 401 Unauthorized} otherwise. Useful for login checks from clients.</p>
+     *
+     * @param ctx the Javalin request context
+     * @throws UnauthorizedResponse if credentials are missing or invalid
+     */
     public static void validateCredentials(Context ctx) {
         if (!userRoles(ctx).isEmpty()) {
             ctx.status(200);
@@ -37,7 +66,13 @@ public class Auth {
         }
     }
 
-    // Authenticate user/access roles (returns list of roles)
+    /**
+     * Returns the list of {@link Role}s associated with the Basic auth credentials
+     * present in the request, or an empty list if credentials are absent or unrecognized.
+     *
+     * @param ctx the Javalin request context
+     * @return a non-null list of roles granted to the caller
+     */
     public static List<Role> userRoles(Context ctx) {
         return Optional.ofNullable(ctx.basicAuthCredentials())
                 .map(credentials -> userRolesMap
@@ -46,8 +81,13 @@ public class Auth {
     }
 
     // ---- TEMP ----
-    // Authentication test samples
-    // To be replaced with API keys and/or user logins later
+    // Authentication test samples — to be replaced with API keys and/or user logins later.
+
+    /**
+     * Simple username/password pair used as the key in {@link #userRolesMap}.
+     *
+     * <p>Intentionally minimal; equality and hashing are based on both fields.</p>
+     */
     static class Pair {
         String a, b;
 

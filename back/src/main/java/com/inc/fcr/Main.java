@@ -16,7 +16,33 @@ import io.javalin.Javalin;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Application entry point for the FCR Inc car rental REST API.
+ *
+ * <p>Bootstraps Hibernate, configures a Javalin HTTP server with
+ * documentation, CORS, and role-based access control, then registers all API routes.</p>
+ *
+ * <p>The server port is read from the {@code PORT} environment variable,
+ * defaulting to {@code 8080} if not set.</p>
+ *
+ * <p><strong>Route overview:</strong></p>
+ * <ul>
+ *   <li>{@code /cars}         — CRUD for vehicle inventory</li>
+ *   <li>{@code /reservations} — CRUD for reservations</li>
+ *   <li>{@code /users}        — CRUD for users</li>
+ *   <li>{@code /payments}     — CRUD for payment records</li>
+ *   <li>{@code /stripe}       — Stripe checkout / webhook integration</li>
+ *   <li>{@code /enums}        — Enum metadata for UI dropdowns</li>
+ *   <li>{@code /auth/validate}— Credential validation</li>
+ * </ul>
+ */
 public class Main {
+    /**
+     * Starts the Javalin HTTP server and registers all routes.
+     *
+     * @param args command-line arguments (unused)
+     * @throws Exception if Hibernate or Javalin initialization fails
+     */
     public static void main(String[] args) throws Exception {
 
         HibernateUtil.getSessionFactory();
@@ -94,7 +120,7 @@ public class Main {
                 });
 
                 // redirect to enums (/enums) and (/enums{enum})
-                path("enums", () -> { // /enums or enums?
+                path("enums", () -> {
                     get(EnumController::getAllEnums, Role.ANYONE);
                     path("{enum}", () -> {
                         get(EnumController::getEnum, Role.ANYONE);
