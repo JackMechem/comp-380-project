@@ -13,4 +13,6 @@ export interface CartCardInfo {
     cartItem?: CartProps;
     /** Other cart items whose rental dates overlap the current browse date range. */
     cartConflicts?: CartProps[];
+    /** True when the logged-in user already has a reservation for this car overlapping the browse range. */
+    userReserved?: boolean;
 }

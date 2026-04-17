@@ -29,6 +29,8 @@ const carToCartProps = (car: Car, startDate?: Date, endDate?: Date): CartProps =
 	endDate: endDate?.toISOString(),
 });
 
+// ── Right column ──────────────────────────────────────────────────────────────
+
 const RightColumn = ({ carData }: { carData: Car }) => {
 	const { addCar, removeCar, inCart } = useCartStore();
 	const isInCart = inCart(carData.vin);
@@ -63,11 +65,15 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 	const isPartial = status === "partial";
 	const canAdd = isInCart || (!!startDate && !!endDate && !isPartial);
 
+	const handleAddToCart = () => {
+		if (isInCart) { removeCar(carData.vin); return; }
+		addCar(carToCartProps(carData, startDate, endDate));
+	};
+
 	if (!hydrated) return null;
 
 	return (
 		<div className={`card ${styles.rightCol}`}>
-
 			{/* Price */}
 			<div className={styles.priceBlock}>
 				<p className={styles.priceMain}>
@@ -143,11 +149,7 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 			{/* CTA */}
 			<button
 				disabled={!canAdd}
-				onClick={() =>
-					isInCart
-						? removeCar(carData.vin)
-						: addCar(carToCartProps(carData, startDate, endDate))
-				}
+				onClick={handleAddToCart}
 				className={`${styles.ctaBtn} ${isInCart ? styles.ctaBtnRemove : styles.ctaBtnAdd}`}
 			>
 				{isInCart ? "Remove from cart" : "Add to cart"}

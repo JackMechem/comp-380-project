@@ -28,7 +28,7 @@
 .fields {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
 .fieldGroup {
@@ -55,6 +55,7 @@
     font-size: 14px;
     outline: none;
     transition: border-color 150ms, box-shadow 150ms;
+    box-sizing: border-box;
 }
 
 .input:focus {
@@ -64,7 +65,6 @@
 
 .submitBtn {
     width: 100%;
-    margin-top: 8px;
     padding: 11px 0;
     background-color: var(--color-accent);
     color: var(--color-primary);
@@ -74,8 +74,48 @@
     border: none;
     cursor: pointer;
     transition: filter 150ms;
+    text-align: center;
+    text-decoration: none;
+    display: block;
 }
 
-.submitBtn:hover {
-    filter: brightness(1.1);
+.submitBtn:hover { filter: brightness(1.1); }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.secondaryBtn {
+    width: 100%;
+    padding: 11px 0;
+    background: none;
+    border: 1px solid var(--color-third);
+    border-radius: 0.75rem;
+    color: var(--color-foreground-light);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 150ms, color 150ms;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.secondaryBtn:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+    color: var(--color-accent);
+}
+
+.errorText {
+    font-size: 13px;
+    color: var(--color-accent);
+    margin: 0;
+}
+
+.reasonNote {
+    font-size: 12px;
+    color: var(--color-foreground);
+    background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border-radius: 0.6rem;
+    padding: 10px 14px;
+    line-height: 1.5;
+    margin-bottom: 16px;
 }

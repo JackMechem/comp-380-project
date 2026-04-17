@@ -1,76 +1,32 @@
-"use client";
+import { redirect } from "next/navigation";
+import { getSessionCookies } from "@/app/lib/serverAuth";
+import { fetchCars, fetchReservations } from "@/app/lib/ServerApiCalls";
+import AdminShell from "./AdminShell";
+import { Car } from "@/app/types/CarTypes";
+import { Reservation } from "@/app/types/ReservationTypes";
 
-import { useEffect } from "react";
-import MainBodyContainer from "../components/containers/mainBodyContainer";
-import NavHeader from "../components/headers/navHeader";
-import AdminSidebar from "../components/menus/adminSidebar";
-import CarFormPanel from "./components/CarFormPanel";
-import DashboardPanel from "./components/DashboardPanel";
-import InventoryPanel from "./components/InventoryPanel";
-import ReservationsPanel from "./components/ReservationsPanel";
-import { useAdminSidebarStore } from "@/stores/adminSidebarStore";
-import { useWindowSize } from "@/app/hooks/useWindowSize";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import { validateCredentials } from "../lib/AuthValidation";
 
-export default function AdminPage() {
-	const router = useRouter();
-	const { collapsed, activeView } = useAdminSidebarStore();
-	const { width } = useWindowSize();
-	const isMobile = width !== undefined && width < 768;
+export default async function AdminPage() {
+    const { sessionToken, role } = await getSessionCookies();
 
-	useEffect(() => {
-		const raw = Cookies.get("credentials");
-		if (!raw) { router.replace("/login"); return; }
-		const { username, password } = JSON.parse(raw);
-		validateCredentials(username, password).then((status) => {
-			if (status !== 200) router.replace("/login");
-		});
-	}, []);
+    // Hard redirect only when there's definitely no session at all.
+    // If role cookie is missing (old session), let AdminShell's Zustand check handle it.
+    if (!sessionToken) {
+        redirect("/login");
+    }
 
-	const renderContent = () => {
-		switch (activeView) {
-			case "add-car":
-				return (
-					<div>
-						<h1 className="page-title" style={{ marginBottom: 24 }}>Add Car</h1>
-						<CarFormPanel mode="add" />
-					</div>
-				);
-			case "edit-car":
-				return (
-					<div>
-						<h1 className="page-title" style={{ marginBottom: 24 }}>Edit Car</h1>
-						<CarFormPanel mode="edit" />
-					</div>
-				);
-			case "view-data":
-				return <InventoryPanel />;
-			case "view-reservations":
-				return <ReservationsPanel />;
-			default:
-				return <DashboardPanel />;
-		}
-	};
+    // If we have the role from cookie and it's not admin/staff, redirect immediately.
+    if (role && role !== "ADMIN" && role !== "STAFF") {
+        redirect("/login");
+    }
 
-	return (
-		<>
-			<NavHeader white={false} />
-			<AdminSidebar />
-			<div
-				className="transition-all duration-300 ease-in-out"
-				style={{
-					paddingLeft: isMobile ? 0 : collapsed ? 64 : 220,
-					paddingBottom: isMobile ? 80 : 0,
-				}}
-			>
-				<MainBodyContainer>
-					<div className="py-[40px]">
-						{renderContent()}
-					</div>
-				</MainBodyContainer>
-			</div>
-		</>
-	);
+    const [carsData, reservationsData] = await Promise.all([
+        fetchCars(sessionToken, { pageSize: 500 }),
+        fetchReservations(sessionToken, { pageSize: 100, parseFullObjects: true }),
+    ]);
+
+    const cars: Car[] = carsData as Car[];
+    const reservations: Reservation[] = reservationsData as Reservation[];
+
+    return <AdminShell initialCars={cars} initialReservations={reservations} />;
 }

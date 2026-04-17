@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getBearerHeader, getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function GET(req: NextRequest) {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("credentials")?.value;
-    const { username, password } = raw
-        ? JSON.parse(raw)
-        : { username: "jim", password: "intentionallyInsecurePassword#3" };
-    const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-
     const userId = req.nextUrl.searchParams.get("userId");
+    const authHeader = await getBearerHeader();
 
+    const headers: HeadersInit = { ...getApiKeyHeader(), ...(authHeader ? { Authorization: authHeader } : {}) };
     const res = await fetch(
         `${process.env.API_BASE_URL}/reservations?pageSize=500&parseFullObjects=true`,
-        { headers: { "Authorization": authHeader }, cache: "no-store" }
+        { headers, cache: "no-store", signal: AbortSignal.timeout(10000) }
     );
 
     const result = await res.json();

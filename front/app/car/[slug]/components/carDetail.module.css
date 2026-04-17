@@ -1,3 +1,95 @@
+/* ── Admin gate modal ─────────────────────────────────────────────────────────── */
+
+.adminGateOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgb(0 0 0 / 0.5);
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+
+.adminGateCard {
+	position: relative;
+	background: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 1rem;
+	padding: 32px 28px;
+	width: 100%;
+	max-width: 360px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	box-shadow: 0 8px 32px rgb(0 0 0 / 0.18);
+}
+
+.adminGateClose {
+	position: absolute;
+	top: 14px;
+	right: 16px;
+	font-size: 14px;
+	color: var(--color-foreground-light);
+	cursor: pointer;
+	transition: color 150ms;
+	background: none;
+	border: none;
+}
+
+.adminGateClose:hover { color: var(--color-foreground); }
+
+.adminGateTitle {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--color-foreground);
+}
+
+.adminGateSubtitle {
+	font-size: 13px;
+	color: var(--color-foreground-light);
+	line-height: 1.5;
+}
+
+.adminGateForm {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.adminGateInput {
+	width: 100%;
+	background: var(--color-primary-dark);
+	border: 1px solid var(--color-third);
+	border-radius: 0.75rem;
+	padding: 10px 14px;
+	color: var(--color-foreground);
+	font-size: 14px;
+	outline: none;
+	transition: border-color 150ms, box-shadow 150ms;
+}
+
+.adminGateInput:focus {
+	border-color: var(--color-accent);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.adminGateBtn {
+	width: 100%;
+	padding: 10px 0;
+	background: var(--color-accent);
+	color: var(--color-primary);
+	border: none;
+	border-radius: 0.75rem;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: filter 150ms;
+}
+
+.adminGateBtn:hover { filter: brightness(1.1); }
+.adminGateBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ── BackButton ───────────────────────────────────────────────────────────────── */
 .backBtn {
 	display: flex;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getAllCars, deleteCar } from "@/app/lib/AdminApiCalls";
 import { Car } from "@/app/types/CarTypes";
 import { useAdminSidebarStore } from "@/stores/adminSidebarStore";
@@ -90,11 +90,15 @@ const ExpandedRow = ({ car }: { car: Car }) => {
 
 // ── Main panel ────────────────────────────────────────────────────────────────
 
-const InventoryPanel = () => {
+interface Props {
+    initialCars: Car[];
+}
+
+const InventoryPanel = ({ initialCars }: Props) => {
     const { openEditCar } = useAdminSidebarStore();
-    const [cars, setCars] = useState<Car[]>([]);
+    const [cars, setCars] = useState<Car[]>(initialCars);
     const [loading, setLoading] = useState(false);
-    const [hasFetched, setHasFetched] = useState(false);
+    const [hasFetched, setHasFetched] = useState(true);
     const [query, setQuery] = useState("");
     const [expandedVin, setExpandedVin] = useState<string | null>(null);
     const [deletingVin, setDeletingVin] = useState<string | null>(null);
@@ -143,9 +147,6 @@ const InventoryPanel = () => {
         setImageCheckDone(true);
     };
 
-    useEffect(() => {
-        fetchCars();
-    }, []);
 
     const handleDelete = async (vin: string) => {
         if (!window.confirm(`Delete vehicle ${vin}?`)) return;

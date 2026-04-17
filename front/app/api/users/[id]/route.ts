@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getBearerHeader, getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    const authHeader = await getBearerHeader();
 
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("credentials")?.value;
-    const { username, password } = raw
-        ? JSON.parse(raw)
-        : { username: "jim", password: "intentionallyInsecurePassword#3" };
-    const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-
+    const headers: HeadersInit = { ...getApiKeyHeader(), ...(authHeader ? { Authorization: authHeader } : {}) };
     const res = await fetch(`${process.env.API_BASE_URL}/users/${id}`, {
-        headers: { "Authorization": authHeader },
+        headers,
         cache: "no-store",
     });
 
@@ -25,20 +20,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("credentials")?.value;
-    const { username, password } = raw
-        ? JSON.parse(raw)
-        : { username: "jim", password: "intentionallyInsecurePassword#3" };
-    const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-
+    const authHeader = await getBearerHeader();
     const body = await req.json();
+
+    const headers: HeadersInit = { "Content-Type": "application/json", ...getApiKeyHeader() };
+    if (authHeader) headers["Authorization"] = authHeader;
 
     const res = await fetch(`${process.env.API_BASE_URL}/users/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "Authorization": authHeader },
+        headers,
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(10000),
     });
 
     try {

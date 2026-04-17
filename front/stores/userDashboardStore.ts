@@ -19,21 +19,22 @@ export interface DashboardReservation {
 interface UserDashboardStore {
     collapsed: boolean;
     activeView: UserDashboardView;
-    userId: number | null;
-    /** Email used for guest lookup. Will be null for fully-authenticated users once accounts are added. */
+    accountId: number | null;
+    /** userId from auth response — the linked user in /users (stripe_users table) */
+    stripeUserId: number | null;
     userEmail: string | null;
-    /**
-     * false  → guest mode (email lookup, no session)
-     * true   → authenticated (future: real login session)
-     * Components should branch on this to show appropriate UI.
-     */
     isAuthenticated: boolean;
+    sessionToken: string | null;
+    sessionExpiresAt: string | null;
+    role: string | null;
     selectedReservation: DashboardReservation | null;
     toggle: () => void;
     setActiveView: (view: UserDashboardView) => void;
-    setUserId: (id: number | null) => void;
+    setAccountId: (id: number | null) => void;
     setUserEmail: (email: string | null) => void;
     setAuthenticated: (value: boolean) => void;
+    setSession: (token: string, accountId: number, role: string, expiresAt: string, stripeUserId?: number | null) => void;
+    clearSession: () => void;
     openEditReservation: (reservation: DashboardReservation) => void;
 }
 
@@ -42,21 +43,38 @@ export const useUserDashboardStore = create<UserDashboardStore>()(
         (set, get) => ({
             collapsed: false,
             activeView: "reservations",
-            userId: null,
+            accountId: null,
+            stripeUserId: null,
             userEmail: null,
             isAuthenticated: false,
+            sessionToken: null,
+            sessionExpiresAt: null,
+            role: null,
             selectedReservation: null,
             toggle: () => set({ collapsed: !get().collapsed }),
             setActiveView: (view) => set({ activeView: view }),
-            setUserId: (id) => set({ userId: id }),
+            setAccountId: (id) => set({ accountId: id }),
             setUserEmail: (email) => set({ userEmail: email }),
             setAuthenticated: (value) => set({ isAuthenticated: value }),
+            setSession: (token, accountId, role, expiresAt, stripeUserId = null) =>
+                set({ sessionToken: token, accountId, stripeUserId, role, sessionExpiresAt: expiresAt, isAuthenticated: true, userEmail: null }),
+            clearSession: () =>
+                set({ sessionToken: null, accountId: null, stripeUserId: null, role: null, sessionExpiresAt: null, isAuthenticated: false, userEmail: null }),
             openEditReservation: (reservation) =>
                 set({ selectedReservation: reservation, activeView: "edit-reservation" }),
         }),
         {
             name: "user-dashboard",
-            partialize: (state) => ({ collapsed: state.collapsed }),
+            partialize: (state) => ({
+                collapsed: state.collapsed,
+                sessionToken: state.sessionToken,
+                accountId: state.accountId,
+                stripeUserId: state.stripeUserId,
+                role: state.role,
+                userEmail: state.userEmail,
+                sessionExpiresAt: state.sessionExpiresAt,
+                isAuthenticated: state.isAuthenticated,
+            }),
         }
     )
 );

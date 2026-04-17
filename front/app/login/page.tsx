@@ -1,82 +1,109 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import NavHeader from "../components/headers/navHeader";
-import Cookies from "js-cookie";
-import { validateCredentials } from "../lib/AuthValidation";
 import styles from "./login.module.css";
 
-interface ICredentials {
-	username: string;
-	password: string;
+function LoginInner() {
+    const searchParams = useSearchParams();
+    const reason = searchParams.get("reason");
+    const prefillEmail = searchParams.get("email") ?? "";
+
+    const [email, setEmail] = useState(prefillEmail);
+    const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+                signal: AbortSignal.timeout(8000),
+            });
+            if (res.status === 400) {
+                setError("Please enter a valid email address.");
+                return;
+            }
+            // Always show success (backend prevents email enumeration)
+            sessionStorage.setItem("pending-auth-email", email);
+            setSent(true);
+        } catch {
+            setError("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (sent) {
+        return (
+            <div className={styles.card}>
+                <h1 className={`page-title ${styles.title}`}>Check Your Email</h1>
+                <p className={`page-subtitle ${styles.subtitle}`}>
+                    We sent a login link to <strong>{email}</strong>. Click the link to sign in.
+                </p>
+                <p className={`page-subtitle ${styles.subtitle}`}>The link expires in 24 hours.</p>
+                <button className={styles.secondaryBtn} onClick={() => { setSent(false); setEmail(""); }}>
+                    Use a different email
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.card}>
+            <h1 className={`page-title ${styles.title}`}>Sign In</h1>
+
+            {reason === "account_exists" && (
+                <p className={styles.reasonNote}>
+                    A full account exists for this email. Sign in below to continue your checkout.
+                </p>
+            )}
+
+            <p className={`page-subtitle ${styles.subtitle}`}>Enter your email and we&apos;ll send you a secure login link.</p>
+            <form onSubmit={handleSubmit} className={styles.fields}>
+                <div className={styles.fieldGroup}>
+                    <label className={styles.label}>Email</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={styles.input}
+                        placeholder="john@example.com"
+                        required
+                        autoFocus={!prefillEmail}
+                    />
+                </div>
+                {error && <p className={styles.errorText}>{error}</p>}
+                <button type="submit" className={styles.submitBtn} disabled={loading}>
+                    {loading ? "Sending..." : "Send Login Link"}
+                </button>
+                <Link
+                    href={`/register${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+                    className={styles.secondaryBtn}
+                >
+                    Create Account
+                </Link>
+            </form>
+        </div>
+    );
 }
 
-const LoginPage = () => {
-	const router = useRouter();
-	const [credentials, setCredentials] = useState<ICredentials>({
-		username: "",
-		password: "",
-	});
-
-	const handleLogin = async () => {
-		const validated = await validateCredentials(
-			credentials.username,
-			credentials.password,
-		);
-		if (validated === 200) {
-			Cookies.set("credentials", JSON.stringify(credentials), { path: "/" });
-			router.back();
-		}
-	};
-
-	return (
-		<div>
-			<NavHeader white={false} />
-			<div className={styles.pageWrapper}>
-				<div className={styles.card}>
-					<h1 className={`page-title ${styles.title}`}>Login</h1>
-					<p className={`page-subtitle ${styles.subtitle}`}>Enter login credentials</p>
-
-					<div className={styles.fields}>
-						<div className={styles.fieldGroup}>
-							<label className={styles.label}>Username</label>
-							<input
-								type="text"
-								value={credentials.username}
-								onChange={(e) =>
-									setCredentials({
-										password: credentials.password,
-										username: e.target.value,
-									})
-								}
-								className={styles.input}
-							/>
-						</div>
-
-						<div className={styles.fieldGroup}>
-							<label className={styles.label}>Password</label>
-							<input
-								type="password"
-								value={credentials.password}
-								onChange={(e) =>
-									setCredentials({
-										password: e.target.value,
-										username: credentials.username,
-									})
-								}
-								className={styles.input}
-							/>
-						</div>
-
-						<button onClick={handleLogin} className={styles.submitBtn}>
-							Sign in
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
-};
+const LoginPage = () => (
+    <div>
+        <NavHeader white={false} />
+        <div className={styles.pageWrapper}>
+            <Suspense>
+                <LoginInner />
+            </Suspense>
+        </div>
+    </div>
+);
 
 export default LoginPage;

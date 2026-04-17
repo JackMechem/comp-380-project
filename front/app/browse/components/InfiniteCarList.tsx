@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Car, CarApiParams } from "@/app/types/CarTypes";
 import { CartCardInfo, CartProps } from "@/app/types/CartTypes";
 import { useCartStore } from "@/stores/cartStore";
+import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { fetchCarsPage } from "../actions";
 import { getAvailability } from "@/app/lib/availability";
 import CarCard from "@/app/components/cars/CarListCard";
@@ -10,6 +11,16 @@ import CarGridCard from "@/app/components/cars/carGridCard";
 import CarListCardSkeleton from "@/app/components/skeletons/CarListCardSkeleton";
 import CarGridCardSkeleton from "@/app/components/skeletons/CarGridCardSkeleton";
 import styles from "./browseContent.module.css";
+
+interface UserReservation {
+    vin: string;
+    pickUpMs: number;
+    dropOffMs: number;
+}
+
+function toMs(t: number | string): number {
+    return typeof t === "number" ? t * 1000 : new Date(t).getTime();
+}
 
 interface InfiniteCarListProps {
 	initialCars: Car[];
@@ -42,6 +53,29 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 
 	const cartItems = useCartStore((s) => s.carData);
 
+	// User reservation overlap tracking
+	const { isAuthenticated, sessionToken, stripeUserId } = useUserDashboardStore();
+	const [userReservations, setUserReservations] = useState<UserReservation[]>([]);
+
+	useEffect(() => {
+		if (!isAuthenticated || !sessionToken || !stripeUserId) { setUserReservations([]); return; }
+		fetch(`/api/reservations?userId=${stripeUserId}`)
+			.then((r) => r.json())
+			.then((data: { car?: { vin: string } | null; pickUpTime: number | string; dropOffTime: number | string }[]) => {
+				if (!Array.isArray(data)) return;
+				setUserReservations(
+					data
+						.filter((r) => r.car?.vin)
+						.map((r) => ({
+							vin: r.car!.vin,
+							pickUpMs: toMs(r.pickUpTime),
+							dropOffMs: toMs(r.dropOffTime),
+						}))
+				);
+			})
+			.catch(() => {/* non-critical */});
+	}, [isAuthenticated, sessionToken, stripeUserId]);
+
 	// Cart items (any car) whose rental dates overlap the current browse range
 	const cartConflicts = (fromDate && untilDate)
 		? cartItems.filter((item) => cartItemOverlapsBrowse(item, fromDate, untilDate))
@@ -51,9 +85,21 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 		const cartItem = cartItems.find((c) => c.vin === car.vin);
 		// Conflicts are other cars (not this one) in the cart overlapping the browse range
 		const conflicts = cartConflicts.filter((c) => c.vin !== car.vin);
+
+		// Check if the user has an existing reservation for this car that overlaps the browse range
+		let userReserved = false;
+		if (fromDate && untilDate && userReservations.length > 0) {
+			const browseFrom = new Date(fromDate).getTime();
+			const browseUntil = new Date(untilDate).getTime();
+			userReserved = userReservations.some(
+				(r) => r.vin === car.vin && browseFrom < r.dropOffMs && browseUntil > r.pickUpMs
+			);
+		}
+
 		return {
 			cartItem,
 			cartConflicts: conflicts.length > 0 ? conflicts : undefined,
+			userReserved,
 		};
 	};
 

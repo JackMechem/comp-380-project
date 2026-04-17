@@ -34,20 +34,20 @@ const BrandScrollSection = async () => {
 		audiPages,
 		volkswagenPages,
 	] = await Promise.all([
-		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Mercedes-Benz", sortDir: "asc", select: "pricePerDay" }),
-		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "BMW", sortDir: "asc", select: "pricePerDay" }),
-		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Porsche", sortDir: "asc", select: "pricePerDay" }),
-		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Audi", sortDir: "asc", select: "pricePerDay" }),
-		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Volkswagen", sortDir: "asc", select: "pricePerDay" }),
+		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Mercedes-Benz", sortDir: "asc" }),
+		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "BMW", sortDir: "asc" }),
+		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Porsche", sortDir: "asc" }),
+		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Audi", sortDir: "asc" }),
+		getFilteredCars({ pageSize: 1, page: 1, sortBy: "pricePerDay", make: "Volkswagen", sortDir: "asc" }),
 	]);
 
 	return (
 		<BrandScroll>
-			<CarBrandCard title="Porsche" startingPrice={porschePages.data[0].pricePerDay} logoImage={PorscheLogo.src} carImage={PorscheCarImage.src} />
-			<CarBrandCard title="BMW" startingPrice={bmwPages.data[0].pricePerDay} logoImage={BmwLogo.src} carImage={BmwCarImage.src} />
-			<CarBrandCard title="Mercedes-Benz" startingPrice={mercedesPages.data[0].pricePerDay} logoImage={MercedesLogo.src} carImage={MercedesCarImage.src} />
-			<CarBrandCard title="Audi" startingPrice={audiPages.data[0].pricePerDay} logoImage={AudiLogo.src} carImage={AudiCarImage.src} />
-			<CarBrandCard title="Volkswagen" startingPrice={volkswagenPages.data[0].pricePerDay} logoImage={VolkswagenLogo.src} carImage={VolkswagenCarImage.src} />
+			<CarBrandCard title="Porsche" startingPrice={porschePages.data[0]?.pricePerDay} logoImage={PorscheLogo.src} carImage={PorscheCarImage.src} />
+			<CarBrandCard title="BMW" startingPrice={bmwPages.data[0]?.pricePerDay} logoImage={BmwLogo.src} carImage={BmwCarImage.src} />
+			<CarBrandCard title="Mercedes-Benz" startingPrice={mercedesPages.data[0]?.pricePerDay} logoImage={MercedesLogo.src} carImage={MercedesCarImage.src} />
+			<CarBrandCard title="Audi" startingPrice={audiPages.data[0]?.pricePerDay} logoImage={AudiLogo.src} carImage={AudiCarImage.src} />
+			<CarBrandCard title="Volkswagen" startingPrice={volkswagenPages.data[0]?.pricePerDay} logoImage={VolkswagenLogo.src} carImage={VolkswagenCarImage.src} />
 		</BrandScroll>
 	);
 };
