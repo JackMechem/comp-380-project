@@ -38,7 +38,7 @@ public class ReservationConfirmation implements EmailComposer {
         return new Email.Builder()
                 .from(MailController.getDefaultFrom())
                 .to(toEmail)
-                .subject("Fast Car Rentals Reservation")
+                .subject("Reservation Confirmation - Fast Car Rentals")
                 .html(buildHtml())
                 .text(buildText())
                 .build();

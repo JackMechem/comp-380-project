@@ -38,7 +38,7 @@ public class ReservationCancellation implements EmailComposer {
         return new Email.Builder()
                 .from(MailController.getDefaultFrom())
                 .to(toEmail)
-                .subject("Official Reservation Cancellation Notice")
+                .subject("Reservation Cancellation - Fast Car Rentals")
                 .html(buildHtml())
                 .text(buildText())
                 .build();
