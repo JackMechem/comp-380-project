@@ -1,10 +1,14 @@
 package com.inc.fcr;
 
+import com.inc.fcr.auth.LoginToken;
+import com.inc.fcr.utils.HibernateUtil;
 import io.javalin.http.Context;
 import io.javalin.http.Header;
 import io.javalin.http.UnauthorizedResponse;
 import io.javalin.security.RouteRole;
+import org.hibernate.Session;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,10 +78,40 @@ public class Auth {
      * @return a non-null list of roles granted to the caller
      */
     public static List<Role> userRoles(Context ctx) {
-        return Optional.ofNullable(ctx.basicAuthCredentials())
+        // Check hardcoded Basic auth first (existing behaviour)
+        List<Role> basicRoles = Optional.ofNullable(ctx.basicAuthCredentials())
                 .map(credentials -> userRolesMap
                         .getOrDefault(new Pair(credentials.getUsername(), credentials.getPassword()), List.of()))
                 .orElse(List.of());
+        if (!basicRoles.isEmpty()) return basicRoles;
+
+        // Fall through to Bearer token auth (magic-link sessions)
+        return bearerTokenRoles(ctx);
+    }
+
+    /**
+     * Checks the {@code Authorization: Bearer <token>} header against the
+     * {@code auth_login_tokens} table. Returns {@link Role#READ} if the token
+     * has been verified and its session has not yet expired.
+     */
+    private static List<Role> bearerTokenRoles(Context ctx) {
+        String authHeader = ctx.header(Header.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return List.of();
+        String tokenStr = authHeader.substring(7).trim();
+        if (tokenStr.isBlank()) return List.of();
+
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            LoginToken lt = session.createQuery("FROM LoginToken WHERE token = :token", LoginToken.class)
+                    .setParameter("token", tokenStr)
+                    .uniqueResult();
+
+            if (lt != null && lt.getVerifiedAt() != null && Instant.now().isBefore(lt.getSessionExpiresAt())) {
+                return List.of(Role.READ);
+            }
+        } catch (Exception e) {
+            System.err.println("Auth: Bearer token lookup failed, " + e.getMessage());
+        }
+        return List.of();
     }
 
     // ---- TEMP ----

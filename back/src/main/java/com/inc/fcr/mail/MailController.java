@@ -59,6 +59,57 @@ public class MailController {
     }
 
     /**
+     * Sends a magic-link login email via Resend.
+     *
+     * <p>The link destination is built from the {@code APP_URL} environment variable
+     * (e.g. {@code https://app.example.com}). If {@code APP_URL} is not set the link
+     * points to {@code http://localhost:8080}.</p>
+     *
+     * @param toEmail   recipient email address
+     * @param firstName recipient first name
+     * @param token     the UUID login token
+     */
+    public static void sendMagicLink(String toEmail, String firstName, String token) {
+        if (API_KEY == null || API_KEY.isBlank()) {
+            System.err.println("Mail: RESEND_API_KEY not set — skipping magic link email");
+            return;
+        }
+
+        String appUrl = System.getenv("APP_URL");
+        if (appUrl == null || appUrl.isBlank()) appUrl = "http://localhost:8080";
+        String link = appUrl + "/auth/verify/" + token;
+
+        try {
+            Resend resend = new Resend(API_KEY);
+
+            CreateEmailOptions email = CreateEmailOptions.builder()
+                    .from(MAIL_FROM != null ? MAIL_FROM : "onboarding@resend.dev")
+                    .to(toEmail)
+                    .subject("Your Login Link — FCR Inc")
+                    .html(buildMagicLinkHtml(firstName, link))
+                    .build();
+
+            resend.emails().send(email);
+            System.out.println("Mail: magic link sent to " + toEmail);
+
+        } catch (Exception e) {
+            System.err.println("Mail: failed to send magic link email — " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static String buildMagicLinkHtml(String firstName, String link) {
+        return "<div style='font-family: sans-serif; max-width: 600px; margin: auto;'>"
+                + "<h2>Sign in to FCR Inc</h2>"
+                + "<p>Hi " + firstName + ",</p>"
+                + "<p>Click the button below to log in. This link expires in 15 minutes and can only be used once.</p>"
+                + "<p><a href='" + link + "' style='display:inline-block; padding:12px 24px; background:#0070f3;"
+                + " color:#fff; text-decoration:none; border-radius:6px; font-weight:bold;'>Log in to FCR Inc</a></p>"
+                + "<p>If you did not request this link you can safely ignore this email.</p>"
+                + "</div>";
+    }
+
+    /**
      * Builds the HTML email body for a reservation confirmation.
      *
      * @param firstName      the recipient's first name

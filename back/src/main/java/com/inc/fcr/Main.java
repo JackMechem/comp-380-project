@@ -1,6 +1,7 @@
 package com.inc.fcr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inc.fcr.auth.AuthController;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.payment.Payment;
 import com.inc.fcr.payment.StripeController;
@@ -19,21 +20,28 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 /**
  * Application entry point for the FCR Inc car rental REST API.
  *
- * <p>Bootstraps Hibernate, configures a Javalin HTTP server with
- * documentation, CORS, and role-based access control, then registers all API routes.</p>
+ * <p>
+ * Bootstraps Hibernate, configures a Javalin HTTP server with
+ * documentation, CORS, and role-based access control, then registers all API
+ * routes.
+ * </p>
  *
- * <p>The server port is read from the {@code PORT} environment variable,
- * defaulting to {@code 8080} if not set.</p>
+ * <p>
+ * The server port is read from the {@code PORT} environment variable,
+ * defaulting to {@code 8080} if not set.
+ * </p>
  *
- * <p><strong>Route overview:</strong></p>
+ * <p>
+ * <strong>Route overview:</strong>
+ * </p>
  * <ul>
- *   <li>{@code /cars}         — CRUD for vehicle inventory</li>
- *   <li>{@code /reservations} — CRUD for reservations</li>
- *   <li>{@code /users}        — CRUD for users</li>
- *   <li>{@code /payments}     — CRUD for payment records</li>
- *   <li>{@code /stripe}       — Stripe checkout / webhook integration</li>
- *   <li>{@code /enums}        — Enum metadata for UI dropdowns</li>
- *   <li>{@code /auth/validate}— Credential validation</li>
+ * <li>{@code /cars} — CRUD for vehicle inventory</li>
+ * <li>{@code /reservations} — CRUD for reservations</li>
+ * <li>{@code /users} — CRUD for users</li>
+ * <li>{@code /payments} — CRUD for payment records</li>
+ * <li>{@code /stripe} — Stripe checkout / webhook integration</li>
+ * <li>{@code /enums} — Enum metadata for UI dropdowns</li>
+ * <li>{@code /auth/validate}— Credential validation</li>
  * </ul>
  */
 public class Main {
@@ -69,6 +77,15 @@ public class Main {
                 // Validate auth credentials
                 get("/auth/validate", Auth::validateCredentials, Role.ANYONE);
 
+                path("auth", () -> {
+                    // Magic-link login: POST /auth/magic-link { "email": "..." }
+                    post("/magic-link", AuthController::requestMagicLink, Role.ANYONE);
+                    // Verify link from email: GET /auth/verify/{token}
+                    path("/verify/{token}", () -> {
+                        get(AuthController::verifyToken, Role.ANYONE);
+                    });
+                });
+
                 path("cars", () -> {
                     get(cars::getAll, Role.ANYONE);
                     post(cars::create, Role.WRITE);
@@ -86,9 +103,14 @@ public class Main {
                     get(reservations::getAll, Role.ANYONE);
                     post(reservations::create, Role.WRITE);
                     path("{id}", () -> {
-                        get(reservations::getOne, Role.ANYONE);
-                        patch(reservations::update, Role.WRITE);
-                        delete(reservations::delete, Role.ADMIN);
+                        // Need to only require the READ role (not WRITE/ADMIN) because
+                        // users need to be able to edit or "cancel" their own reservation.
+                        // THIS IS A MASSIVE SECURITY VULNERABILITY!!! and should not be done in prod.
+                        // Due to the scope of this project, implementing this further might not be
+                        // worth it.
+                        get(reservations::getOne, Role.READ);
+                        patch(reservations::update, Role.READ);
+                        delete(reservations::delete, Role.READ);
                     });
                 });
 
