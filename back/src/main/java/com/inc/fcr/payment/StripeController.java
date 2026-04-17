@@ -3,6 +3,7 @@ package com.inc.fcr.payment;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.mail.MailController;
+import com.inc.fcr.mail.reservation.ReservationConfirmation;
 import com.inc.fcr.user.User;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.utils.DatabaseController;
@@ -62,12 +63,12 @@ public class StripeController {
      * Looks up a user by email. If found, returns their userId.
      * If not found, creates a new user and returns the new userId.
      * Body: {
-     *   "email": "john@example.com",
-     *   "firstName": "John",
-     *   "lastName": "Doe",
-     *   "phoneNumber": "555-555-5555",
-     *   "address": { "buildingNumber": "123", "streetName": "Main St", "city": "Springfield", "state": "IL", "zipCode": "62701" },
-     *   "driversLicense": { "driversLicense": "D1234567", "state": "IL", "expirationDate": 1893456000, "dateOfBirth": 694224000 }
+     * "email": "john@example.com",
+     * "firstName": "John",
+     * "lastName": "Doe",
+     * "phoneNumber": "555-555-5555",
+     * "address": { "buildingNumber": "123", "streetName": "Main St", "city": "Springfield", "state": "IL", "zipCode": "62701" },
+     * "driversLicense": { "driversLicense": "D1234567", "state": "IL", "expirationDate": 1893456000, "dateOfBirth": 694224000 }
      * }
      */
     public static void findOrCreateUser(Context ctx) {
@@ -75,74 +76,74 @@ public class StripeController {
             JsonNode body = ctx.bodyAsClass(JsonNode.class);
 
             if (!body.has("email")) {
-                ctx.status(400).json("{\"error\": \"email is required\"}");
+                ctx.status(400).result("{\"error\": \"email is required\"}");
                 return;
             }
 
             String email = body.get("email").asText().trim();
 
-            // Look up existing user by email
             try (org.hibernate.Session session = HibernateUtil.getSessionFactory().openSession()) {
                 User existing = session.createQuery("FROM User u WHERE u.email = :email", User.class)
                         .setParameter("email", email)
                         .uniqueResult();
 
                 if (existing != null) {
-                    ctx.status(200).json("{\"userId\": " + existing.getUserId() + ", \"created\": false}");
+                    ctx.status(200).result("{\"userId\": " + existing.getUserId() + ", \"created\": false}");
                     return;
                 }
             }
 
-            // User not found — create one
             String[] required = {"firstName", "lastName", "phoneNumber", "address", "driversLicense"};
             for (String field : required) {
                 if (!body.has(field)) {
-                    ctx.status(400).json("{\"error\": \"New user requires: firstName, lastName, phoneNumber, address, driversLicense\"}");
+                    ctx.status(400).result("{\"error\": \"New user requires: firstName, lastName, phoneNumber, address, driversLicense\"}");
                     return;
                 }
             }
 
             String port = System.getenv("PORT") != null ? System.getenv("PORT") : "8080";
-            String auth = "Basic " + java.util.Base64.getEncoder().encodeToString("bob:intentionallyInsecurePassword#2".getBytes());
+            String auth = "Basic " + java.util.Base64.getEncoder()
+                    .encodeToString("bob:intentionallyInsecurePassword#2".getBytes());
 
-            com.fasterxml.jackson.databind.node.ObjectNode userBody = ((com.fasterxml.jackson.databind.node.ObjectNode) body.deepCopy());
+            com.fasterxml.jackson.databind.node.ObjectNode userBody =
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) body.deepCopy());
             userBody.put("dateCreated", Instant.now().toString());
 
             HttpResponse<String> response = HttpClient.newHttpClient().send(
-                HttpRequest.newBuilder()
-                    .uri(URI.create("http://localhost:" + port + "/users"))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", auth)
-                    .POST(HttpRequest.BodyPublishers.ofString(userBody.toString()))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString()
+                    HttpRequest.newBuilder()
+                            .uri(URI.create("http://localhost:" + port + "/users"))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", auth)
+                            .POST(HttpRequest.BodyPublishers.ofString(userBody.toString()))
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString()
             );
 
             System.out.println("findOrCreateUser: POST /users response " + response.statusCode() + ": " + response.body());
 
             if (response.statusCode() != 201) {
-                ctx.status(500).json("{\"error\": \"Failed to create user: " + response.body().replace("\"", "'") + "\"}");
+                ctx.status(500).result("{\"error\": \"Failed to create user: " +
+                        response.body().replace("\"", "'") + "\"}");
                 return;
             }
 
-            // Fetch the newly created user to get their ID
             try (org.hibernate.Session session = HibernateUtil.getSessionFactory().openSession()) {
                 User created = session.createQuery("FROM User u WHERE u.email = :email", User.class)
                         .setParameter("email", email)
                         .uniqueResult();
 
                 if (created == null) {
-                    ctx.status(500).json("{\"error\": \"User created but could not be retrieved\"}");
+                    ctx.status(500).result("{\"error\": \"User created but could not be retrieved\"}");
                     return;
                 }
 
-                ctx.status(201).json("{\"userId\": " + created.getUserId() + ", \"created\": true}");
+                ctx.status(201).result("{\"userId\": " + created.getUserId() + ", \"created\": true}");
             }
 
         } catch (Exception e) {
             System.err.println("findOrCreateUser error: " + e.getMessage());
             e.printStackTrace();
-            ctx.status(500).json("{\"error\": \"Internal server error\"}");
+            ctx.status(500).result("{\"error\": \"Internal server error\"}");
         }
     }
 
@@ -478,8 +479,9 @@ public class StripeController {
                 carInfo.put("dropOffTime", metadata.get("dropOffTime_" + i));
                 carList.add(carInfo);
             }
-            MailController.sendReservationConfirmation(user.getEmail(), user.getFirstName(), userId, paymentId, createdReservationIds, carList);
-        } else {
+            MailController.send(new ReservationConfirmation(user.getEmail(), user.getFirstName(), userId, paymentId,
+                    createdReservationIds, carList)
+            );        } else {
             System.err.println("Mail: user not found for userId=" + userId + ", skipping email");
         }
     }

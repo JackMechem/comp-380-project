@@ -1,9 +1,5 @@
 package com.inc.fcr.mail;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 public class Email {
     private final String to;
     private final String from;

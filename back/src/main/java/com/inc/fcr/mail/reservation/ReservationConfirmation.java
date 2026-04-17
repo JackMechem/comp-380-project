@@ -1,16 +1,23 @@
 package com.inc.fcr.mail.reservation;
 
 import com.inc.fcr.mail.Email;
+import com.inc.fcr.mail.EmailComposer;
 import com.inc.fcr.mail.MailController;
-
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ReservationConfirmation {
+public class ReservationConfirmation implements EmailComposer {
 
-    public static com.inc.fcr.mail.Email build(
+    private final String toEmail;
+    private final String firstName;
+    private final long userId;
+    private final String paymentId;
+    private final List<Long> reservationIds;
+    private final List<Map<String, String>> cars;
+
+    public ReservationConfirmation(
             String toEmail,
             String firstName,
             long userId,
@@ -18,43 +25,53 @@ public class ReservationConfirmation {
             List<Long> reservationIds,
             List<Map<String, String>> cars
     ) {
+        this.toEmail = toEmail;
+        this.firstName = firstName;
+        this.userId = userId;
+        this.paymentId = paymentId;
+        this.reservationIds = reservationIds;
+        this.cars = cars;
+    }
+
+    @Override
+    public Email toEmail() {
         return new Email.Builder()
                 .from(MailController.getDefaultFrom())
                 .to(toEmail)
                 .subject("Fast Car Rentals Reservation")
-                .html(buildHtml(firstName, userId, paymentId, reservationIds, cars))
-                .text(buildText(firstName, userId, paymentId, reservationIds, cars))
+                .html(buildHtml())
+                .text(buildText())
                 .build();
     }
 
-    private static String buildHtml(
-            String firstName,
-            long userId,
-            String paymentId,
-            List<Long> reservationIds,
-            List<Map<String, String>> cars
-    )   {
+    private String buildHtml() {
+        String safeFirstName = firstName != null ? firstName : "Customer";
+
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: sans-serif; max-width: 600px; margin: auto;'>");
         sb.append("<h2>Reservation Confirmed</h2>");
-        sb.append("<p>Hi ").append(firstName).append(",</p>");
+        sb.append("<p>Hi ").append(safeFirstName).append(",</p>");
         sb.append("<p>Your reservation is confirmed. Here are your booking details:</p>");
         sb.append("<table style='width:100%; margin-bottom:16px;'>");
         sb.append("<tr><td style='padding:6px; font-weight:bold;'>User ID</td><td style='padding:6px;'>")
-                .append(userId).append("</td></tr>");
+                .append(userId)
+                .append("</td></tr>");
         sb.append("<tr><td style='padding:6px; font-weight:bold;'>Payment Reference</td><td style='padding:6px;'>")
-                .append(paymentId).append("</td></tr>");
+                .append(paymentId != null ? paymentId : "")
+                .append("</td></tr>");
 
         if (reservationIds != null && !reservationIds.isEmpty()) {
             sb.append("<tr><td style='padding:6px; font-weight:bold;'>Reservation ID(s)</td><td style='padding:6px;'>")
-                    .append(reservationIds.stream().map(String::valueOf).collect(Collectors.joining(", ")))
+                    .append(reservationIds.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", ")))
                     .append("</td></tr>");
         }
 
         sb.append("</table>");
         sb.append("<hr/>");
 
-        if (cars != null) {
+        if (cars != null && !cars.isEmpty()) {
             for (Map<String, String> car : cars) {
                 sb.append("<table style='width:100%; border-collapse: collapse; margin-bottom: 16px;'>");
                 sb.append("<tr><td style='padding:6px; font-weight:bold;'>Vehicle</td>")
@@ -78,29 +95,27 @@ public class ReservationConfirmation {
         return sb.toString();
     }
 
-    private static String buildText(
-            String firstName,
-            long userId,
-            String paymentId,
-            List<Long> reservationIds,
-            List<Map<String, String>> cars
-    ) {
+    private String buildText() {
+        String safeFirstName = firstName != null ? firstName : "Customer";
+
         StringBuilder sb = new StringBuilder();
         sb.append("Reservation Confirmed\n\n");
-        sb.append("Hi ").append(firstName).append(",\n\n");
+        sb.append("Hi ").append(safeFirstName).append(",\n\n");
         sb.append("Your reservation is confirmed.\n");
         sb.append("User ID: ").append(userId).append("\n");
-        sb.append("Payment Reference: ").append(paymentId).append("\n");
+        sb.append("Payment Reference: ").append(paymentId != null ? paymentId : "").append("\n");
 
         if (reservationIds != null && !reservationIds.isEmpty()) {
             sb.append("Reservation ID(s): ")
-                    .append(reservationIds.stream().map(String::valueOf).collect(Collectors.joining(", ")))
+                    .append(reservationIds.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(", ")))
                     .append("\n");
         }
 
         sb.append("\n");
 
-        if (cars != null) {
+        if (cars != null && !cars.isEmpty()) {
             for (Map<String, String> car : cars) {
                 sb.append("Vehicle: ")
                         .append(value(car, "year")).append(" ")
@@ -116,7 +131,7 @@ public class ReservationConfirmation {
         return sb.toString();
     }
 
-    private static String value(Map<String, String> map, String key) {
+    private String value(Map<String, String> map, String key) {
         if (map == null) {
             return "";
         }
