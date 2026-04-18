@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function GET(req: NextRequest) {
     const authHeader = req.headers.get("Authorization");
@@ -7,6 +8,7 @@ export async function GET(req: NextRequest) {
         headers: {
             Authorization: authHeader ?? "",
             "Content-Type": "application/json",
+            ...getApiKeyHeader(),
         },
         cache: "no-store",
     });

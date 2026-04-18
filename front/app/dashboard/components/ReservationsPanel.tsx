@@ -15,21 +15,27 @@ const fmtDate = (d: string | number) =>
 const fmtDateTime = (d: string | number) =>
     new Date(toMs(d)).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
 
-export default function ReservationsPanel() {
-    const { userId, openEditReservation } = useUserDashboardStore();
-    const [reservations, setReservations] = useState<DashboardReservation[]>([]);
+interface Props {
+    initialReservations?: DashboardReservation[];
+    serverFetched?: boolean;
+}
+
+export default function ReservationsPanel({ initialReservations, serverFetched }: Props) {
+    const { accountId, openEditReservation } = useUserDashboardStore();
+    const [reservations, setReservations] = useState<DashboardReservation[]>(initialReservations ?? []);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!userId) return;
+        // Skip client fetch if the server already fetched the data (even if empty)
+        if (serverFetched || !accountId) return;
         setLoading(true);
-        fetch(`/api/reservations?userId=${userId}`)
+        fetch(`/api/reservations?userId=${accountId}`)
             .then((r) => r.json())
             .then(setReservations)
             .catch(() => setError("Failed to load reservations."))
             .finally(() => setLoading(false));
-    }, [userId]);
+    }, [accountId]);
 
     if (loading) return <div className={styles.loading}>Loading reservations...</div>;
     if (error)   return <p className={styles.error}>{error}</p>;

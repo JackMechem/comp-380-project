@@ -16,14 +16,40 @@ const toDateStr = (ts?: number) =>
 
 const toUnix = (s: string) => s ? Math.floor(new Date(s).getTime() / 1000) : 0;
 
-export default function UserDetailsPanel() {
-    const { userId } = useUserDashboardStore();
-    const [form, setForm] = useState<UserForm>({
-        firstName: "", lastName: "", phoneNumber: "",
-        buildingNumber: "", streetName: "", city: "", state: "", zipCode: "",
-        licenseNumber: "", licenseState: "", expirationDate: "", dateOfBirth: "",
-    });
-    const [email, setEmail] = useState("");
+const defaultForm: UserForm = {
+    firstName: "", lastName: "", phoneNumber: "",
+    buildingNumber: "", streetName: "", city: "", state: "", zipCode: "",
+    licenseNumber: "", licenseState: "", expirationDate: "", dateOfBirth: "",
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapUserToForm(user: Record<string, any>): UserForm {
+    const addr = user.address ?? {};
+    const lic = user.driversLicense ?? {};
+    return {
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        phoneNumber: user.phoneNumber ?? "",
+        buildingNumber: addr.buildingNumber ?? "",
+        streetName: addr.streetName ?? "",
+        city: addr.city ?? "",
+        state: addr.state ?? "",
+        zipCode: addr.zipCode ?? "",
+        licenseNumber: lic.driversLicense ?? "",
+        licenseState: lic.state ?? "",
+        expirationDate: toDateStr(lic.expirationDate),
+        dateOfBirth: toDateStr(lic.dateOfBirth),
+    };
+}
+
+interface Props {
+    initialUser?: Record<string, unknown> | null;
+}
+
+export default function UserDetailsPanel({ initialUser }: Props) {
+    const { stripeUserId } = useUserDashboardStore();
+    const [form, setForm] = useState<UserForm>(initialUser ? mapUserToForm(initialUser) : defaultForm);
+    const [email, setEmail] = useState(initialUser ? String(initialUser.email ?? "") : "");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,30 +59,18 @@ export default function UserDetailsPanel() {
         setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
     useEffect(() => {
-        if (!userId) return;
+        // Skip fetch if server pre-loaded the user
+        if (initialUser || !stripeUserId) return;
         setLoading(true);
-        fetch(`/api/users/${userId}`)
+        fetch(`/api/users/${stripeUserId}`)
             .then((r) => r.json())
             .then((user) => {
                 setEmail(user.email ?? "");
-                setForm({
-                    firstName: user.firstName ?? "",
-                    lastName: user.lastName ?? "",
-                    phoneNumber: user.phoneNumber ?? "",
-                    buildingNumber: user.address?.buildingNumber ?? "",
-                    streetName: user.address?.streetName ?? "",
-                    city: user.address?.city ?? "",
-                    state: user.address?.state ?? "",
-                    zipCode: user.address?.zipCode ?? "",
-                    licenseNumber: user.driversLicense?.driversLicense ?? "",
-                    licenseState: user.driversLicense?.state ?? "",
-                    expirationDate: toDateStr(user.driversLicense?.expirationDate),
-                    dateOfBirth: toDateStr(user.driversLicense?.dateOfBirth),
-                });
+                setForm(mapUserToForm(user));
             })
             .catch(() => setError("Failed to load user details."))
             .finally(() => setLoading(false));
-    }, [userId]);
+    }, [stripeUserId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,7 +79,7 @@ export default function UserDetailsPanel() {
         setSuccess(false);
 
         try {
-            const res = await fetch(`/api/users/${userId}`, {
+            const res = await fetch(`/api/users/${stripeUserId}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

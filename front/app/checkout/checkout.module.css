@@ -437,6 +437,146 @@
 	text-align: center;
 }
 
+/* ── Guest banner ── */
+.guestBanner {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+	border-radius: 0.75rem;
+	padding: 14px 16px;
+}
+
+.guestBannerIcon {
+	flex-shrink: 0;
+	font-size: 14pt;
+	color: var(--color-accent);
+	margin-top: 1px;
+}
+
+.guestBannerTitle {
+	font-size: 10pt;
+	font-weight: 600;
+	color: var(--color-foreground);
+	margin-bottom: 3px;
+}
+
+.guestBannerNote {
+	font-size: 9pt;
+	color: var(--color-foreground-light);
+	line-height: 1.5;
+}
+
+/* ── Choose screen ── */
+.chooseWrapper {
+	display: flex;
+	justify-content: center;
+	padding: 20px 0 60px;
+}
+
+.chooseCard {
+	width: 100%;
+	max-width: 420px;
+	background-color: var(--color-primary);
+	border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+	border-radius: 1rem;
+	padding: 36px 32px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.chooseTitle {
+	color: var(--color-foreground);
+	font-size: 13pt;
+	font-weight: 600;
+}
+
+.chooseSubtitle {
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+	line-height: 1.5;
+	margin-top: -4px;
+}
+
+.chooseButtons {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 8px;
+}
+
+.chooseGuestBtn {
+	width: 100%;
+	padding: 14px 0;
+	background-color: transparent;
+	color: var(--color-foreground);
+	font-weight: 600;
+	font-size: 11pt;
+	border-radius: 0.75rem;
+	cursor: pointer;
+	border: 1px solid color-mix(in srgb, var(--color-third) 80%, transparent);
+	transition: border-color 150ms, color 150ms;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.chooseGuestBtn:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}
+
+.chooseCreateLink {
+	text-align: center;
+	font-size: 10pt;
+	color: var(--color-foreground-light);
+	padding: 6px 0;
+	transition: color 150ms;
+}
+
+.chooseCreateLink:hover {
+	color: var(--color-accent);
+}
+
+/* ── Info form (guest / incomplete profile) ── */
+.infoFormGrid {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.infoSection {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.infoSectionTitle {
+	color: var(--color-foreground-light);
+	font-size: 8.5pt;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+/* Back link */
+.backLink {
+	background: none;
+	border: none;
+	color: var(--color-foreground-light);
+	font-size: 10pt;
+	cursor: pointer;
+	padding: 4px 0;
+	transition: color 150ms;
+	text-align: left;
+}
+
+.backLink:hover {
+	color: var(--color-accent);
+}
+
 .emailRow {
 	display: flex;
 	gap: 8px;
@@ -485,6 +625,25 @@
 .inputReadonly {
 	opacity: 0.5;
 	cursor: default;
+}
+
+.inputDisabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	color: var(--color-foreground-light);
+}
+
+.disabledFieldsNote {
+	font-size: 9pt;
+	color: var(--color-foreground-light);
+	margin-bottom: 16px;
+	line-height: 1.5;
+}
+
+.disabledFieldsLink {
+	color: var(--color-accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
 }
 
 .userFoundNote {

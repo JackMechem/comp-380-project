@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function POST(req: NextRequest) {
-    const headers = { "Content-Type": "application/json" };
+    const headers = { "Content-Type": "application/json", ...getApiKeyHeader() };
 
     const { userInfo, cars } = await req.json();
 

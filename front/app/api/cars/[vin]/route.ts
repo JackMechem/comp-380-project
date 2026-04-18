@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-
-async function getAuthHeader() {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("credentials")?.value;
-    const { username, password } = raw
-        ? JSON.parse(raw)
-        : { username: "jim", password: "intentionallyInsecurePassword#3" };
-    return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-}
+import { getBearerHeader, getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ vin: string }> }) {
     const { vin } = await params;
-    const authHeader = await getAuthHeader();
+    const authHeader = await getBearerHeader();
 
+    const headers: HeadersInit = { ...getApiKeyHeader(), ...(authHeader ? { Authorization: authHeader } : {}) };
     const res = await fetch(`${process.env.API_BASE_URL}/cars/${vin}`, {
-        headers: { Authorization: authHeader },
+        headers,
         cache: "no-store",
     });
     return NextResponse.json(await res.json(), { status: res.status });
@@ -23,12 +15,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ vin
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ vin: string }> }) {
     const { vin } = await params;
-    const authHeader = await getAuthHeader();
+    const authHeader = await getBearerHeader();
     const body = await req.json();
+
+    const headers: HeadersInit = { "Content-Type": "application/json", ...getApiKeyHeader() };
+    if (authHeader) headers["Authorization"] = authHeader;
 
     const res = await fetch(`${process.env.API_BASE_URL}/cars/${vin}`, {
         method: "PATCH",
-        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
     });
     const text = await res.text();
@@ -37,11 +32,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ vi
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ vin: string }> }) {
     const { vin } = await params;
-    const authHeader = await getAuthHeader();
+    const authHeader = await getBearerHeader();
 
+    const headers: HeadersInit = { ...getApiKeyHeader(), ...(authHeader ? { Authorization: authHeader } : {}) };
     const res = await fetch(`${process.env.API_BASE_URL}/cars/${vin}`, {
         method: "DELETE",
-        headers: { Authorization: authHeader },
+        headers,
     });
     const text = await res.text();
     return new NextResponse(text, { status: res.status });

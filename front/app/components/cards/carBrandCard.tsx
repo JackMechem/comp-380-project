@@ -4,7 +4,7 @@ import styles from "./carBrandCard.module.css";
 
 interface CarBrandCardProps {
 	title: string;
-	startingPrice: number;
+	startingPrice?: number;
 	logoImage: string;
 	carImage: string;
     searchURL?: string;
@@ -39,7 +39,9 @@ const CarBrandCard = ({
 			<div className={styles.footer}>
 				<div>
 					<p className={styles.priceLabel}>Starting at</p>
-					<h3 className={styles.price}>${startingPrice}<span className={styles.priceUnit}>/day</span></h3>
+					<h3 className={styles.price}>
+						{startingPrice != null ? <>${startingPrice}<span className={styles.priceUnit}>/day</span></> : "—"}
+					</h3>
 				</div>
 				<Link href={searchURL} className={styles.browseBtn}>Browse {title}</Link>
 			</div>

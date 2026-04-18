@@ -4,9 +4,10 @@ const username = "jim";
 const password = "intentionallyInsecurePassword#3";
 const token = btoa(`${username}:${password}`);
 
-const defaultHeaders = {
+const defaultHeaders: Record<string, string> = {
 	Authorization: `Basic ${token}`,
 	"Content-Type": "application/json",
+	...(process.env.API_KEY ? { "X-API-Key": process.env.API_KEY } : {}),
 };
 
 const defaultNext = {
@@ -95,6 +96,7 @@ export const getAllMakes = async (): Promise<string[]> => {
 		`${process.env.NEXT_PUBLIC_API_BASE_URL}/cars/makes`,
 		{
 			...defaultNext,
+			headers: defaultHeaders,
 		},
 	);
 	if (!res.ok) throw new Error(`Failed to fetch data from ${res.url}`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getAllReservations } from "@/app/lib/ReservationApi";
 import { Reservation } from "@/app/types/ReservationTypes";
 import Image from "next/image";
@@ -109,10 +109,14 @@ const ExpandedRow = ({ res }: { res: Reservation }) => {
     );
 };
 
-const ReservationsPanel = () => {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
+interface Props {
+    initialReservations: Reservation[];
+}
+
+const ReservationsPanel = ({ initialReservations }: Props) => {
+    const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
     const [loading, setLoading] = useState(false);
-    const [hasFetched, setHasFetched] = useState(false);
+    const [hasFetched, setHasFetched] = useState(true);
     const [query, setQuery] = useState("");
     const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -129,7 +133,6 @@ const ReservationsPanel = () => {
         }
     };
 
-    useEffect(() => { fetchReservations(); }, []);
 
     const filtered = reservations.filter((r) =>
         `${r.car.make} ${r.car.model} ${r.car.vin} ${r.reservationId}`

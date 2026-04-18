@@ -42,7 +42,7 @@ const CarListCard = ({
 	const thumbs = car.images.slice(1, 3);
 	const hasGrid = thumbs.length > 0;
 
-	const { cartItem, cartConflicts } = cartInfo ?? {};
+	const { cartItem, cartConflicts, userReserved } = cartInfo ?? {};
 	const hasCartConflict = !cartItem && !!cartConflicts?.length;
 
 	return (
@@ -82,6 +82,7 @@ const CarListCard = ({
 						{cartItem && (
 							<span className={styles.badgeInCart}>In Cart</span>
 						)}
+						{userReserved && <span className={styles.badgeUserReserved}>Your Reservation</span>}
 						{hasCartConflict ? (
 							<span
 								className={styles.badgeCartConflict}

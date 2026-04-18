@@ -1,8 +1,9 @@
 import { CarEnums } from "../types/CarEnums";
 import { CarPages } from "../types/CarTypes";
 
-const defaultHeaders = {
+const defaultHeaders: Record<string, string> = {
 	"Content-Type": "application/json",
+	...(process.env.API_KEY ? { "X-API-Key": process.env.API_KEY } : {}),
 };
 
 const defaultNext = {

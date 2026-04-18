@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getFilteredCarsAdmin } from "@/app/lib/AdminApiCalls";
 import { Car } from "@/app/types/CarTypes";
 import { useAdminSidebarStore, AdminView } from "@/stores/adminSidebarStore";
 import { BiCar, BiPlus, BiEdit, BiTable, BiCalendar } from "react-icons/bi";
@@ -74,32 +72,14 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <p className={styles.sectionTitle}>{children}</p>
 );
 
-const DashboardPanel = () => {
+interface Props {
+  initialCars: Car[];
+}
+
+const DashboardPanel = ({ initialCars }: Props) => {
   const { setActiveView } = useAdminSidebarStore();
-  const [cars, setCars] = useState<Car[]>([]);
-  const [totalItems, setTotalItems] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    getFilteredCarsAdmin({ pageSize: 500 })
-      .then((res) => {
-        setCars(res.data);
-        setTotalItems(res.totalItems);
-      })
-      .catch((e) => setError(String(e)))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        {[1, 2, 3].map((i) => <div key={i} className={styles.pulse} />)}
-      </div>
-    );
-  }
-
-  if (error) return <p style={{ color: "var(--color-accent)" }}>Error: {error}</p>;
+  const cars = initialCars;
+  const totalItems = initialCars.length;
 
   const prices = cars.map((c) => c.pricePerDay).filter(Boolean);
   const hps = cars.map((c) => c.horsepower).filter(Boolean);

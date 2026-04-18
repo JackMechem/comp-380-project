@@ -23,7 +23,7 @@ const CarGridCard = ({
 	cartInfo?: CartCardInfo;
 }) => {
 	const { status } = getAvailability(car, fromDate, untilDate);
-	const { cartItem, cartConflicts } = cartInfo ?? {};
+	const { cartItem, cartConflicts, userReserved } = cartInfo ?? {};
 	const hasCartConflict = !cartItem && !!cartConflicts?.length;
 
 	return (
@@ -81,6 +81,7 @@ const CarGridCard = ({
 					</h2>
 					<div className={styles.badgeGroup}>
 						{cartItem && <span className={styles.badgeInCart}>In Cart</span>}
+						{userReserved && <span className={styles.badgeUserReserved}>Your Reservation</span>}
 						{hasCartConflict ? (
 							<span
 								className={styles.badgeCartConflict}

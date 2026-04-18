@@ -2,8 +2,9 @@
 
 import { useUserDashboardStore, UserDashboardView } from "@/stores/userDashboardStore";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
-import { BiCalendar, BiUser, BiChevronLeft, BiChevronRight } from "react-icons/bi";
-import { useState } from "react";
+import { BiCalendar, BiUser, BiChevronLeft, BiChevronRight, BiLogOut } from "react-icons/bi";
+import { useState, useEffect } from "react";
+import Cookies from "js-cookie";
 import styles from "../../components/menus/adminSidebar.module.css";
 
 const NAV_ITEMS: { icon: React.ReactNode; label: string; view: UserDashboardView }[] = [
@@ -12,7 +13,24 @@ const NAV_ITEMS: { icon: React.ReactNode; label: string; view: UserDashboardView
 ];
 
 const DesktopSidebar = () => {
-    const { collapsed, toggle, activeView, setActiveView, isAuthenticated, userEmail } = useUserDashboardStore();
+    const { collapsed, toggle, activeView, setActiveView, userEmail, stripeUserId, setUserEmail, clearSession } = useUserDashboardStore();
+
+    const handleSignOut = () => {
+        Cookies.remove("user-session", { path: "/" });
+        Cookies.remove("account-id", { path: "/" });
+        Cookies.remove("stripe-user-id", { path: "/" });
+        Cookies.remove("user-role", { path: "/" });
+        clearSession();
+    };
+
+    useEffect(() => {
+        if (!userEmail && stripeUserId) {
+            fetch(`/api/users/${stripeUserId}`)
+                .then((r) => r.json())
+                .then((u) => { if (u?.email) setUserEmail(u.email); })
+                .catch(() => {});
+        }
+    }, [stripeUserId]);
 
     return (
         <div className={`${styles.desktop} ${collapsed ? styles.desktopCollapsed : styles.desktopExpanded}`}>
@@ -34,7 +52,7 @@ const DesktopSidebar = () => {
                     {/* Identity header */}
                     <div style={{ padding: "16px 16px 8px", borderBottom: "1px solid var(--color-third)", marginBottom: 8 }}>
                         <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-foreground-light)", marginBottom: 2 }}>
-                            {isAuthenticated ? "Signed in as" : "Viewing as guest"}
+                            Signed in as
                         </p>
                         <p style={{ fontSize: 13, color: "var(--color-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {userEmail ?? "—"}
@@ -55,6 +73,17 @@ const DesktopSidebar = () => {
                             </button>
                         ))}
                     </div>
+
+                    {/* Sign out */}
+                    {!collapsed && (
+                        <button
+                            onClick={handleSignOut}
+                            style={{ display: "flex", alignItems: "center", gap: 8, margin: "8px 12px 0", padding: "8px 12px", borderRadius: 8, fontSize: 13, color: "var(--color-foreground-light)", background: "none", border: "none", cursor: "pointer", width: "calc(100% - 24px)" }}
+                        >
+                            <BiLogOut />
+                            Sign Out
+                        </button>
+                    )}
                 </div>
             )}
             <button onClick={toggle} className={styles.toggleBtn}>

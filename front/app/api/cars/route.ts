@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-
-async function getAuthHeader() {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get("credentials")?.value;
-    const { username, password } = raw
-        ? JSON.parse(raw)
-        : { username: "jim", password: "intentionallyInsecurePassword#3" };
-    return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
-}
+import { getBearerHeader, getApiKeyHeader } from "@/app/lib/serverAuth";
 
 export async function GET(req: NextRequest) {
-    const authHeader = await getAuthHeader();
+    const authHeader = await getBearerHeader();
     const qs = req.nextUrl.searchParams.toString();
 
+    const headers: HeadersInit = { ...getApiKeyHeader(), ...(authHeader ? { Authorization: authHeader } : {}) };
     const res = await fetch(`${process.env.API_BASE_URL}/cars?${qs}`, {
-        headers: { Authorization: authHeader },
+        headers,
         cache: "no-store",
     });
     return NextResponse.json(await res.json(), { status: res.status });
 }
 
 export async function POST(req: NextRequest) {
-    const authHeader = await getAuthHeader();
+    const authHeader = await getBearerHeader();
     const body = await req.json();
+
+    const headers: HeadersInit = { "Content-Type": "application/json", ...getApiKeyHeader() };
+    if (authHeader) headers["Authorization"] = authHeader;
 
     const res = await fetch(`${process.env.API_BASE_URL}/cars`, {
         method: "POST",
-        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
     });
     const text = await res.text();
