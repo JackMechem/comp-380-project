@@ -87,6 +87,7 @@ public class Account extends APIEntity {
     }
     @JsonProperty("user")
     public Object getUserParse() {
+        if (user == null) return null;
         if (parseFullObjects) {
             user.parseFullObjects = true;
             return user;

@@ -2,6 +2,7 @@ package com.inc.fcr.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.inc.fcr.database.ParsedQueryParams;
 import com.inc.fcr.errorHandling.QueryParamException;
 import com.inc.fcr.errorHandling.ValidationException;
@@ -131,6 +132,7 @@ public class APIController {
 
             // Merge specified fields
             ObjectMapper mapper = new ObjectMapper();
+            mapper.registerModule(new JavaTimeModule());
             // If set to true (default), changes to json objects will be appended to the existing contnet, not overridden
             mapper.setDefaultMergeable(false);
             JsonNode objJson = mapper.valueToTree(oldObj);
