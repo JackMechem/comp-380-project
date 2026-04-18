@@ -44,6 +44,14 @@ public class HibernateUtil {
             configuration.setProperty(Environment.PASS, System.getenv("DB_PASSWORD"));
             configuration.setProperty(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
 
+            // Connection pool (HikariCP — bundled with Hibernate 6)
+            configuration.setProperty("hibernate.connection.provider_class",
+                    "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
+            configuration.setProperty("hibernate.hikari.minimumIdle", "2");
+            configuration.setProperty("hibernate.hikari.maximumPoolSize", "10");
+            configuration.setProperty("hibernate.hikari.idleTimeout", "30000");
+            configuration.setProperty("hibernate.hikari.connectionTimeout", "20000");
+
             // 2. SQL Dialect - Tells Hibernate how to write MySQL-specific SQL
             configuration.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
 
@@ -52,8 +60,9 @@ public class HibernateUtil {
             configuration.setProperty(Environment.HBM2DDL_AUTO, "update");
 
             // 4. Optional: Show SQL in console so you can see the CREATE TABLE command
-            configuration.setProperty(Environment.SHOW_SQL, "true");
-            configuration.setProperty(Environment.FORMAT_SQL, "true");
+            String showSql = System.getenv("SHOW_SQL") != null ? System.getenv("SHOW_SQL") : "true";
+            configuration.setProperty(Environment.SHOW_SQL, showSql);
+            configuration.setProperty(Environment.FORMAT_SQL, showSql);
 
             // 5. Register your Entity
             configuration.addAnnotatedClass(Account.class);
