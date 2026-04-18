@@ -5,11 +5,11 @@ import { useAdminSidebarStore, AdminView } from "@/stores/adminSidebarStore";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCar, BiChevronLeft, BiChevronRight,
-    BiPlus, BiEdit, BiTable, BiGridAlt, BiX, BiCalendar,
+    BiPlus, BiEdit, BiTable, BiGridAlt, BiX, BiCalendar, BiUser,
 } from "react-icons/bi";
 import styles from "./adminSidebar.module.css";
 
-type Section = "cars" | "reservations";
+type Section = "cars" | "reservations" | "users";
 
 interface SectionDef {
     id: Section;
@@ -35,6 +35,15 @@ const SECTIONS: SectionDef[] = [
         label: "Reservations",
         items: [
             { icon: <BiTable />, label: "View Data", view: "view-reservations" },
+        ],
+    },
+    {
+        id: "users",
+        icon: <BiUser />,
+        label: "Users",
+        items: [
+            { icon: <BiTable />, label: "View Accounts", view: "view-accounts" },
+            { icon: <BiUser />,  label: "View Users",    view: "view-users"    },
         ],
     },
 ];
