@@ -1,5 +1,7 @@
 package com.inc.fcr.utils;
 
+import com.inc.fcr.auth.Account;
+import com.inc.fcr.auth.LoginToken;
 import com.inc.fcr.car.Car;
 import com.inc.fcr.payment.Payment;
 import com.inc.fcr.reservation.Reservation;
@@ -53,6 +55,8 @@ public class HibernateUtil {
             configuration.setProperty(Environment.FORMAT_SQL, "true");
 
             // 5. Register your Entity
+            configuration.addAnnotatedClass(Account.class);
+            configuration.addAnnotatedClass(LoginToken.class);
             configuration.addAnnotatedClass(Car.class);
             configuration.addAnnotatedClass(User.class);
             configuration.addAnnotatedClass(Reservation.class);
