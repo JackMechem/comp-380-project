@@ -76,8 +76,8 @@ public class Car extends APIEntity {
     private RoofType roofType;
     @Enumerated(EnumType.STRING)
     private VehicleClass vehicleClass;
-    @Enumerated(EnumType.STRING)
-    private CarStatus carStatus;
+    @Enumerated(EnumType.STRING) @Column(nullable = false)
+    private CarStatus carStatus = CarStatus.AVAILABLE;
     @OneToMany(mappedBy = "car") @JsonManagedReference("car-reservation") @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
     @OneToMany(mappedBy = "car") @JsonManagedReference("car-review") @JsonIgnore
