@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ReservationsPanel from "./components/ReservationsPanel";
 import EditReservationPanel from "./components/EditReservationPanel";
 import UserDetailsPanel from "./components/UserDetailsPanel";
+import AdminContentWrapper, { isAdminView } from "./components/AdminContentWrapper";
 import { useUserDashboardStore, DashboardReservation } from "@/stores/userDashboardStore";
 import { useCartStore } from "@/stores/cartStore";
 import { BiCheckCircle, BiCheck, BiX } from "react-icons/bi";
@@ -95,7 +96,7 @@ interface Props {
 }
 
 export default function DashboardShell({ paymentSuccess: initialPaymentSuccess }: Props) {
-    const { activeView, accountId, isAuthenticated } = useUserDashboardStore();
+    const { activeView, accountId, isAuthenticated, setUserEmail, setUserName } = useUserDashboardStore();
     const { clearCart } = useCartStore();
     const router = useRouter();
 
@@ -128,6 +129,9 @@ export default function DashboardShell({ paymentSuccess: initialPaymentSuccess }
                 return r.json();
             })
             .then(async (account: Record<string, unknown>) => {
+                if (account.email) setUserEmail(account.email as string);
+                if (account.name) setUserName(account.name as string);
+
                 const user = (account.user as Record<string, unknown>) ?? null;
                 setUserData(user);
 
@@ -186,6 +190,9 @@ export default function DashboardShell({ paymentSuccess: initialPaymentSuccess }
     if (!allSettled) return <LoadingScreen items={fetchItems} />;
 
     const renderPanel = () => {
+        if (isAdminView(activeView)) {
+            return <AdminContentWrapper />;
+        }
         switch (activeView) {
             case "edit-reservation": return <EditReservationPanel />;
             case "user-details":     return <UserDetailsPanel initialUser={userData} />;

@@ -1,7 +1,7 @@
 "use client";
 
 import { Car } from "@/app/types/CarTypes";
-import { useAdminSidebarStore, AdminView } from "@/stores/adminSidebarStore";
+import { useUserDashboardStore, UserDashboardView } from "@/stores/userDashboardStore";
 import { BiCar, BiPlus, BiEdit, BiTable, BiCalendar, BiUser } from "react-icons/bi";
 import { MdAttachMoney, MdSpeed, MdDirectionsCar } from "react-icons/md";
 import styles from "./dashboardPanel.module.css";
@@ -53,9 +53,9 @@ const NAV_SECTIONS = [
     icon: <BiCar />,
     label: "Cars",
     items: [
-      { icon: <BiPlus />, label: "Add Car", view: "add-car" as AdminView },
-      { icon: <BiEdit />, label: "Edit Car", view: "edit-car" as AdminView },
-      { icon: <BiTable />, label: "View Data", view: "view-data" as AdminView },
+      { icon: <BiPlus />, label: "Add Car", view: "add-car" as UserDashboardView },
+      { icon: <BiEdit />, label: "Edit Car", view: "edit-car" as UserDashboardView },
+      { icon: <BiTable />, label: "View Data", view: "view-data" as UserDashboardView },
     ],
   },
   {
@@ -63,7 +63,7 @@ const NAV_SECTIONS = [
     icon: <BiCalendar />,
     label: "Reservations",
     items: [
-      { icon: <BiTable />, label: "View Data", view: "view-reservations" as AdminView },
+      { icon: <BiTable />, label: "View Data", view: "view-reservations" as UserDashboardView },
     ],
   },
   {
@@ -71,7 +71,7 @@ const NAV_SECTIONS = [
     icon: <BiUser />,
     label: "Users",
     items: [
-      { icon: <BiTable />, label: "View Accounts", view: "view-users" as AdminView },
+      { icon: <BiTable />, label: "View Accounts", view: "view-users" as UserDashboardView },
     ],
   },
 ];
@@ -82,10 +82,12 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 
 interface Props {
   cars: Car[];
+  role: string;
 }
 
-const DashboardPanel = ({ cars }: Props) => {
-  const { setActiveView } = useAdminSidebarStore();
+const DashboardPanel = ({ cars, role }: Props) => {
+  const { setActiveView } = useUserDashboardStore();
+  const isAdmin = role === "ADMIN";
 
   const prices = cars.map((c) => c.pricePerDay).filter(Boolean);
   const hps = cars.map((c) => c.horsepower).filter(Boolean);
@@ -94,7 +96,7 @@ const DashboardPanel = ({ cars }: Props) => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className="page-title">Admin Dashboard</h1>
+        <h1 className="page-title">{isAdmin ? "Admin" : "Staff"} Dashboard</h1>
         <p className="page-subtitle">Fleet overview and quick actions</p>
       </div>
 

@@ -110,6 +110,16 @@ export const editCar = async (car: Car) => {
     return res.text();
 };
 
+export const updateCarStatus = async (vin: string, carStatus: string) => {
+    const res = await fetch(`/api/cars/${vin}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ carStatus }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.text();
+};
+
 export const deleteCar = async (vin: string) => {
     const res = await fetch(`/api/cars/${vin}`, { method: "DELETE" });
     if (!res.ok) throw new Error(await res.text());

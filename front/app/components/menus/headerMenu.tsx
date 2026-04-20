@@ -8,7 +8,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import DefaultProfilePhoto from "../defaultProfilePhoto";
 import Image from "next/image";
-import { BiTrash } from "react-icons/bi";
+import { BiTrash, BiCog } from "react-icons/bi";
 import { CartProps } from "@/app/types/CartTypes";
 import { BsCart2, BsCart3 } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -25,20 +25,23 @@ const HeaderMenu = () => {
         useCartStore();
     const cartCount = carData.length;
 
-    const { isAuthenticated, sessionToken, userEmail, stripeUserId, role, clearSession, setUserEmail } = useUserDashboardStore();
+    const { isAuthenticated, sessionToken, userEmail, userName, accountId, role, clearSession, setUserEmail, setUserName } = useUserDashboardStore();
 
     const isLoggedIn = isAuthenticated && !!sessionToken;
     const isGuest = isLoggedIn && role === "GUEST";
     const isAdmin = isLoggedIn && (role === "ADMIN" || role === "STAFF");
 
     useEffect(() => {
-        if (isLoggedIn && !userEmail && stripeUserId) {
-            fetch(`/api/users/${stripeUserId}`)
+        if (isLoggedIn && !userEmail && accountId) {
+            fetch(`/api/accounts/${accountId}`)
                 .then((r) => r.json())
-                .then((u) => { if (u?.email) setUserEmail(u.email); })
+                .then((a) => {
+                    if (a?.email) setUserEmail(a.email);
+                    if (a?.name) setUserName(a.name);
+                })
                 .catch(() => {});
         }
-    }, [isLoggedIn, stripeUserId]);
+    }, [isLoggedIn, accountId]);
 
     const handleSignOut = () => {
         Cookies.remove("user-session", { path: "/" });
@@ -50,7 +53,7 @@ const HeaderMenu = () => {
     };
 
     // Derive display info for the profile row
-    const displayName = isLoggedIn ? (userEmail ?? "User") : null;
+    const displayName = isLoggedIn ? (userName ?? userEmail ?? "User") : null;
     const displayRole = isAdmin
         ? (role === "ADMIN" ? "Administrator" : "Staff")
         : isGuest
@@ -83,9 +86,14 @@ const HeaderMenu = () => {
                         <p className={styles.profileRole}>{displayRole}</p>
                     </div>
                     {isLoggedIn ? (
-                        <button onClick={handleSignOut} className={styles.signOutBtn}>
-                            Sign out
-                        </button>
+                        <div className={styles.profileActions}>
+                            <Link href="/dashboard" onClick={close} className={styles.gearBtn} title="Dashboard">
+                                <BiCog />
+                            </Link>
+                            <button onClick={handleSignOut} className={styles.signOutBtn}>
+                                Sign out
+                            </button>
+                        </div>
                     ) : (
                         <div className={styles.authBtns}>
                             <Link href="/login" onClick={close} className={styles.loginBtn}>
@@ -167,16 +175,6 @@ const HeaderMenu = () => {
                     {cartCount > 0 && (
                         <Link href="/checkout" onClick={close} className={styles.checkoutBtn}>
                             Checkout
-                        </Link>
-                    )}
-                    {isLoggedIn && (
-                        <Link href="/dashboard" onClick={close} className={styles.reservationsBtn}>
-                            My Dashboard
-                        </Link>
-                    )}
-                    {isAdmin && (
-                        <Link href="/admin" onClick={close} className={styles.adminBtn}>
-                            Admin Dashboard
                         </Link>
                     )}
                 </div>

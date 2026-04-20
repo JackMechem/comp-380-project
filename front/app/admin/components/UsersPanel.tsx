@@ -299,8 +299,11 @@ const ExpandedRow = ({
     onDeleteAccount,
     onDeleteUser,
 }: ExpandedRowProps) => {
-    const canEdit = role === "STAFF" || role === "ADMIN";
-    const canDelete = role === "ADMIN";
+    const isAdmin = role === "ADMIN";
+    const isStaff = role === "STAFF";
+    // Staff can edit all accounts and users, just can't change roles or delete
+    const canEdit = isAdmin || isStaff;
+    const canDelete = isAdmin;
 
     return (
         <div className={styles.expandedSection} style={{ gap: 24 }}>
@@ -334,7 +337,7 @@ const ExpandedRow = ({
                     {editTarget === "account" ? (
                         <EditAccountForm
                             account={account}
-                            canChangeRole={canEdit}
+                            canChangeRole={isAdmin}
                             onSave={onAccountSave}
                             onCancel={() => setEditTarget(null)}
                         />

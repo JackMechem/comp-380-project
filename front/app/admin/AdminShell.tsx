@@ -219,7 +219,7 @@ export default function AdminShell() {
                     </div>
                 );
             case "view-data":
-                return <InventoryPanel cars={cars} onRefresh={refreshCars} />;
+                return <InventoryPanel cars={cars} onRefresh={refreshCars} role={role ?? ""} />;
             case "view-reservations":
                 return <ReservationsPanel reservations={reservations} accounts={accounts} onRefresh={refreshReservations} />;
             case "view-accounts":
@@ -227,7 +227,7 @@ export default function AdminShell() {
             case "view-users":
                 return <UserProfilesPanel users={users} onRefresh={refreshUsers} />;
             default:
-                return <DashboardPanel cars={cars} />;
+                return <DashboardPanel cars={cars} role={role ?? ""} />;
         }
     };
 
@@ -253,6 +253,26 @@ export default function AdminShell() {
                         minHeight: "calc(100vh - 65px - 20px)",
                         padding: isMobile ? "24px 16px 60px" : "36px 40px 60px",
                     }}>
+                        <div style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            marginBottom: 20,
+                            fontSize: "9pt",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.06em",
+                            color: role === "ADMIN" ? "#ef4444" : "#3b82f6",
+                        }}>
+                            <span style={{
+                                width: 7,
+                                height: 7,
+                                borderRadius: "50%",
+                                backgroundColor: role === "ADMIN" ? "#ef4444" : "#3b82f6",
+                                display: "inline-block",
+                            }} />
+                            {role === "ADMIN" ? "Admin" : "Staff"}
+                        </div>
                         {renderContent()}
                     </div>
                 </div>

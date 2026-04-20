@@ -1,3 +1,5 @@
+export type CarStatus = "AVAILABLE" | "DISABLED" | "ARCHIVED" | "LOANED" | "SERVICE";
+
 export interface Car {
     vin: string;
     make: string;
@@ -20,6 +22,7 @@ export interface Car {
     roofType: string;
     vehicleClass: string;
     modelYear: number;
+    carStatus?: CarStatus;
     reservationDates?: number[][];
     [key: string]: string | number | string[] | number[][] | undefined;
 }
