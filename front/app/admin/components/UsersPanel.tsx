@@ -25,6 +25,7 @@ import {
     BiX,
     BiUser,
 } from "react-icons/bi";
+import { BsBookmarkFill } from "react-icons/bs";
 import styles from "./inventoryPanel.module.css";
 import userStyles from "./usersPanel.module.css";
 import { LoadingSkeleton, EmptyState } from "./PanelLoading";
@@ -357,6 +358,40 @@ const ExpandedRow = ({
                                 </div>
                             ))}
                         </div>
+                    )}
+                </div>
+
+                {/* Bookmarked cars */}
+                <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                        <BsBookmarkFill style={{ fontSize: "10pt", color: "var(--color-accent)" }} />
+                        <p className={styles.columnLabel}>Bookmarked Cars</p>
+                        <span style={{ fontSize: "9pt", color: "var(--color-foreground-light)" }}>
+                            ({account.bookmarkedCars?.length ?? 0})
+                        </span>
+                    </div>
+                    {account.bookmarkedCars && account.bookmarkedCars.length > 0 ? (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {account.bookmarkedCars.map((vin) => (
+                                <span
+                                    key={vin}
+                                    style={{
+                                        padding: "3px 10px",
+                                        borderRadius: 6,
+                                        fontSize: "9pt",
+                                        fontFamily: "monospace",
+                                        backgroundColor: "var(--color-third)",
+                                        color: "var(--color-foreground)",
+                                    }}
+                                >
+                                    {vin}
+                                </span>
+                            ))}
+                        </div>
+                    ) : (
+                        <p style={{ fontSize: "9.5pt", color: "var(--color-foreground-light)" }}>
+                            No bookmarked cars
+                        </p>
                     )}
                 </div>
 

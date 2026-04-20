@@ -591,8 +591,34 @@
 	color: color-mix(in srgb, var(--color-foreground-light) 70%, transparent);
 }
 
+.ctaRow {
+	display: flex;
+	gap: 10px;
+	align-items: stretch;
+}
+
+.bookmarkBtn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	flex-shrink: 0;
+	border-radius: 0.75rem;
+	border: 1px solid var(--color-third);
+	color: var(--color-foreground-light);
+	font-size: 16pt;
+	cursor: pointer;
+	transition: color 150ms, border-color 150ms, background-color 150ms;
+}
+
+.bookmarkBtn:hover {
+	color: var(--color-accent);
+	border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+	background-color: color-mix(in srgb, var(--color-accent) 5%, transparent);
+}
+
 .ctaBtn {
-	width: 100%;
+	flex: 1;
 	padding: 12px 0;
 	border-radius: 0.75rem;
 	font-weight: 600;

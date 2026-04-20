@@ -5,9 +5,12 @@ import { useHydrated } from "@/app/hooks/useHydrated";
 import { CartProps } from "@/app/types/CartTypes";
 import { Car } from "@/app/types/CarTypes";
 import { useCartStore } from "@/stores/cartStore";
+import { useBookmarkStore, toggleBookmark as toggleBookmarkApi } from "@/stores/bookmarkStore";
+import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { useState, useEffect } from "react";
 import { getStoredDates } from "@/app/lib/browseStorage";
 import { getAvailability, formatConflicts } from "@/app/lib/availability";
+import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import styles from "./carDetail.module.css";
 
 const parseStoredDate = (val: string | null): Date | undefined => {
@@ -33,6 +36,8 @@ const carToCartProps = (car: Car, startDate?: Date, endDate?: Date): CartProps =
 
 const RightColumn = ({ carData }: { carData: Car }) => {
 	const { addCar, removeCar, inCart } = useCartStore();
+	const bookmarked = useBookmarkStore((s) => s.isBookmarked(carData.vin));
+	const { isAuthenticated, accountId } = useUserDashboardStore();
 	const isInCart = inCart(carData.vin);
 	const [startDate, setStartDate] = useState<Date | undefined>(() => {
 		const stored = getStoredDates();
@@ -147,13 +152,32 @@ const RightColumn = ({ carData }: { carData: Car }) => {
 			)}
 
 			{/* CTA */}
-			<button
-				disabled={!canAdd}
-				onClick={handleAddToCart}
-				className={`${styles.ctaBtn} ${isInCart ? styles.ctaBtnRemove : styles.ctaBtnAdd}`}
-			>
-				{isInCart ? "Remove from cart" : "Add to cart"}
-			</button>
+			<div className={styles.ctaRow}>
+				<button
+					disabled={!canAdd}
+					onClick={handleAddToCart}
+					className={`${styles.ctaBtn} ${isInCart ? styles.ctaBtnRemove : styles.ctaBtnAdd}`}
+				>
+					{isInCart ? "Remove from cart" : "Add to cart"}
+				</button>
+				{isAuthenticated && accountId && (
+					<button
+						onClick={() => {
+							toggleBookmarkApi(accountId, {
+								vin: carData.vin,
+								make: carData.make,
+								model: carData.model,
+								pricePerDay: carData.pricePerDay,
+								image: carData.images[0] ?? undefined,
+							});
+						}}
+						className={styles.bookmarkBtn}
+						title={bookmarked ? "Remove bookmark" : "Bookmark"}
+					>
+						{bookmarked ? <BsBookmarkFill /> : <BsBookmark />}
+					</button>
+				)}
+			</div>
 		</div>
 	);
 };

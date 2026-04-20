@@ -12,6 +12,7 @@ export interface Account {
     dateEmailConfirmed: string | null;
     user: number | null;
     role: AccountRole;
+    bookmarkedCars?: string[];
 }
 
 export interface AccountPages {
