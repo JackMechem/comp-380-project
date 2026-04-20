@@ -30,8 +30,8 @@ import joptsimple.internal.Strings;
  *   <li>{@code pageSize} — results per page (default: 10)</li>
  *   <li>{@code search}   — full-text search across {@link SearchField}-annotated fields</li>
  *   <li>{@code min<Field>} / {@code max<Field>} — range filter on numeric fields</li>
- *   <li>{@code <field>}  — exact or enum match filter (enum filters support multiple values as a comma-separated list)</li>
- *   <li>{@code <field>!}  — inverted exact or enum match filter</li>
+ *   <li>{@code <field>}  — exact field or enum match filter, supports multiple values as a comma-separated list</li>
+ *   <li>{@code <field>!}  — inverted exact field or enum match filter, supports multiple values as a comma-separated list</li>
  *   <li>{@code parseFullObjects} - determines if objects parse/return nested objects or just IDs (full car object vs just VIN). </li>
  * </ul>
  *
@@ -296,15 +296,19 @@ public class ParsedQueryParams {
                             .filter(v -> { // validation
                                 boolean isValid = ENUM_VALUES.get(_field).contains(v);
                                 if (STRICT_QUERY_PARAMS && !isValid) throw new IllegalArgumentException( // would be QueryParamException need runtime thrown here
-                                        "Invalid value '" + value + "' for '" + _field + "'. Valid options: " + ENUM_VALUES.get(_field));
+                                        "Invalid value '" + v + "' for '" + _field + "'. Valid options: " + ENUM_VALUES.get(_field));
                                 return isValid; })
                             .forEach(v -> sb.append(" OR c.").append(_field).append(" = '").append(v).append("'"));
                     sb.append(")");
                     // close the condition group
                 } else {
-                    boolean inverted = field.startsWith("not_");
-                    if (inverted) field = field.substring(4);
-                    sb.append(" AND c.").append(field).append(inverted ? " !" : " ").append("= '").append(value).append("'");
+                    boolean inverted = field.startsWith("not_"); String _field;
+                    if (inverted) _field = field.substring(4);
+                    else _field = field;
+                    sb.append(" AND ").append(inverted ? "NOT ":"").append("(1=0 "); // new condition group
+                    Arrays.stream(value.split(",")).forEach(v ->
+                            sb.append(" OR c.").append(_field).append(" = '").append(v).append("'"));
+                    sb.append(")"); // close the condition group
                 }
             }
         }
