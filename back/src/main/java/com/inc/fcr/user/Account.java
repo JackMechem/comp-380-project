@@ -2,6 +2,7 @@ package com.inc.fcr.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.inc.fcr.car.Car;
 import com.inc.fcr.database.SearchField;
 import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
@@ -10,6 +11,8 @@ import jakarta.persistence.*;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * JPA entity representing an authenticated account in the FCR rental system.
@@ -39,6 +42,8 @@ public class Account extends APIEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private AccountRole role;
+    @JoinColumn(name = "vin", nullable = false) @JsonIgnore
+    private List<Car> bookmarkedCars = new ArrayList<>();
 
     // Constructors
 
@@ -93,6 +98,14 @@ public class Account extends APIEntity {
         return role;
     }
 
+    @JsonIgnore
+    public List<Car> getBookmarkedCars() { return bookmarkedCars; }
+    @JsonProperty("bookmarkedCars")
+    public Object getBookmarksParse() {
+        if (parseFullObjects) return bookmarkedCars;
+        else return bookmarkedCars.stream().map(Car::getVin).toList();
+    }
+
     // Setters
 
     public void setName(String name) {
@@ -113,5 +126,9 @@ public class Account extends APIEntity {
 
     public void setDateEmailConfirmed(Instant dateEmailConfirmed) {
         this.dateEmailConfirmed = dateEmailConfirmed;
+    }
+
+    public void setBookmarkedCars(List<Car> bookmarkedCars) {
+        this.bookmarkedCars = bookmarkedCars;
     }
 }
