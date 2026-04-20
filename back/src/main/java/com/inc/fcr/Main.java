@@ -15,6 +15,7 @@ import com.inc.fcr.car.enums.EnumController;
 import com.inc.fcr.utils.HibernateUtil;
 
 import io.javalin.Javalin;
+import io.javalin.http.ForbiddenResponse;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
@@ -105,7 +106,15 @@ public class Main {
                     get(accounts::getAll, Role.READ);
                     path("{id}", () -> {
                         get(accounts::getOne, Role.READ);
-                        patch(accounts::update, Role.WRITE);
+                        patch(ctx -> {
+                            long tokenAcctId = Auth.getAccountIdFromToken(ctx);
+                            long pathId = Long.parseLong(ctx.pathParam("id"));
+                            // Allow if owner, or if staff/admin
+                            if (tokenAcctId != pathId && !Auth.userRoles(ctx).contains(Role.WRITE)) {
+                                throw new ForbiddenResponse("You can only update your own account");
+                            }
+                            accounts.update(ctx);
+                        }, Role.READ);
                         delete(accounts::delete, Role.ADMIN);
                     });
                 });
