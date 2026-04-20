@@ -18,7 +18,7 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
 
     const { openPanel } = useSidebarStore();
     const { width } = useWindowSize();
-    const pushContent = openPanel && (width === undefined || width >= 1110);
+    const pushContent = openPanel && (width === undefined || width >= 1300);
 
     return (
         <div className={styles.root}>

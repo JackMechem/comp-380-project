@@ -9,6 +9,7 @@ import { BsFuelPump } from "react-icons/bs";
 import { formatEnum } from "@/app/lib/formatEnum";
 import { TbManualGearbox } from "react-icons/tb";
 import { getAvailability, formatConflicts } from "@/app/lib/availability";
+import BookmarkButton from "@/app/components/buttons/bookmarkButton";
 import styles from "./CarListCard.module.css";
 
 const Stat = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
@@ -48,6 +49,7 @@ const CarListCard = ({
 	return (
 		<Link href={"/car/" + car.vin} className={styles.card}>
 			<div className={styles.imageWrapper}>
+				<BookmarkButton car={{ vin: car.vin, make: car.make, model: car.model, pricePerDay: car.pricePerDay, image: car.images[0] }} />
 				<Image
 					src={car.images[0]}
 					alt={car.make}

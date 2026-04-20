@@ -15,3 +15,26 @@
 	background-color: color-mix(in srgb, var(--color-primary-dark) 50%, transparent);
 	transform: scale(1.05);
 }
+
+.iconWrapper {
+	position: relative;
+	margin-bottom: -6px;
+}
+
+.badge {
+	position: absolute;
+	font-size: 7pt;
+	font-weight: 600;
+	min-width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 4px;
+	right: -8px;
+	top: -8px;
+	border-radius: 9999px;
+	background-color: var(--color-accent);
+	color: #fff;
+	line-height: 1;
+}

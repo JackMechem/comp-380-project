@@ -6,6 +6,7 @@ import { BiCar } from "react-icons/bi";
 import { GiCarSeat } from "react-icons/gi";
 import { PiEngine } from "react-icons/pi";
 import { getAvailability } from "@/app/lib/availability";
+import BookmarkButton from "@/app/components/buttons/bookmarkButton";
 import styles from "./carGridCard.module.css";
 
 const fmtDate = (iso: string) =>
@@ -28,14 +29,17 @@ const CarGridCard = ({
 
 	return (
 		<Link href={`/car/${car.vin}`} className={styles.card}>
-			<Image
-				width={400}
-				height={250}
-				alt={`${car.make} ${car.model}`}
-				src={car.images[0]}
-				className={styles.image}
-				loading="lazy"
-			/>
+			<div className={styles.imageWrapper}>
+				<BookmarkButton car={{ vin: car.vin, make: car.make, model: car.model, pricePerDay: car.pricePerDay, image: car.images[0] }} />
+				<Image
+					width={400}
+					height={250}
+					alt={`${car.make} ${car.model}`}
+					src={car.images[0]}
+					className={styles.image}
+					loading="lazy"
+				/>
+			</div>
 			<div className={styles.body}>
 				<div className={styles.titleGroup}>
 					<h2 className={styles.carName}>

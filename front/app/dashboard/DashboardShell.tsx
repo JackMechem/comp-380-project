@@ -129,6 +129,7 @@ export default function DashboardShell({ paymentSuccess: initialPaymentSuccess }
                 return r.json();
             })
             .then(async (account: Record<string, unknown>) => {
+                console.log("DashboardShell /accounts response:", account);
                 if (account.email) setUserEmail(account.email as string);
                 if (account.name) setUserName(account.name as string);
 
