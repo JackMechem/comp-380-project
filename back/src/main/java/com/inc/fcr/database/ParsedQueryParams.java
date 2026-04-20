@@ -307,7 +307,7 @@ public class ParsedQueryParams {
                     else _field = field;
                     sb.append(" AND ").append(inverted ? "NOT ":"").append("(1=0 "); // new condition group
                     Arrays.stream(value.split(",")).forEach(v ->
-                            sb.append(" OR c.").append(_field).append(" = '").append(v).append("'"));
+                            sb.append(" OR c.").append(_field).append(" like '%").append(v).append("%'"));
                     sb.append(")"); // close the condition group
                 }
             }
