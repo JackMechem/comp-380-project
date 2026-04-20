@@ -54,14 +54,6 @@ public class ParsedQueryParams {
     // ---------------------
 
     private void mapClassFields() throws QueryParamException {
-        Set<String> searchFields = new LinkedHashSet<>();
-        Set<String> numericSet = new LinkedHashSet<>();
-        Set<String> temporalSet = new LinkedHashSet<>();
-        Map<String, String> fieldMap = new LinkedHashMap<>();
-        Map<String, String> alphaFieldMap = new LinkedHashMap<>();
-        Map<String, List<String>> enumValues = new HashMap<>();
-        Map<String, String> relationIdPaths = new LinkedHashMap<>();
-        Set<String> numericRelationFields = new LinkedHashSet<>();
 
         if (!APIEntity.class.isAssignableFrom(clazz))
             throw new QueryParamException("Entity does not extend APIEntity.");
@@ -75,37 +67,29 @@ public class ParsedQueryParams {
             final Class<?> type = field.getType();
 
             if (field.isAnnotationPresent(Id.class)) idName = name;
-            if (field.isAnnotationPresent(SearchField.class)) searchFields.add(name);
+            if (field.isAnnotationPresent(SearchField.class)) SEARCH_FIELDS.add(name);
 
-            fieldMap.put(name.toLowerCase(), name);
+            FIELD_MAP.put(name.toLowerCase(), name);
 
-            if (isNumericClass(type)) numericSet.add(name);
-            else if (Temporal.class.isAssignableFrom(type)) temporalSet.add(name);
+            if (isNumericClass(type)) NUMERIC_FIELDS.add(name);
+            else if (Temporal.class.isAssignableFrom(type)) TEMPORAL_FIELDS.add(name);
             else if (field.isAnnotationPresent(ManyToOne.class) || field.isAnnotationPresent(OneToOne.class)) {
                 // Find the related entity's @Id field to build a proper path filter
                 for (Field relField : type.getDeclaredFields()) {
                     if (relField.isAnnotationPresent(Id.class)) {
-                        relationIdPaths.put(name, name + "." + relField.getName());
-                        if (isNumericClass(relField.getType())) numericRelationFields.add(name);
+                        RELATION_ID_PATHS.put(name, name + "." + relField.getName());
+                        if (isNumericClass(relField.getType())) NUMERIC_RELATION_FIELDS.add(name);
                         break;
                     }
                 }
             }
-            else alphaFieldMap.put(name.toLowerCase(), name);
+            else ALPHA_FIELD_MAP.put(name.toLowerCase(), name);
 
             if (type.isEnum()) {
                 var eType = (Class<? extends Enum>) type;
-                enumValues.put(name, Arrays.stream(eType.getEnumConstants()).map(Enum::name).toList());
+                ENUM_VALUES.put(name, Arrays.stream(eType.getEnumConstants()).map(Enum::name).toList());
             }
         }
-        SEARCH_FIELDS = Collections.unmodifiableSet(searchFields);
-        NUMERIC_FIELDS = Collections.unmodifiableSet(numericSet);
-        TEMPORAL_FIELDS = Collections.unmodifiableSet(temporalSet);
-        FIELD_MAP = Collections.unmodifiableMap(fieldMap);
-        ALPHA_FIELD_MAP = Collections.unmodifiableMap(alphaFieldMap);
-        ENUM_VALUES = Collections.unmodifiableMap(enumValues);
-        RELATION_ID_PATHS = Collections.unmodifiableMap(relationIdPaths);
-        NUMERIC_RELATION_FIELDS = Collections.unmodifiableSet(numericRelationFields);
     }
 
     private static boolean isNumericClass(Class<?> clazz) {
@@ -134,14 +118,15 @@ public class ParsedQueryParams {
     private List<String> parsedSearchText;
 
     private final Class<?> clazz;
-    private Set<String> SEARCH_FIELDS;
-    private Set<String> NUMERIC_FIELDS; // numeric only
-    private Set<String> TEMPORAL_FIELDS; // date type fields
-    private Map<String, String> FIELD_MAP; // contains alpha & numeric
-    private Map<String, String> ALPHA_FIELD_MAP; // strings only
-    private Map<String, List<String>> ENUM_VALUES;
-    private Map<String, String> RELATION_ID_PATHS; // @ManyToOne/@OneToOne: fieldName -> "field.idField"
-    private Set<String> NUMERIC_RELATION_FIELDS; // relation fields whose FK is numeric
+
+    private Set<String> SEARCH_FIELDS = new LinkedHashSet<>();
+    private Set<String> NUMERIC_FIELDS = new LinkedHashSet<>(); // numeric only
+    private Set<String> TEMPORAL_FIELDS = new LinkedHashSet<>(); // date type fields
+    private Map<String, String> FIELD_MAP = new LinkedHashMap<>(); // contains alpha & numeric
+    private Map<String, String> ALPHA_FIELD_MAP = new LinkedHashMap<>(); // strings only
+    private Map<String, List<String>> ENUM_VALUES = new HashMap<>();
+    private Map<String, String> RELATION_ID_PATHS = new LinkedHashMap<>(); // @ManyToOne/@OneToOne: fieldName -> "field.idField"
+    private Set<String> NUMERIC_RELATION_FIELDS  = new LinkedHashSet<>(); // relation fields whose FK is numeric
 
     // Params Constructor
     // ------------------
