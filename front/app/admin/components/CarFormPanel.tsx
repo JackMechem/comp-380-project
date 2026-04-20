@@ -1,10 +1,10 @@
 "use client";
 
-import { Car } from "@/app/types/CarTypes";
+import { Car, CarStatus } from "@/app/types/CarTypes";
 import { CarEnums } from "@/app/types/CarEnums";
 import { useEffect, useState } from "react";
 import { addCar, editCar, getCarAdmin, getFilteredCarsAdmin } from "@/app/lib/AdminApiCalls";
-import { useAdminSidebarStore } from "@/stores/adminSidebarStore";
+import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { callGemini } from "@/app/lib/gemini";
 import { formatEnum } from "@/app/lib/formatEnum";
 import Image from "next/image";
@@ -44,7 +44,7 @@ interface CarFormPanelProps {
 }
 
 const CarFormPanel = ({ mode }: CarFormPanelProps) => {
-	const { editVin, setEditVin } = useAdminSidebarStore();
+	const { editVin, setEditVin } = useUserDashboardStore();
 	const [isLoading, setIsLoading] = useState(false);
 	const [submitted, setSubmitted] = useState(false);
 	const [copyOptions, setCopyOptions] = useState<CopyOption[]>([]);
@@ -285,6 +285,17 @@ Reply with only the JSON object, no extra text.`,
 							</Field>
 							<Field label="Year">
 								<input type="number" className={formStyles.input} placeholder="e.g. 2024" value={numVal("modelYear")} onChange={(e) => handleNum("modelYear", e.target.value)} />
+							</Field>
+							<Field label="Status">
+								<select
+									className={formStyles.select}
+									value={(form.carStatus as string) ?? "AVAILABLE"}
+									onChange={(e) => setField("carStatus", e.target.value as CarStatus)}
+								>
+									{(["AVAILABLE", "DISABLED", "ARCHIVED", "LOANED", "SERVICE"] as CarStatus[]).map((s) => (
+										<option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
+									))}
+								</select>
 							</Field>
 						</div>
 					</SectionCard>

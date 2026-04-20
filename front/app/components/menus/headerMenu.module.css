@@ -86,6 +86,25 @@
 	font-size: 9pt;
 }
 
+.profileActions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.gearBtn {
+	font-size: 16pt;
+	color: var(--color-foreground-light);
+	transition: color 150ms;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+}
+
+.gearBtn:hover {
+	color: var(--color-accent);
+}
+
 .signOutBtn {
 	font-size: 9.5pt;
 	font-weight: 500;
