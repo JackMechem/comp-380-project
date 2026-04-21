@@ -9,6 +9,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Collection of JPA {@link AttributeConverter} implementations used to persist
@@ -19,7 +20,7 @@ import java.util.ArrayList;
  *   <li>{@link JsonListConverter}          — {@code ArrayList<String>} ↔ JSON array string</li>
  *   <li>{@link JsonDriversLicenseConverter}— {@link com.inc.fcr.user.DriversLicense} ↔ JSON object string</li>
  *   <li>{@link JsonAddressConverter}       — {@link com.inc.fcr.user.Address} ↔ JSON object string</li>
- *   <li>{@link JsonCartReservationConverter} — {@link com.inc.fcr.reservation.CartReservation} ↔ JSON object string</li>
+ *   <li>{@link JsonCartReservationConverter} — {@code List<CartReservation>} ↔ JSON array string</li>
  * </ul>
  */
 public class Converters {
@@ -136,37 +137,38 @@ public class Converters {
     }
 
     /**
-     * Converts a {@link CartReservation} to/from a JSON object string.
+     * Converts a {@code List<CartReservation>} to/from a JSON array string.
      *
-     * <p>Used for cart reservation data in database storage.</p>
+     * <p>Used for cart reservation list data in database storage.</p>
      */
     @Converter
-    public static class JsonCartReservationConverter implements AttributeConverter<CartReservation, String> {
+    public static class JsonCartReservationConverter implements AttributeConverter<List<CartReservation>, String> {
         /**
-         * Serializes a {@link CartReservation} to JSON. Returns {@code "{}"} on error.
+         * Serializes the list to a JSON array string. Returns {@code "[]"} on error.
          *
-         * @param obj the reservation object to serialize
-         * @return JSON representation of the reservation
+         * @param attribute the list to serialize
+         * @return JSON representation of the list
          */
-        public String convertToDatabaseColumn(CartReservation obj) {
+        public String convertToDatabaseColumn(List<CartReservation> attribute) {
             try {
-                return mapper.writeValueAsString(obj);
+                return mapper.writeValueAsString(attribute);
             } catch (Exception e) {
-                return "{}";
+                return "[]";
             }
         }
 
         /**
-         * Deserializes a JSON string to a {@link CartReservation}. Returns {@code null} on error.
+         * Deserializes a JSON array string back to a {@code List<CartReservation>}.
+         * Returns an empty list on error.
          *
          * @param dbData the JSON string from the database column
-         * @return the deserialized reservation, or {@code null} on failure
+         * @return the deserialized list, or an empty list on failure
          */
-        public CartReservation convertToEntityAttribute(String dbData) {
+        public List<CartReservation> convertToEntityAttribute(String dbData) {
             try {
-                return mapper.readValue(dbData, new TypeReference<CartReservation>() {});
+                return mapper.readValue(dbData, new TypeReference<List<CartReservation>>() {});
             } catch (Exception e) {
-                return null;
+                return new ArrayList<>();
             }
         }
     }
