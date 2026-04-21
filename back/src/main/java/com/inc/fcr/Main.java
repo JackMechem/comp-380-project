@@ -11,6 +11,8 @@ import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.reviews.Review;
 import com.inc.fcr.user.User;
 import com.inc.fcr.utils.APIController;
+import com.inc.fcr.utils.PostmanController;
+import com.inc.fcr.utils.VersionController;
 import com.inc.fcr.car.enums.EnumController;
 import com.inc.fcr.utils.HibernateUtil;
 
@@ -186,6 +188,12 @@ public class Main {
                         get(EnumController::getEnum, Role.ANYONE);
                     });
                 });
+
+                // GET /postman — returns a Postman collection JSON for import
+                get("/postman", PostmanController::getCollection, Role.ANYONE);
+
+                // GET /version — returns the current API version
+                get("/version", VersionController::getVersion, Role.ANYONE);
             });
         }).start(port);
     }
