@@ -3,7 +3,9 @@ package com.inc.fcr.auth;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.inc.fcr.car.Car;
+import com.inc.fcr.database.Converters;
 import com.inc.fcr.database.SearchField;
+import com.inc.fcr.reservation.CartReservation;
 import com.inc.fcr.user.User;
 import com.inc.fcr.utils.APIEntity;
 import com.inc.fcr.utils.DatabaseController;
@@ -45,6 +47,9 @@ public class Account extends APIEntity {
     private AccountRole role;
     @ManyToMany @JsonIgnore
     private List<Car> bookmarkedCars = new ArrayList<>();
+    @Convert(converter = Converters.JsonCartReservationConverter.class)
+    @Column(columnDefinition = "json", nullable = false)
+    private List<CartReservation> cartReservations = new ArrayList<>();
 
     // Constructors
 
@@ -109,6 +114,10 @@ public class Account extends APIEntity {
         else return bookmarkedCars.stream().map(Car::getVin).toList();
     }
 
+    public List<CartReservation> getCartReservations() {
+        return cartReservations;
+    }
+
     // Setters
 
     public void setName(String name) {
@@ -135,5 +144,9 @@ public class Account extends APIEntity {
     @JsonProperty("bookmarkedCars")
     public void setBookmarkedCars(List<Car> bookmarkedCars) {
         this.bookmarkedCars = bookmarkedCars;
+    }
+  
+    public void setCartReservations(List<CartReservation> cartReservations) {
+        this.cartReservations = cartReservations;
     }
 }
