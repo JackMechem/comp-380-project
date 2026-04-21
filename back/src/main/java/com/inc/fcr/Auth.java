@@ -125,6 +125,27 @@ public class Auth {
     }
 
     /**
+     * Returns the account ID associated with the Bearer token in the request,
+     * or -1 if no valid token is present.
+     */
+    public static long getAccountIdFromToken(Context ctx) {
+        String authHeader = ctx.header(Header.AUTHORIZATION);
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) return -1;
+        String tokenStr = authHeader.substring(7).trim();
+        if (tokenStr.isBlank()) return -1;
+
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            LoginToken lt = session.createQuery(
+                    "FROM LoginToken WHERE token = :t AND type = 'ACCOUNT_SESSION'", LoginToken.class)
+                    .setParameter("t", tokenStr).uniqueResult();
+            if (lt == null || Instant.now().isAfter(lt.getSessionExpiresAt())) return -1;
+            return lt.getAccountId();
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
      * Maps an {@link AccountRole} to the set of Javalin {@link Role} route permissions it grants.
      *
      * @param accountRole the role assigned to an {@link Account}
