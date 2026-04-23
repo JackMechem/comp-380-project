@@ -25,6 +25,8 @@ const LandingSearchBar = () => {
 		setHighlightedIndex(-1);
 		const params = new URLSearchParams();
 		if (searchText.trim()) params.set("search", searchText);
+		if (fromDate) params.set("fromDate", fromDate.toISOString().split("T")[0]);
+		if (untilDate) params.set("untilDate", untilDate.toISOString().split("T")[0]);
 		router.push(`/browse${params.size ? `?${params}` : ""}`);
 	};
 

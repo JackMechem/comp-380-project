@@ -6,17 +6,106 @@
 	isolation: isolate;
 }
 
+/* ── Brand section ─────────────────────────────────────────────────── */
 
-.sectionHeader {
+.brandSection {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 20px;
+	flex-direction: column;
+	gap: 16px;
 }
 
-.seeMore {
+/* ── Featured section ──────────────────────────────────────────────── */
+
+.featuredSection {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.featuredHeader {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.featuredSubtitle {
+	color: var(--color-foreground-light);
+	font-size: 11pt;
+	margin-top: 4px;
+}
+
+.browseBtn {
+	display: flex;
+	align-items: center;
+	gap: 4px;
 	color: var(--color-accent);
-	font-size: 12pt;
+	font-size: 11pt;
 	font-weight: 500;
-	text-decoration: none;
+	white-space: nowrap;
+	flex-shrink: 0;
+	transition: gap 150ms;
+}
+
+.browseBtn:hover {
+	gap: 8px;
+}
+
+.browseBtnIcon {
+	font-size: 14pt;
+}
+
+/* ── Featured grid ─────────────────────────────────────────────────── */
+
+.featuredGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 16px;
+}
+
+@media (min-width: 540px) {
+	.featuredGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 768px) {
+	.featuredGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1280px) {
+	.featuredGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.cardSkeleton {
+	border-radius: 0.75rem;
+	background-color: var(--color-third);
+	height: 340px;
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50%       { opacity: 0.5; }
+}
+
+/* ── CTA row ───────────────────────────────────────────────────────── */
+
+.ctaRow {
+	display: flex;
+	justify-content: center;
+	padding-top: 8px;
+}
+
+.ctaBtn {
+	padding: 14px 40px;
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	font-size: 12pt;
+	font-weight: 600;
+	border-radius: 0.75rem;
+	transition: filter 150ms, transform 100ms;
+}
+
+.ctaBtn:hover {
+	filter: brightness(1.1);
+	transform: scale(1.02);
 }

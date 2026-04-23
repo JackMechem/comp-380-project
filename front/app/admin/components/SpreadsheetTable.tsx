@@ -260,7 +260,92 @@ export default function SpreadsheetTable<T>({
         });
     };
 
-    const activeCols = columns.filter((c) => visibleCols.has(c.key));
+    // Column order (drag-to-reorder, persisted to localStorage)
+    const colOrderKey = `col-order:${title}`;
+    const [colOrder, setColOrder] = useState<string[]>(() => {
+        const defaultOrder = columns.map((c) => c.key);
+        try {
+            const saved = localStorage.getItem(colOrderKey);
+            if (saved) {
+                const parsed: string[] = JSON.parse(saved);
+                const kept = parsed.filter((k) => defaultOrder.includes(k));
+                const added = defaultOrder.filter((k) => !kept.includes(k));
+                return [...kept, ...added];
+            }
+        } catch {}
+        return defaultOrder;
+    });
+
+    useEffect(() => {
+        try { localStorage.setItem(colOrderKey, JSON.stringify(colOrder)); } catch {}
+    }, [colOrder, colOrderKey]);
+
+    useEffect(() => {
+        setColOrder((prev) => {
+            const newKeys = columns.map((c) => c.key);
+            const kept = prev.filter((k) => newKeys.includes(k));
+            const added = newKeys.filter((k) => !prev.includes(k));
+            return [...kept, ...added];
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [columns.map((c) => c.key).join(",")]);
+
+    const orderedColumns = colOrder
+        .map((k) => columns.find((c) => c.key === k))
+        .filter(Boolean) as Column<T>[];
+    const activeCols = orderedColumns.filter((c) => visibleCols.has(c.key));
+
+    // Column drag-to-reorder state
+    const [dragColIdx, setDragColIdx] = useState<number | null>(null);
+    const [dragOverColIdx, setDragOverColIdx] = useState<number | null>(null);
+    const dragColStateRef = useRef<{ fromIdx: number; overIdx: number | null }>({ fromIdx: -1, overIdx: null });
+
+    const handleColDragStart = (i: number, e: React.MouseEvent) => {
+        const startX = e.clientX;
+        const startY = e.clientY;
+        let started = false;
+        dragColStateRef.current = { fromIdx: i, overIdx: null };
+
+        const onMove = (ev: MouseEvent) => {
+            if (!started && Math.hypot(ev.clientX - startX, ev.clientY - startY) > 5) {
+                started = true;
+                setDragColIdx(i);
+            }
+        };
+
+        const onUp = () => {
+            if (started) {
+                const { fromIdx, overIdx } = dragColStateRef.current;
+                if (overIdx !== null && overIdx !== fromIdx) {
+                    setColOrder((prev) => {
+                        const visibleKeys = prev.filter((k) => visibleCols.has(k));
+                        const fromKey = visibleKeys[fromIdx];
+                        const toKey = visibleKeys[overIdx];
+                        if (!fromKey || !toKey) return prev;
+                        const next = [...prev];
+                        next.splice(next.indexOf(fromKey), 1);
+                        next.splice(next.indexOf(toKey), 0, fromKey);
+                        return next;
+                    });
+                }
+            }
+            started = false;
+            setDragColIdx(null);
+            setDragOverColIdx(null);
+            dragColStateRef.current = { fromIdx: -1, overIdx: null };
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+        };
+
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+    };
+
+    const handleColDragEnter = (i: number) => {
+        if (dragColIdx === null) return;
+        dragColStateRef.current.overIdx = i;
+        setDragOverColIdx(i);
+    };
 
     // Column widths (resizable)
     const [colWidths, setColWidths] = useState<Record<string, number>>({});
@@ -304,22 +389,42 @@ export default function SpreadsheetTable<T>({
         setStickyColWidth(stickyW);
         setColWidths(snap);
 
+        const isLastHandle = colIdx === activeCols.length - 2;
+
+        if (isLastHandle) {
+            // Special case: handle on the left of the last column.
+            // Drag left → last column grows from the left; drag right → shrinks.
+            // Nothing to the left changes. Scroll right to keep the right edge in place.
+            const lastCol = activeCols[activeCols.length - 1];
+            const lastStartW = snap[lastCol.key];
+            let prevW = lastStartW;
+
+            const onMove = (ev: MouseEvent) => {
+                const diff = ev.clientX - startX;
+                const lastW = Math.max(40, lastStartW - diff); // inverted
+                const delta = lastW - prevW;
+                prevW = lastW;
+                setColWidths((prev) => ({ ...prev, [lastCol.key]: lastW }));
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollLeft += delta;
+                }
+            };
+            const onUp = () => {
+                document.removeEventListener("mousemove", onMove);
+                document.removeEventListener("mouseup", onUp);
+            };
+            document.addEventListener("mousemove", onMove);
+            document.addEventListener("mouseup", onUp);
+            return;
+        }
+
         const leftKey = activeCols[colIdx].key;
-        const rightKey = activeCols[colIdx + 1]?.key;
         const leftStartW = snap[leftKey];
-        const rightStartW = rightKey ? snap[rightKey] : 0;
 
         const onMove = (ev: MouseEvent) => {
             const diff = ev.clientX - startX;
             const leftW = Math.max(40, leftStartW + diff);
-            const clampedDiff = leftW - leftStartW;
-            setColWidths((prev) => {
-                const next = { ...prev, [leftKey]: leftW };
-                if (rightKey) {
-                    next[rightKey] = Math.max(40, rightStartW - clampedDiff);
-                }
-                return next;
-            });
+            setColWidths((prev) => ({ ...prev, [leftKey]: leftW }));
         };
 
         const onUp = () => {
@@ -604,10 +709,16 @@ export default function SpreadsheetTable<T>({
                     <table
                         ref={tableRef}
                         className={styles.table}
-                        style={isFixed ? {
-                            tableLayout: "fixed",
-                            width: (stickyColWidth ?? 0) + Object.values(colWidths).reduce((a, b) => a + b, 0),
-                        } : undefined}
+                        style={isFixed ? (() => {
+                            const lastCol = activeCols[activeCols.length - 1];
+                            const lastColMin = lastCol
+                                ? (colWidths[lastCol.key] ?? lastCol.minWidth ?? 120)
+                                : 0;
+                            const minW = (stickyColWidth ?? 0)
+                                + activeCols.slice(0, -1).reduce((sum, col) => sum + (colWidths[col.key] ?? 0), 0)
+                                + lastColMin;
+                            return { tableLayout: "fixed", width: "100%", minWidth: minW };
+                        })() : undefined}
                     >
                         <thead>
                             <tr>
@@ -636,18 +747,23 @@ export default function SpreadsheetTable<T>({
                                     <th
                                         key={col.key}
                                         style={{
-                                            width: colWidths[col.key] || undefined,
+                                            width: i < activeCols.length - 1 ? (colWidths[col.key] || undefined) : undefined,
                                             minWidth: col.minWidth || undefined,
+                                            cursor: dragColIdx !== null ? "grabbing" : "grab",
+                                            opacity: dragColIdx === i ? 0.4 : 1,
+                                            borderLeft: dragOverColIdx === i && dragColIdx !== null && dragColIdx !== i
+                                                ? "2px solid var(--color-accent)"
+                                                : undefined,
                                         }}
+                                        onMouseDown={(e) => handleColDragStart(i, e)}
+                                        onMouseEnter={() => handleColDragEnter(i)}
                                         onContextMenu={(e) => handleContextMenu(e, col.key, null)}
                                     >
                                         {col.label}
-                                        {i < activeCols.length - 1 && (
-                                            <span
-                                                className={styles.resizeHandle}
-                                                onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(i, e); }}
-                                            />
-                                        )}
+                                        <span
+                                            className={styles.resizeHandle}
+                                            onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(i, e); }}
+                                        />
                                     </th>
                                 ))}
                             </tr>

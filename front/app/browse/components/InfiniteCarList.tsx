@@ -23,8 +23,6 @@ function toMs(t: number | string): number {
 }
 
 interface InfiniteCarListProps {
-	initialCars: Car[];
-	totalPages: number;
 	filterParams: CarApiParams;
 	layout?: "list" | "grid";
 	fromDate?: string;
@@ -41,10 +39,12 @@ function cartItemOverlapsBrowse(item: CartProps, fromDate: string, untilDate: st
 	return browseFrom < cartEnd && browseUntil > cartStart;
 }
 
-const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list", fromDate, untilDate }: InfiniteCarListProps) => {
-	const [cars, setCars] = useState<Car[]>(initialCars);
+const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }: InfiniteCarListProps) => {
+	const [cars, setCars] = useState<Car[]>([]);
+	const [carsLoading, setCarsLoading] = useState(true);
 	const [loading, setLoading] = useState(false);
-	const [hasMore, setHasMore] = useState(totalPages > 1);
+	const [hasMore, setHasMore] = useState(false);
+	const [datesReady, setDatesReady] = useState(false);
 	const availabilityFilter = filterParams.availabilityFilter;
 	const [isSmall] = useState(false);
 	const sentinelRef = useRef<HTMLDivElement>(null);
@@ -57,23 +57,47 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 	const { isAuthenticated, sessionToken, stripeUserId } = useUserDashboardStore();
 	const [userReservations, setUserReservations] = useState<UserReservation[]>([]);
 
+	// Fetch first page of cars client-side
 	useEffect(() => {
-		if (!isAuthenticated || !sessionToken || !stripeUserId) { setUserReservations([]); return; }
+		setCarsLoading(true);
+		setCars([]);
+		pageRef.current = 1;
+		setHasMore(false);
+
+		fetchCarsPage({ ...filterParams, page: 1 }).then((result) => {
+			setCars(result.data);
+			setHasMore(result.totalPages > 1);
+			setCarsLoading(false);
+		}).catch(() => {
+			setCarsLoading(false);
+		});
+	// Stringify to detect param changes without deep equality
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [JSON.stringify(filterParams)]);
+
+	useEffect(() => {
+		if (!isAuthenticated || !sessionToken || !stripeUserId) {
+			setUserReservations([]);
+			setDatesReady(true);
+			return;
+		}
 		fetch(`/api/reservations?userId=${stripeUserId}`)
 			.then((r) => r.json())
 			.then((data: { car?: { vin: string } | null; pickUpTime: number | string; dropOffTime: number | string }[]) => {
-				if (!Array.isArray(data)) return;
-				setUserReservations(
-					data
-						.filter((r) => r.car?.vin)
-						.map((r) => ({
-							vin: r.car!.vin,
-							pickUpMs: toMs(r.pickUpTime),
-							dropOffMs: toMs(r.dropOffTime),
-						}))
-				);
+				if (Array.isArray(data)) {
+					setUserReservations(
+						data
+							.filter((r) => r.car?.vin)
+							.map((r) => ({
+								vin: r.car!.vin,
+								pickUpMs: toMs(r.pickUpTime),
+								dropOffMs: toMs(r.dropOffTime),
+							}))
+					);
+				}
 			})
-			.catch(() => {/* non-critical */});
+			.catch(() => {/* non-critical */})
+			.finally(() => setDatesReady(true));
 	}, [isAuthenticated, sessionToken, stripeUserId]);
 
 	// Cart items (any car) whose rental dates overlap the current browse range
@@ -115,7 +139,7 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 			return [...prev, ...result.data.filter((c) => !seen.has(c.vin))];
 		});
 		pageRef.current = nextPage;
-		setHasMore(nextPage < totalPages);
+		setHasMore(nextPage < result.totalPages);
 		loadingRef.current = false;
 		setLoading(false);
 	};
@@ -149,6 +173,29 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 
 	const isList = layout === "list" && !isSmall;
 
+	if (carsLoading) {
+		return (
+			<div className={isList ? styles.listGrid : styles.carGrid}>
+				{isList ? (
+					<>
+						<CarListCardSkeleton />
+						<CarListCardSkeleton />
+						<CarListCardSkeleton />
+					</>
+				) : (
+					<>
+						<CarGridCardSkeleton />
+						<CarGridCardSkeleton />
+						<CarGridCardSkeleton />
+						<CarGridCardSkeleton />
+						<CarGridCardSkeleton />
+						<CarGridCardSkeleton />
+					</>
+				)}
+			</div>
+		);
+	}
+
 	return (
 		<>
 			<div className={isList ? styles.listGrid : styles.carGrid}>
@@ -160,6 +207,7 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 							fromDate={fromDate}
 							untilDate={untilDate}
 							cartInfo={getCartInfo(car)}
+							datesReady={datesReady}
 						/>
 					) : (
 						<CarGridCard
@@ -168,6 +216,7 @@ const InfiniteCarList = ({ initialCars, totalPages, filterParams, layout = "list
 							fromDate={fromDate}
 							untilDate={untilDate}
 							cartInfo={getCartInfo(car)}
+							datesReady={datesReady}
 						/>
 					)
 				)}

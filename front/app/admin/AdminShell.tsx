@@ -87,7 +87,30 @@ export default function AdminShell() {
                     boxSizing: "border-box",
                     display: "flex",
                     flexDirection: "column" as const,
+                    gap: 8,
                 }}>
+                    {role === "ADMIN" && (
+                        <div style={{
+                            flexShrink: 0,
+                            padding: "11px 16px",
+                            background: "rgba(239, 68, 68, 0.1)",
+                            border: "1.5px solid rgba(239, 68, 68, 0.65)",
+                            borderRadius: 10,
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 10,
+                        }}>
+                            <span style={{ fontSize: 16, lineHeight: 1.4, flexShrink: 0 }}>⚠️</span>
+                            <div>
+                                <p style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.07em", color: "#ef4444", marginBottom: 2 }}>
+                                    WARNING — ADMINISTRATOR ACCESS
+                                </p>
+                                <p style={{ fontSize: "11.5px", color: "#ef4444", lineHeight: 1.55, opacity: 0.9 }}>
+                                    You have <strong>full, unrestricted access</strong> to the live database. Any changes are <strong>permanent and immediate</strong>. Do <strong>NOT</strong> modify or delete data unless you are absolutely certain of what you are doing.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <div style={{
                         backgroundColor: "var(--color-primary)",
                         borderRadius: "16px",

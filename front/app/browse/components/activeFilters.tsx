@@ -45,6 +45,18 @@ const SKIP = new Set([
 	"availabilityFilter",
 ]);
 
+const formatValue = (value: string | string[] | number | undefined): string => {
+	if (Array.isArray(value)) {
+		if (value.length === 1) return value[0].toLowerCase().replace(/_/g, " ");
+		return `${value.length} selected`;
+	}
+	const str = value?.toString() ?? "";
+	// comma-separated multi values stored as string
+	const parts = str.split(",");
+	if (parts.length === 1) return str.toLowerCase().replace(/_/g, " ");
+	return `${parts.length} selected`;
+};
+
 const ActiveFilters = ({ className }: { className?: string }) => {
 	const { params, remove } = useFilterParams();
 
@@ -61,7 +73,7 @@ const ActiveFilters = ({ className }: { className?: string }) => {
 					className={styles.activeFilterChip}
 				>
 					<span className={styles.activeFilterKey}>{LABELS[key] ?? key.toLowerCase()}:</span>
-					<span>{value.toString().toLowerCase()}</span>
+					<span>{formatValue(value as string | string[] | number | undefined)}</span>
 					<span className={styles.activeFilterX}>✕</span>
 				</button>
 			))}

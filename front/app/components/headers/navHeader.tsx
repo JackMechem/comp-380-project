@@ -16,7 +16,9 @@ import { useSearchSuggestions } from "@/app/hooks/useSearchSuggestions";
 import type { Suggestion } from "@/app/hooks/useSearchSuggestions";
 import { saveDates, getStoredDates } from "@/app/lib/browseStorage";
 import { useCartStore } from "@/stores/cartStore";
+import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import styles from "./navHeader.module.css";
+
 
 const COMPACT_SCROLL_THRESHOLD = 100;
 const COMPACT_SCROLL_HYSTERESIS = 60;
@@ -59,6 +61,8 @@ const NavHeader = ({
 		const day = String(d.getDate()).padStart(2, "0");
 		return `${y}-${m}-${day}`;
 	};
+
+	const { role } = useUserDashboardStore();
 
 	const cartItems = useCartStore((s) => s.carData);
 	const cartDateRanges = cartItems
@@ -156,6 +160,10 @@ const NavHeader = ({
 		COMPACT_SCROLL_HYSTERESIS,
 	);
 	const isWhite = white && isExpanded;
+	const isElevated = !isWhite && (role === "ADMIN" || role === "STAFF");
+	const elevatedClass = isElevated
+		? role === "ADMIN" ? styles.headerAdmin : styles.headerStaff
+		: "";
 
 	const { suggestions, loadingSuggestions } = useSearchSuggestions(searchText);
 
@@ -231,7 +239,7 @@ const NavHeader = ({
 
 	return (
 		<div
-			className={`${styles.header} ${isWhite ? styles.headerWhite : styles.headerCompact}`}
+			className={`${styles.header} ${isWhite ? styles.headerWhite : styles.headerCompact} ${elevatedClass}`}
 		>
 			{/* ── Main header row ── */}
 			<div

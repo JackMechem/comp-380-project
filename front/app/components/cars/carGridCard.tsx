@@ -1,13 +1,23 @@
 import { Car } from "@/app/types/CarTypes";
 import { CartCardInfo } from "@/app/types/CartTypes";
-import Image from "next/image";
 import Link from "next/link";
+import CarImageFill from "./CarImageFill";
 import { BiCar } from "react-icons/bi";
 import { GiCarSeat } from "react-icons/gi";
 import { PiEngine } from "react-icons/pi";
+import { BsFuelPump } from "react-icons/bs";
+import { formatEnum } from "@/app/lib/formatEnum";
 import { getAvailability } from "@/app/lib/availability";
 import BookmarkButton from "@/app/components/buttons/bookmarkButton";
+import CarRatingBadge from "@/app/components/reviews/CarRatingBadge";
 import styles from "./carGridCard.module.css";
+
+const Stat = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
+	<div className={styles.stat}>
+		<span className={styles.statIcon}>{icon}</span>
+		<p className={styles.statLabel}>{label}</p>
+	</div>
+);
 
 const fmtDate = (iso: string) =>
 	new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -17,84 +27,49 @@ const CarGridCard = ({
 	fromDate,
 	untilDate,
 	cartInfo,
+	datesReady = true,
 }: {
 	car: Car;
 	fromDate?: string;
 	untilDate?: string;
 	cartInfo?: CartCardInfo;
+	datesReady?: boolean;
 }) => {
+	const engineLabel =
+		car.engineLayout === "DUAL_MOTOR" || car.engineLayout === "SINGLE_MOTOR"
+			? formatEnum(car.engineLayout)
+			: `${formatEnum(car.engineLayout)} ${car.cylinders}`;
+
 	const { status } = getAvailability(car, fromDate, untilDate);
-	const { cartItem, cartConflicts, userReserved } = cartInfo ?? {};
-	const hasCartConflict = !cartItem && !!cartConflicts?.length;
+	const { cartItem, userReserved } = cartInfo ?? {};
 
 	return (
 		<Link href={`/car/${car.vin}`} className={styles.card}>
 			<div className={styles.imageWrapper}>
-				<BookmarkButton car={{ vin: car.vin, make: car.make, model: car.model, pricePerDay: car.pricePerDay, image: car.images[0] }} />
-				<Image
-					width={400}
-					height={250}
-					alt={`${car.make} ${car.model}`}
+				<CarImageFill
 					src={car.images[0]}
+					alt={`${car.make} ${car.model}`}
 					className={styles.image}
-					loading="lazy"
+					sizes="(min-width: 768px) 25vw, 50vw"
 				/>
 			</div>
 			<div className={styles.body}>
-				<div className={styles.titleGroup}>
-					<h2 className={styles.carName}>
-						{car.make} {car.model}
-					</h2>
-					<p className={styles.carYear}>{car.modelYear}</p>
-				</div>
-				<div className={styles.stats}>
-					<div className={styles.stat}>
-						<BiCar />
-						<p className={styles.statCapitalize}>{car.vehicleClass}</p>
+				<div>
+					<div className={styles.titleRow}>
+						<h2 className={styles.carModel}>{car.model}</h2>
+						<div className={styles.titleRight}>
+							<h2 className={styles.carMake}>{car.make}</h2>
+							<BookmarkButton car={{ vin: car.vin, make: car.make, model: car.model, pricePerDay: car.pricePerDay, image: car.images[0] }} variant="inline" />
+						</div>
 					</div>
-					<div className={styles.stat}>
-						<GiCarSeat />
-						<p>{car.seats} seats</p>
-					</div>
-					<div className={styles.stat}>
-						<PiEngine />
-						<p className={styles.statCapitalize}>
-							{car.engineLayout === "DUAL_MOTOR" || car.engineLayout === "SINGLE_MOTOR"
-								? car.engineLayout
-								: `${car.engineLayout} ${car.cylinders}`}
-						</p>
-					</div>
-				</div>
-
-				{cartItem?.startDate && cartItem?.endDate && (
-					<p className={styles.inCartDates}>
-						Cart: {fmtDate(cartItem.startDate)} – {fmtDate(cartItem.endDate)}
-					</p>
-				)}
-				{hasCartConflict && cartConflicts!.map((c) => (
-					<p key={c.vin} className={styles.cartConflictDates}>
-						{c.make} {c.model}
-						{c.startDate && c.endDate ? `: ${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}` : " in cart"}
-					</p>
-				))}
-
-				<div className={styles.priceRow}>
-					<h2 className={styles.price}>
-						${car.pricePerDay}
-						<span className={styles.priceUnit}>/day</span>
-					</h2>
-					<div className={styles.badgeGroup}>
-						{cartItem && <span className={styles.badgeInCart}>In Cart</span>}
-						{userReserved && <span className={styles.badgeUserReserved}>Your Reservation</span>}
-						{hasCartConflict ? (
-							<span
-								className={styles.badgeCartConflict}
-								data-tooltip="You can't reserve more than one car at a time"
-							>
-								Cart Conflict
-							</span>
+					<div className={styles.yearAvailabilityRow}>
+						<p className={styles.carYear}>{car.modelYear}</p>
+						{!datesReady ? (
+							<div className={styles.badgeSkeleton} />
 						) : (
 							<>
+								{cartItem && <span className={styles.badgeInCart}>In Cart</span>}
+								{userReserved && <span className={styles.badgeUserReserved}>Your Reservation</span>}
 								{status === "available" && (
 									<span className={styles.badgeAvailable}>Available</span>
 								)}
@@ -106,6 +81,39 @@ const CarGridCard = ({
 								)}
 							</>
 						)}
+					</div>
+
+					{datesReady && cartItem?.startDate && cartItem?.endDate && (
+						<p className={styles.inCartDates}>
+							Cart: {fmtDate(cartItem.startDate)} – {fmtDate(cartItem.endDate)}
+						</p>
+					)}
+
+					<CarRatingBadge vin={car.vin} />
+
+					{car.features?.length > 0 && (
+						<div className={styles.features}>
+							{car.features.slice(0, 4).map((f) => (
+								<span key={f} className={styles.featureTag}>{f}</span>
+							))}
+						</div>
+					)}
+				</div>
+
+				<div className={styles.bottomRow}>
+					<div className={styles.statsGrid}>
+						<Stat icon={<BiCar />} label={formatEnum(car.vehicleClass)} />
+						<Stat icon={<GiCarSeat />} label={`${car.seats} seats`} />
+						<Stat icon={<PiEngine />} label={engineLabel} />
+						<Stat icon={<BsFuelPump />} label={formatEnum(car.fuel)} />
+					</div>
+
+					<div className={styles.priceGroup}>
+						<h2 className={styles.price}>
+							${car.pricePerDay}
+							<span className={styles.priceUnit}>/day</span>
+						</h2>
+						<p className={styles.priceNote}>Before taxes</p>
 					</div>
 				</div>
 			</div>

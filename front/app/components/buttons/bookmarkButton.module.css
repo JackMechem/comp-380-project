@@ -20,6 +20,26 @@
     background-color: color-mix(in srgb, var(--color-primary) 95%, transparent);
 }
 
+/* Inline variant — used in list card body instead of overlaid on image */
+.btnInline {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: var(--color-primary-dark);
+    cursor: pointer;
+    transition: transform 150ms, background-color 150ms;
+    flex-shrink: 0;
+}
+
+.btnInline:hover {
+    transform: scale(1.1);
+    background-color: var(--color-third);
+}
+
 .outline {
     font-size: 14pt;
     color: var(--color-foreground-light);

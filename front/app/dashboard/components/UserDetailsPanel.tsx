@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { BiUser, BiPhone, BiMap, BiIdCard, BiEnvelope } from "react-icons/bi";
 import styles from "./panels.module.css";
@@ -42,17 +42,59 @@ function mapUserToForm(user: Record<string, any>): UserForm {
     };
 }
 
-interface Props {
-    initialUser?: Record<string, unknown> | null;
+// ── Skeleton ───────────────────────────────────────────────────────────────────
+
+function UserDetailsSkeleton() {
+    return (
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+                <div className={`${styles.skeleton} ${styles.skeletonSubtitle}`} style={{ marginTop: 6 }} />
+            </div>
+            <div className={styles.form}>
+                {[1, 3, 2, 2].map((fields, si) => (
+                    <div key={si} className={styles.skeletonFormSection}>
+                        <div className={`${styles.skeleton} ${styles.skeletonLine}`} style={{ width: 120 }} />
+                        <div className={fields === 1 ? undefined : styles.skeletonGrid2}>
+                            {Array.from({ length: fields }, (_, fi) => (
+                                <div key={fi} className={styles.fieldGroup}>
+                                    <div className={`${styles.skeleton} ${styles.skeletonLine}`} style={{ width: 80 }} />
+                                    <div className={`${styles.skeleton} ${styles.skeletonInput}`} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+                <div className={`${styles.skeleton}`} style={{ height: 40, width: 130, borderRadius: 8 }} />
+            </div>
+        </div>
+    );
 }
 
-export default function UserDetailsPanel({ initialUser }: Props) {
-    const { stripeUserId } = useUserDashboardStore();
-    const [form, setForm] = useState<UserForm>(initialUser ? mapUserToForm(initialUser) : defaultForm);
-    const [email, setEmail] = useState(initialUser ? String(initialUser.email ?? "") : "");
+// ── Panel ──────────────────────────────────────────────────────────────────────
+
+export default function UserDetailsPanel() {
+    const { stripeUserId, userEmail } = useUserDashboardStore();
+    const [loading, setLoading] = useState(true);
+    const [form, setForm] = useState<UserForm>(defaultForm);
+    const [email, setEmail] = useState(userEmail ?? "");
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+
+    useEffect(() => {
+        if (!stripeUserId) return;
+        fetch(`/api/users/${stripeUserId}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((user) => {
+                if (user) {
+                    setForm(mapUserToForm(user));
+                    if (user.email) setEmail(user.email);
+                }
+                setLoading(false);
+            })
+            .catch(() => setLoading(false));
+    }, [stripeUserId]);
 
     const set = (key: keyof UserForm) => (e: React.ChangeEvent<HTMLInputElement>) =>
         setForm((prev) => ({ ...prev, [key]: e.target.value }));
@@ -62,7 +104,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
         setSaving(true);
         setError(null);
         setSuccess(false);
-
         try {
             const res = await fetch(`/api/users/${stripeUserId}`, {
                 method: "PATCH",
@@ -87,7 +128,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
                     },
                 }),
             });
-
             if (res.status >= 400) throw new Error((await res.json()).error ?? "Failed to update user.");
             setSuccess(true);
         } catch (err) {
@@ -97,6 +137,8 @@ export default function UserDetailsPanel({ initialUser }: Props) {
         }
     };
 
+    if (loading) return <UserDetailsSkeleton />;
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -105,7 +147,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
             </div>
 
             <form onSubmit={handleSubmit} className={styles.form}>
-                {/* Email (read-only identifier) */}
                 <div className={styles.formSection}>
                     <p className={styles.sectionTitle}><BiEnvelope className={styles.sectionIcon} /> Account</p>
                     <div className={styles.fieldGroup}>
@@ -114,7 +155,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
                     </div>
                 </div>
 
-                {/* Personal info */}
                 <div className={styles.formSection}>
                     <p className={styles.sectionTitle}><BiUser className={styles.sectionIcon} /> Personal Info</p>
                     <div className={styles.grid2}>
@@ -133,7 +173,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
                     </div>
                 </div>
 
-                {/* Address */}
                 <div className={styles.formSection}>
                     <p className={styles.sectionTitle}><BiMap className={styles.sectionIcon} /> Address</p>
                     <div className={styles.grid2}>
@@ -162,7 +201,6 @@ export default function UserDetailsPanel({ initialUser }: Props) {
                     </div>
                 </div>
 
-                {/* Driver's License */}
                 <div className={styles.formSection}>
                     <p className={styles.sectionTitle}><BiIdCard className={styles.sectionIcon} /> Driver&apos;s License</p>
                     <div className={styles.grid2}>

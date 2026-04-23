@@ -5,6 +5,7 @@
  */
 
 import { getApiKeyHeader } from "./serverAuth";
+import type { Review } from "@/app/types/ReviewTypes";
 
 const base = () => process.env.API_BASE_URL;
 
@@ -112,6 +113,22 @@ export async function fetchCarByVin(
         return res.ok ? await res.json() : null;
     } catch {
         return null;
+    }
+}
+
+export async function fetchReviewsForCar(vin: string): Promise<Review[]> {
+    const url = `${base()}/reviews?car=${encodeURIComponent(vin)}&objects-per-page=100`;
+    try {
+        const res = await fetch(url, {
+            headers: buildHeaders(),
+            cache: "no-store",
+            signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data?.data) ? (data.data as Review[]) : [];
+    } catch {
+        return [];
     }
 }
 

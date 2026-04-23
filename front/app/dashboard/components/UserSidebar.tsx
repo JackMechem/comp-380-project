@@ -266,8 +266,18 @@ const DesktopSidebar = () => {
                     )}
                     </div>
 
+                    {/* Admin warning */}
+                    {role === "ADMIN" && (
+                        <div className={styles.adminWarning}>
+                            <p className={styles.adminWarningTitle}>⚠ Administrator</p>
+                            <p className={styles.adminWarningBody}>
+                                You have full permissions to <strong>view, mutate, or delete any data</strong> in the database. Changes are <strong>permanent</strong>. Do <strong>NOT</strong> touch anything you are not certain about.
+                            </p>
+                        </div>
+                    )}
+
                     {/* Sign out */}
-                    <div style={{ padding: "0 10px 12px", marginTop: "auto" }}>
+                    <div style={{ padding: "0 10px 12px", marginTop: role === "ADMIN" ? 0 : "auto" }}>
                         <div className={styles.navDivider} style={{ marginBottom: 8 }} />
                         <button onClick={handleSignOut} className={styles.dashBtn}>
                             <BiLogOut className={styles.dashBtnIcon} />

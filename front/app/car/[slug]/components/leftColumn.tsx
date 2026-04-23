@@ -1,4 +1,5 @@
 import { Car } from "@/app/types/CarTypes";
+import { Review } from "@/app/types/ReviewTypes";
 import Markdown from "react-markdown";
 import { formatEnum } from "@/app/lib/formatEnum";
 import { BiCar } from "react-icons/bi";
@@ -9,9 +10,14 @@ import { TbArrowAutofitDown, TbManualGearbox, TbWheel } from "react-icons/tb";
 import { MdRoofing } from "react-icons/md";
 import Spec from "./Spec";
 import SpecGroup from "./SpecGroup";
+import StarRating from "@/app/components/reviews/StarRating";
 import styles from "./carDetail.module.css";
+import reviewStyles from "@/app/components/reviews/reviews.module.css";
 
-const LeftColumn = ({ carData }: { carData: Car }) => {
+const fmtDate = (iso: string) =>
+	new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+const LeftColumn = ({ carData, reviews = [] }: { carData: Car; reviews?: Review[] }) => {
 	const engineLabel =
 		carData.engineLayout === "DUAL_MOTOR" || carData.engineLayout === "SINGLE_MOTOR"
 			? formatEnum(carData.engineLayout)
@@ -76,6 +82,49 @@ const LeftColumn = ({ carData }: { carData: Car }) => {
 					</div>
 				</div>
 			)}
+
+			{/* Reviews */}
+			<div className={reviewStyles.reviewsSection}>
+				<p className={reviewStyles.reviewsSectionTitle}>
+					Reviews
+					{reviews.length > 0 && (
+						<StarRating
+							average={reviews.reduce((s, r) => s + r.stars, 0) / reviews.length}
+							count={reviews.length}
+							size="sm"
+						/>
+					)}
+				</p>
+				{reviews.length === 0 ? (
+					<p className={reviewStyles.reviewsEmpty}>No reviews yet for this vehicle.</p>
+				) : (
+					<div className={reviewStyles.reviewsList}>
+						{reviews.map((r) => {
+							const authorName =
+								typeof r.account === "object" && r.account !== null
+									? (r.account as { name?: string }).name ?? "Anonymous"
+									: "Anonymous";
+							return (
+								<div key={r.reviewId} className={reviewStyles.reviewCard}>
+									<div className={reviewStyles.reviewHeader}>
+										<div className={reviewStyles.reviewTitleStars}>
+											<StarRating average={r.stars} size="sm" />
+											<p className={reviewStyles.reviewTitle}>{r.title}</p>
+										</div>
+										<span className={reviewStyles.reviewMeta}>{fmtDate(r.publishedDate)}</span>
+									</div>
+									{r.bodyOfText && (
+										<p className={reviewStyles.reviewBody}>{r.bodyOfText}</p>
+									)}
+									<p className={reviewStyles.reviewDuration}>
+										{authorName} · {r.rentalDuration} day rental
+									</p>
+								</div>
+							);
+						})}
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

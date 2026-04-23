@@ -4,6 +4,7 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useBookmarkStore } from "@/stores/bookmarkStore";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { BsBookmark } from "react-icons/bs";
+import { BiError, BiUser } from "react-icons/bi";
 import CartButton from "./cartButton";
 import DefaultProfilePhoto from "../defaultProfilePhoto";
 import styles from "./headerMenuButton.module.css";
@@ -11,7 +12,7 @@ import styles from "./headerMenuButton.module.css";
 const HeaderMenuButton = () => {
     const { toggleMenu } = useSidebarStore();
     const bookmarkCount = useBookmarkStore((s) => s.bookmarks.length);
-    const isAuthenticated = useUserDashboardStore((s) => s.isAuthenticated);
+    const { isAuthenticated, role } = useUserDashboardStore();
 
     return (
         <div className={styles.button} onClick={toggleMenu}>
@@ -24,7 +25,19 @@ const HeaderMenuButton = () => {
                     )}
                 </div>
             )}
-            <DefaultProfilePhoto totalHeight={30} headSize={10} />
+            {role === "ADMIN" ? (
+                <div className={styles.rolePill} style={{ background: "#ef4444" }}>
+                    <BiError style={{ fontSize: 14, color: "#fff" }} />
+                    <span className={styles.rolePillText}>Admin</span>
+                </div>
+            ) : role === "STAFF" ? (
+                <div className={styles.rolePill} style={{ background: "#3b82f6" }}>
+                    <BiUser style={{ fontSize: 14, color: "#fff" }} />
+                    <span className={styles.rolePillText}>Staff</span>
+                </div>
+            ) : (
+                <DefaultProfilePhoto totalHeight={30} headSize={10} />
+            )}
         </div>
     );
 };

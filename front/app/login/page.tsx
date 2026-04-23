@@ -80,6 +80,12 @@ function LoginInner() {
         <div className={styles.card}>
             <h1 className={`page-title ${styles.title}`}>Sign In</h1>
 
+            {reason === "inactivity" && (
+                <p className={styles.reasonNote} style={{ borderColor: "rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.06)", color: "#ef4444" }}>
+                    You were signed out due to 5 minutes of inactivity.
+                </p>
+            )}
+
             {reason === "account_exists" && (
                 <p className={styles.reasonNote}>
                     A full account exists for this email. Sign in below to continue your checkout.

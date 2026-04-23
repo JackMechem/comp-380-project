@@ -5,7 +5,7 @@ import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import styles from "./bookmarkButton.module.css";
 
-const BookmarkButton = ({ car }: { car: BookmarkCar }) => {
+const BookmarkButton = ({ car, variant = "overlay" }: { car: BookmarkCar; variant?: "overlay" | "inline" }) => {
     const bookmarked = useBookmarkStore((s) => s.isBookmarked(car.vin));
     const { accountId, isAuthenticated } = useUserDashboardStore();
 
@@ -18,7 +18,7 @@ const BookmarkButton = ({ car }: { car: BookmarkCar }) => {
     };
 
     return (
-        <button onClick={handleClick} className={styles.btn} title={bookmarked ? "Remove bookmark" : "Bookmark"}>
+        <button onClick={handleClick} className={variant === "inline" ? styles.btnInline : styles.btn} title={bookmarked ? "Remove bookmark" : "Bookmark"}>
             {bookmarked ? <BsBookmarkFill className={styles.filled} /> : <BsBookmark className={styles.outline} />}
         </button>
     );

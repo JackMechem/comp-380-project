@@ -1,7 +1,6 @@
 import { Suspense } from "react";
-import { getAllMakes, getFilteredCars } from "../lib/CarApi";
+import { getAllMakes } from "../lib/CarApi";
 import { getAllEnums } from "../lib/EnumApi";
-import { CarPages } from "../types/CarTypes";
 import { CarApiParams } from "../types/CarTypes";
 import { CarEnums } from "../types/CarEnums";
 import NavHeader from "../components/headers/navHeader";
@@ -10,10 +9,9 @@ import SortButtons from "./components/sortButtons";
 import ActiveFilters from "./components/activeFilters";
 import InfiniteCarList from "./components/InfiniteCarList";
 import LayoutToggle from "./components/layoutToggle";
-import CarListSkeleton from "../components/skeletons/CarListSkeleton";
-import CarGridSkeleton from "../components/skeletons/CarGridSkeleton";
 import BrowseContentWrapper from "./components/BrowseContentWrapper";
 import BrowseParamsSync from "./components/BrowseParamsSync";
+import PageFooter from "../components/footer/PageFooter";
 import styles from "./components/browseContent.module.css";
 
 type Params = { [key: string]: string | string[] | undefined };
@@ -23,15 +21,25 @@ const str = (val: string | string[] | undefined): string | undefined =>
 const num = (val: string | string[] | undefined): number | undefined =>
 	str(val) ? Number(str(val)) : undefined;
 
-// --- Async data components ---
+const FilterButtonWithEnums = async () => {
+	const [enums, makes]: [CarEnums, string[]] = await Promise.all([getAllEnums(), getAllMakes()]);
+	return <FilterButton enums={enums} makes={makes} />;
+};
 
-const CarResults = async ({
-	p,
-	layout,
+const FilterButtonSkeleton = () => (
+	<div className={styles.filterBtnSkeleton} />
+);
+
+// --- Page ---
+
+const BrowsePage = async ({
+	searchParams,
 }: {
-	p: Params;
-	layout: "list" | "grid";
+	searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
+	const p = (await searchParams) ?? {};
+	const layout = p.layout === "grid" ? "grid" : "list";
+
 	const filterParams: CarApiParams = {
 		page: 1,
 		pageSize: num(p.pageSize),
@@ -67,40 +75,6 @@ const CarResults = async ({
 		availabilityFilter: str(p.availabilityFilter),
 	};
 
-	const carsPages: CarPages = await getFilteredCars(filterParams);
-
-	return (
-		<InfiniteCarList
-			initialCars={carsPages.data}
-			totalPages={carsPages.totalPages}
-			filterParams={filterParams}
-			layout={layout}
-			fromDate={str(p.fromDate)}
-			untilDate={str(p.untilDate)}
-		/>
-	);
-};
-
-const FilterButtonWithEnums = async () => {
-	const [enums, makes]: [CarEnums, string[]] = await Promise.all([getAllEnums(), getAllMakes()]);
-	return <FilterButton enums={enums} makes={makes} />;
-};
-
-const FilterButtonSkeleton = () => (
-	<div className={styles.filterBtnSkeleton} />
-);
-
-// --- Page ---
-
-const BrowsePage = async ({
-	searchParams,
-}: {
-	searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}) => {
-	const p = (await searchParams) ?? {};
-	const layout = p.layout === "grid" ? "grid" : "list";
-	const paramsKey = JSON.stringify(p);
-
 	return (
 		<div className={styles.page}>
 			<Suspense>
@@ -132,15 +106,14 @@ const BrowsePage = async ({
 						</Suspense>
 					</div>
 				</div>
-				<Suspense
-					key={paramsKey}
-					fallback={
-						layout === "grid" ? <CarGridSkeleton /> : <CarListSkeleton />
-					}
-				>
-					<CarResults p={p} layout={layout} />
-				</Suspense>
+				<InfiniteCarList
+					filterParams={filterParams}
+					layout={layout}
+					fromDate={str(p.fromDate)}
+					untilDate={str(p.untilDate)}
+				/>
 			</BrowseContentWrapper>
+			<PageFooter />
 		</div>
 	);
 };

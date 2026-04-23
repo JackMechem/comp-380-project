@@ -9,10 +9,16 @@
 .headerCompact {
 	background-color: var(--color-primary);
 	backdrop-filter: blur(12px);
-	border-bottom: 1px solid color-mix(in srgb, var(--color-third) 30%, transparent);
-	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 	height: auto;
+}
 
+.headerAdmin {
+	background-color: var(--color-primary);
+}
+
+.headerStaff {
+	background-color: #1d4ed8;
+	border-bottom: none;
 }
 
 .headerWhite {
