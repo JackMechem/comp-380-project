@@ -16,8 +16,13 @@ const defaultNext = {
 
 export const getFilteredCars = async (p: CarApiParams): Promise<CarPages> => {
 	const params = new URLSearchParams();
-	const set = (key: string, val: string | number | undefined) => {
-		if (val != null) params.set(key, String(val));
+	const set = (key: string, val: string | number | string[] | undefined) => {
+		if (val == null) return;
+		if (Array.isArray(val)) {
+			if (val.length > 0) params.set(key, val.join(","));
+		} else {
+			params.set(key, String(val));
+		}
 	};
 
 	set("page", p.page);

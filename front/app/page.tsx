@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import PaymentSuccessDialog from "./components/dialogs/PaymentSuccessDialog";
-import CarScroll from "./components/scrolls/carScroll";
 import TitleText from "./components/text/titleText";
 import { getFilteredCars } from "./lib/CarApi";
 import { Car, CarPages } from "./types/CarTypes";
@@ -9,8 +8,8 @@ import NavHeader from "./components/headers/navHeader";
 import LandingHero from "./components/heros/landingHero";
 import CarBrandCard from "./components/cards/carBrandCard";
 import BrandScroll from "./components/scrolls/brandScroll";
-import CarScrollSkeleton from "./components/skeletons/CarScrollSkeleton";
 import BrandScrollSkeleton from "./components/skeletons/BrandScrollSkeleton";
+import CarGridCard from "./components/cars/carGridCard";
 import BmwLogo from "./media/carBrandLogos/bmw.svg";
 import BmwCarImage from "./media/transparentCarImages/bmw.png";
 import MercedesLogo from "./media/carBrandLogos/mercedes.svg";
@@ -22,6 +21,8 @@ import AudiCarImage from "./media/transparentCarImages/audi.png";
 import VolkswagenLogo from "./media/carBrandLogos/volkswagen.svg";
 import VolkswagenCarImage from "./media/transparentCarImages/volkswagen.png";
 import Link from "next/link";
+import { BiArrowToRight } from "react-icons/bi";
+import PageFooter from "./components/footer/PageFooter";
 import styles from "./home.module.css";
 
 // --- Async data components ---
@@ -52,16 +53,31 @@ const BrandScrollSection = async () => {
 	);
 };
 
-const CheapCarsSection = async () => {
-	const carPagesDataCheap: CarPages = await getFilteredCars({
-		minPricePerDay: 0,
-		maxPricePerDay: 100,
+const FeaturedCarsSection = async () => {
+	const result: CarPages = await getFilteredCars({
+		pageSize: 8,
+		page: 1,
+		sortBy: "pricePerDay",
+		sortDir: "desc",
 	});
-	const carsDataCheap: Car[] = carPagesDataCheap.data;
-
-	if (carsDataCheap.length === 0) return null;
-	return <CarScroll cars={carsDataCheap} />;
+	const cars: Car[] = result.data;
+	if (cars.length === 0) return null;
+	return (
+		<div className={styles.featuredGrid}>
+			{cars.map((car) => (
+				<CarGridCard key={car.vin} car={car} datesReady={false} />
+			))}
+		</div>
+	);
 };
+
+const FeaturedCardsSkeleton = () => (
+	<div className={styles.featuredGrid}>
+		{Array.from({ length: 8 }).map((_, i) => (
+			<div key={i} className={styles.cardSkeleton} />
+		))}
+	</div>
+);
 
 // --- Page ---
 
@@ -74,23 +90,44 @@ const Home = () => {
 			<NavHeader />
 			<LandingHero />
 			<MainBodyContainer className={styles.mainContent}>
-				<Suspense fallback={<BrandScrollSkeleton />}>
-					<BrandScrollSection />
-				</Suspense>
-
-				<div>
-					<Link
-						href="/browse?minPricePerDay=0&maxPricePerDay=100"
-						className={styles.sectionHeader}
-					>
-						<TitleText>Cars Under $100/day</TitleText>
-						<p className={styles.seeMore}>See more {"->"}</p>
-					</Link>
-					<Suspense fallback={<CarScrollSkeleton />}>
-						<CheapCarsSection />
+				<div className={styles.brandSection}>
+					<div className={styles.featuredHeader}>
+						<div>
+							<TitleText>Featured Brands</TitleText>
+							<p className={styles.featuredSubtitle}>Browse by manufacturer</p>
+						</div>
+					</div>
+					<Suspense fallback={<BrandScrollSkeleton />}>
+						<BrandScrollSection />
 					</Suspense>
 				</div>
+
+				<div className={styles.featuredSection}>
+					<div className={styles.featuredHeader}>
+						<div>
+							<TitleText>Explore Our Fleet</TitleText>
+							<p className={styles.featuredSubtitle}>
+								Handpicked vehicles for every occasion
+							</p>
+						</div>
+						<Link href="/browse" className={styles.browseBtn}>
+							Browse all
+							<BiArrowToRight className={styles.browseBtnIcon} />
+						</Link>
+					</div>
+
+					<Suspense fallback={<FeaturedCardsSkeleton />}>
+						<FeaturedCarsSection />
+					</Suspense>
+
+					<div className={styles.ctaRow}>
+						<Link href="/browse" className={styles.ctaBtn}>
+							View full inventory
+						</Link>
+					</div>
+				</div>
 			</MainBodyContainer>
+			<PageFooter />
 		</>
 	);
 };

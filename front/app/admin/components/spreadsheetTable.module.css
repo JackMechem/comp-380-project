@@ -346,6 +346,36 @@
     opacity: 0.4;
 }
 
+.sortableColLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 3px;
+    padding: 1px 2px;
+    margin: -1px -2px;
+    transition: background-color 120ms;
+}
+
+.sortableColLabel:hover {
+    background-color: var(--color-third);
+}
+
+.sortIcon {
+    font-size: 12px;
+    flex-shrink: 0;
+    opacity: 1;
+}
+
+.sortIconHint {
+    opacity: 0.2;
+}
+
+.sortableColLabel:hover .sortIconHint {
+    opacity: 0.5;
+}
+
 .table tbody tr {
     border-bottom: 1px solid var(--color-third);
     transition: background-color 0.12s;
@@ -701,6 +731,125 @@ select.fieldInput {
 .wrappedCell .badge,
 .wrappedCell .statusBadge {
     white-space: nowrap;
+}
+
+/* ── Edit mode ──────────────────────────────────────────────────────────── */
+
+.topBarEditMode {
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-primary-dark));
+    border-bottom-color: color-mix(in srgb, var(--color-accent) 30%, var(--color-third));
+}
+
+.editModeBadge {
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+    border-radius: 4px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+}
+
+.editChangeCount {
+    font-size: 8.5pt;
+    color: var(--color-foreground-light);
+    padding: 0 6px;
+    flex-shrink: 0;
+}
+
+.editSaveBtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 9pt;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    color: #fff;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.editSaveBtn:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.editSaveBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.editCancelBtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    font-size: 9pt;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--color-third);
+    color: var(--color-foreground-light);
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.editCancelBtn:hover:not(:disabled) {
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.editCancelBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.editInput {
+    all: unset;
+    display: inline;
+    width: 100%;
+    cursor: text;
+    padding: 8px 0;
+    margin: -8px 0;
+}
+
+textarea.editInput {
+    all: unset;
+    display: block;
+    width: 100%;
+    cursor: text;
+    white-space: pre-wrap;
+    resize: none;
+    padding: 8px 0;
+    margin: -8px 0;
+}
+
+.cellSaving {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.editSelectWrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.editSelectOverlay {
+    position: absolute;
+    inset: -8px 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+}
+
+.editedCell {
+    background: color-mix(in srgb, var(--color-accent) 6%, transparent) !important;
 }
 
 /* Right-click context menu */

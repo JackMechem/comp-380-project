@@ -5,7 +5,7 @@ import { Reservation } from "@/app/types/ReservationTypes";
 import { updateReservation, deleteReservation } from "@/app/lib/AdminApiCalls";
 import { getAllReservations } from "@/app/lib/ReservationApi";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
-import SpreadsheetTable, { Column } from "./SpreadsheetTable";
+import SpreadsheetTable, { Column, RowEdit } from "./SpreadsheetTable";
 import styles from "./spreadsheetTable.module.css";
 import {
     BiSave,
@@ -47,10 +47,10 @@ const userId = (r: Reservation) =>
 const RES_COLUMNS: Column<Reservation>[] = [
     { key: "reservationId", label: "Res #",     defaultVisible: true,  render: (r) => <span className={styles.badge}>#{r.reservationId}</span> },
     { key: "car",           label: "Vehicle",   defaultVisible: true,  render: carLabel, minWidth: 140 },
-    { key: "carVin",        label: "Car VIN",   defaultVisible: false, render: (r) => carVin(r), minWidth: 170 },
-    { key: "userId",        label: "User ID",   defaultVisible: true,  render: (r) => userId(r) ?? "—" },
-    { key: "pickUpTime",    label: "Pick-up",   defaultVisible: true,  render: (r) => fmtTimestamp(r.pickUpTime) },
-    { key: "dropOffTime",   label: "Drop-off",  defaultVisible: true,  render: (r) => fmtTimestamp(r.dropOffTime) },
+    { key: "carVin",        label: "Car VIN",   defaultVisible: false, render: (r) => carVin(r), minWidth: 170, editable: true, editType: "text", getValue: (r) => carVin(r) },
+    { key: "userId",        label: "User ID",   defaultVisible: true,  render: (r) => userId(r) ?? "—", editable: true, editType: "number", getValue: (r) => userId(r) ?? 0 },
+    { key: "pickUpTime",    label: "Pick-up",   defaultVisible: true,  render: (r) => fmtTimestamp(r.pickUpTime),  editable: true, editType: "datetime-local", getValue: (r) => toDatetimeLocal(r.pickUpTime) },
+    { key: "dropOffTime",   label: "Drop-off",  defaultVisible: true,  render: (r) => fmtTimestamp(r.dropOffTime), editable: true, editType: "datetime-local", getValue: (r) => toDatetimeLocal(r.dropOffTime) },
     { key: "durationDays",  label: "Days",      defaultVisible: true,  render: (r) => `${r.durationDays}d ${r.durationHours % 24}h` },
     { key: "dateBooked",    label: "Booked",    defaultVisible: false, render: (r) => fmtTimestamp(r.dateBooked) },
     { key: "payments",      label: "Payments",  defaultVisible: false, render: (r) => Array.isArray(r.payments) ? r.payments.length : 0 },
@@ -152,11 +152,13 @@ const ReservationsPanel = () => {
     const [selected, setSelected] = useState<Set<string | number>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [editing, setEditing] = useState<Reservation | null>(null);
+    const [sortBy, setSortBy] = useState<string | null>(null);
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-    const fetchPage = useCallback(async (p: number, ps: number, isRefresh = false) => {
+    const fetchPage = useCallback(async (p: number, ps: number, sb: string | null, sd: "asc" | "desc", isRefresh = false) => {
         if (isRefresh) setRefreshing(true); else setLoading(true);
         try {
-            const res = await getAllReservations({ page: p, pageSize: ps });
+            const res = await getAllReservations({ page: p, pageSize: ps, sortBy: sb ?? undefined, sortDir: sd });
             setReservations(res.data);
             setTotalPages(res.totalPages);
             setTotalItems(res.totalItems);
@@ -168,11 +170,16 @@ const ReservationsPanel = () => {
         }
     }, []);
 
-    useEffect(() => { fetchPage(page, pageSize); }, [page, pageSize, fetchPage]);
+    useEffect(() => { fetchPage(page, pageSize, sortBy, sortDir); }, [page, pageSize, fetchPage]);
 
     const handlePageChange = (p: number) => { setPage(p); setSelected(new Set()); };
     const handlePageSizeChange = (ps: number) => { setPageSize(ps); setPage(1); setSelected(new Set()); };
-    const handleRefresh = () => fetchPage(page, pageSize, true);
+    const handleRefresh = () => fetchPage(page, pageSize, sortBy, sortDir, true);
+
+    const handleSortChange = (col: string, dir: "asc" | "desc") => {
+        setSortBy(col); setSortDir(dir); setPage(1);
+        fetchPage(1, pageSize, col, dir);
+    };
 
     const handleBulkDelete = async () => {
         const ids = [...selected] as number[];
@@ -183,7 +190,7 @@ const ReservationsPanel = () => {
         setBulkDeleting(false);
         if (failed.length) alert(`${failed.length} deletion(s) failed.`);
         setSelected(new Set(failed));
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const handleEdit = (res: Reservation) => setEditing(res);
@@ -192,17 +199,29 @@ const ReservationsPanel = () => {
         if (!window.confirm(`Delete reservation #${res.reservationId}? This cannot be undone.`)) return;
         try {
             await deleteReservation(res.reservationId);
-            fetchPage(page, pageSize, true);
+            fetchPage(page, pageSize, sortBy, sortDir, true);
         } catch (e) {
             alert("Delete failed: " + e);
         }
+    };
+
+    const handleSaveEdits = async (edits: RowEdit<Reservation>[]) => {
+        await Promise.all(edits.map(({ id, patch }) => {
+            const apiPatch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number } = {};
+            if (patch.pickUpTime !== undefined)  apiPatch.pickUpTime  = fromDatetimeLocal(String(patch.pickUpTime));
+            if (patch.dropOffTime !== undefined) apiPatch.dropOffTime = fromDatetimeLocal(String(patch.dropOffTime));
+            if (patch.carVin !== undefined)      apiPatch.car         = String(patch.carVin);
+            if (patch.userId !== undefined)      apiPatch.user        = Number(patch.userId);
+            return updateReservation(id as number, apiPatch);
+        }));
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const handleSaveEdit = async (patch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number }) => {
         if (!editing) return;
         await updateReservation(editing.reservationId, patch);
         setEditing(null);
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const filtered = query
@@ -241,6 +260,10 @@ const ReservationsPanel = () => {
                 onSearchChange={setQuery}
                 searchPlaceholder="Filter by vehicle, reservation ID or user ID\u2026"
                 emptyMessage="No reservations found."
+                onSaveEdits={handleSaveEdits}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSortChange={handleSortChange}
             />
             {editing && (
                 <EditForm

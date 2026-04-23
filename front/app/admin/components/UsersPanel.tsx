@@ -9,7 +9,7 @@ import {
     AccountRole,
 } from "@/app/lib/AdminApiCalls";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
-import SpreadsheetTable, { Column } from "./SpreadsheetTable";
+import SpreadsheetTable, { Column, RowEdit } from "./SpreadsheetTable";
 import styles from "./spreadsheetTable.module.css";
 import { BiSave, BiX, BiRefresh } from "react-icons/bi";
 
@@ -39,9 +39,9 @@ const RoleBadge = ({ role }: { role: AccountRole }) => {
 
 const ACCOUNT_COLUMNS: Column<Account>[] = [
     { key: "acctId",             label: "ID",             defaultVisible: true,  render: (a) => `#${a.acctId}` },
-    { key: "name",               label: "Name",           defaultVisible: true,  render: (a) => a.name, minWidth: 140 },
-    { key: "email",              label: "Email",          defaultVisible: true,  render: (a) => a.email, minWidth: 180 },
-    { key: "role",               label: "Role",           defaultVisible: true,  render: (a) => <RoleBadge role={a.role} /> },
+    { key: "name",               label: "Name",           defaultVisible: true,  render: (a) => a.name,  minWidth: 140, editable: true, editType: "text", getValue: (a) => a.name },
+    { key: "email",              label: "Email",          defaultVisible: true,  render: (a) => a.email, minWidth: 180, editable: true, editType: "text", getValue: (a) => a.email },
+    { key: "role",               label: "Role",           defaultVisible: true,  render: (a) => <RoleBadge role={a.role} />, editable: true, editType: "select", editOptions: ["CUSTOMER", "STAFF", "ADMIN"], getValue: (a) => a.role },
     { key: "dateCreated",        label: "Created",        defaultVisible: true,  render: (a) => fmtDate(a.dateCreated) },
     { key: "dateEmailConfirmed", label: "Email Confirmed",defaultVisible: false, render: (a) => fmtDate(a.dateEmailConfirmed) },
     { key: "user",               label: "Linked User",    defaultVisible: false, render: (a) => a.user != null ? `#${a.user}` : "—" },
@@ -129,11 +129,13 @@ const UsersPanel = () => {
     const [selected, setSelected] = useState<Set<string | number>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [editing, setEditing] = useState<Account | null>(null);
+    const [sortBy, setSortBy] = useState<string | null>(null);
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-    const fetchPage = useCallback(async (p: number, ps: number, isRefresh = false) => {
+    const fetchPage = useCallback(async (p: number, ps: number, sb: string | null, sd: "asc" | "desc", isRefresh = false) => {
         if (isRefresh) setRefreshing(true); else setLoading(true);
         try {
-            const res = await getAllAccounts({ page: p, pageSize: ps });
+            const res = await getAllAccounts({ page: p, pageSize: ps, sortBy: sb ?? undefined, sortDir: sd });
             setAccounts(res.data);
             setTotalPages(res.totalPages);
             setTotalItems(res.totalItems);
@@ -145,11 +147,16 @@ const UsersPanel = () => {
         }
     }, []);
 
-    useEffect(() => { fetchPage(page, pageSize); }, [page, pageSize, fetchPage]);
+    useEffect(() => { fetchPage(page, pageSize, sortBy, sortDir); }, [page, pageSize, fetchPage]);
 
     const handlePageChange = (p: number) => { setPage(p); setSelected(new Set()); };
     const handlePageSizeChange = (ps: number) => { setPageSize(ps); setPage(1); setSelected(new Set()); };
-    const handleRefresh = () => fetchPage(page, pageSize, true);
+    const handleRefresh = () => fetchPage(page, pageSize, sortBy, sortDir, true);
+
+    const handleSortChange = (col: string, dir: "asc" | "desc") => {
+        setSortBy(col); setSortDir(dir); setPage(1);
+        fetchPage(1, pageSize, col, dir);
+    };
 
     const handleBulkDelete = async () => {
         const ids = [...selected] as number[];
@@ -160,7 +167,7 @@ const UsersPanel = () => {
         setBulkDeleting(false);
         if (failed.length) alert(`${failed.length} deletion(s) failed.`);
         setSelected(new Set(failed));
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const handleEdit = (account: Account) => setEditing(account);
@@ -169,7 +176,7 @@ const UsersPanel = () => {
         if (!window.confirm(`Delete account #${account.acctId}? This cannot be undone.`)) return;
         try {
             await deleteAccount(account.acctId);
-            fetchPage(page, pageSize, true);
+            fetchPage(page, pageSize, sortBy, sortDir, true);
         } catch (e) {
             alert("Delete failed: " + e);
         }
@@ -179,7 +186,14 @@ const UsersPanel = () => {
         if (!editing) return;
         await updateAccount(editing.acctId, patch);
         setEditing(null);
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
+    };
+
+    const handleSaveEdits = async (edits: RowEdit<Account>[]) => {
+        await Promise.all(edits.map(({ id, patch }) =>
+            updateAccount(id as number, patch as Partial<Pick<Account, "name" | "email" | "role">>)
+        ));
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const filtered = query
@@ -216,6 +230,10 @@ const UsersPanel = () => {
                 onSearchChange={setQuery}
                 searchPlaceholder="Filter by name, email, ID or role\u2026"
                 emptyMessage="No accounts found."
+                onSaveEdits={handleSaveEdits}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSortChange={handleSortChange}
             />
             {editing && (
                 <EditForm

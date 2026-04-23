@@ -1,0 +1,349 @@
+/* ── StarRating ──────────────────────────────────────────────────────────────── */
+
+.starRow {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    line-height: 1;
+}
+
+.starRowMd {
+    gap: 2px;
+}
+
+.star {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+}
+
+.starRowMd .star {
+    width: 14px;
+    height: 14px;
+}
+
+.starFull {
+    background-color: #f59e0b;
+}
+
+.starHalf {
+    background: linear-gradient(90deg, #f59e0b 50%, var(--color-third) 50%);
+}
+
+.starEmpty {
+    background-color: var(--color-third);
+}
+
+.starCount {
+    font-size: 11px;
+    color: var(--color-foreground-light);
+    margin-left: 4px;
+    line-height: 1;
+}
+
+.starRowMd .starCount {
+    font-size: 13px;
+    margin-left: 6px;
+}
+
+/* ── CarRatingBadge ──────────────────────────────────────────────────────────── */
+
+.ratingBadge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── ReviewsList ─────────────────────────────────────────────────────────────── */
+
+.reviewsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.reviewsSectionTitle {
+    color: var(--color-foreground);
+    font-size: 11pt;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-third) 50%, transparent);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.reviewsEmpty {
+    color: var(--color-foreground-light);
+    font-size: 10pt;
+    padding: 8px 0;
+}
+
+.reviewsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reviewCard {
+    background: var(--color-primary-dark);
+    border: 1px solid color-mix(in srgb, var(--color-third) 60%, transparent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reviewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.reviewTitleStars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.reviewTitle {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--color-foreground);
+    line-height: 1.3;
+}
+
+.reviewMeta {
+    font-size: 9pt;
+    color: var(--color-foreground-light);
+}
+
+.reviewBody {
+    font-size: 10pt;
+    color: color-mix(in srgb, var(--color-foreground) 80%, transparent);
+    line-height: 1.65;
+}
+
+.reviewDuration {
+    font-size: 9pt;
+    color: var(--color-foreground-light);
+}
+
+/* ── ReviewModal ─────────────────────────────────────────────────────────────── */
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    padding: 16px;
+}
+
+.modal {
+    background: var(--color-primary);
+    border: 1px solid var(--color-third);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.modalTitle {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--color-foreground);
+}
+
+.modalSubtitle {
+    font-size: 10pt;
+    color: var(--color-foreground-light);
+    margin-top: 4px;
+}
+
+.modalCloseBtn {
+    background: none;
+    border: none;
+    color: var(--color-foreground-light);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px;
+    line-height: 1;
+    transition: color 150ms;
+    flex-shrink: 0;
+}
+
+.modalCloseBtn:hover {
+    color: var(--color-foreground);
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-light);
+}
+
+.input {
+    width: 100%;
+    background: var(--color-primary-dark);
+    border: 1px solid var(--color-third);
+    border-radius: 8px;
+    padding: 9px 12px;
+    color: var(--color-foreground);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+    font-family: inherit;
+}
+
+.input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.starPicker {
+    display: flex;
+    gap: 6px;
+}
+
+.starPickerBtn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: transform 100ms;
+    color: var(--color-third);
+}
+
+.starPickerBtn:hover,
+.starPickerBtnActive {
+    color: #f59e0b;
+    transform: scale(1.15);
+}
+
+.starPickerBtnActive {
+    transform: scale(1);
+}
+
+.modalActions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.deleteBtn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.deleteBtn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.16);
+}
+
+.deleteBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cancelBtn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid var(--color-third);
+    background: transparent;
+    color: var(--color-foreground-light);
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.cancelBtn:hover {
+    background: var(--color-primary-dark);
+}
+
+.submitBtn {
+    padding: 9px 22px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    background: var(--color-accent);
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: filter 150ms;
+}
+
+.submitBtn:hover:not(:disabled) {
+    filter: brightness(1.1);
+}
+
+.submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.errorMsg {
+    font-size: 11px;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+/* ── Review action button (in ReservationsPanel) ─────────────────────────────── */
+
+.reviewBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    color: #f59e0b;
+    border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 150ms;
+}
+
+.reviewBtn:hover {
+    background: color-mix(in srgb, #f59e0b 22%, transparent);
+}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAdminSidebarStore, AdminView } from "@/stores/adminSidebarStore";
+import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCar, BiChevronLeft, BiChevronRight, BiChevronDown,
@@ -130,6 +131,7 @@ const MobileSidebar = () => {
 
 const DesktopSidebar = () => {
     const { collapsed, toggle, activeView, setActiveView } = useAdminSidebarStore();
+    const { role } = useUserDashboardStore();
     const [openSection, setOpenSection] = useState<Section | null>(
         () => SECTIONS.find((s) => s.items.some((i) => i.view === activeView))?.id ?? null
     );
@@ -265,6 +267,15 @@ const DesktopSidebar = () => {
                             );
                         })}
                     </div>
+
+                    {role === "ADMIN" && (
+                        <div className={styles.adminWarning}>
+                            <p className={styles.adminWarningTitle}>⚠ Admin Access</p>
+                            <p className={styles.adminWarningBody}>
+                                You have <strong>full access</strong> to the live database. Changes are <strong>permanent</strong>. Do <strong>NOT</strong> tamper with data carelessly.
+                            </p>
+                        </div>
+                    )}
                 </div>
             )}
 

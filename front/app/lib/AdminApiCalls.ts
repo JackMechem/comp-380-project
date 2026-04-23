@@ -133,15 +133,21 @@ export const getAllAccounts = async ({
     page,
     pageSize,
     search,
+    sortBy,
+    sortDir,
 }: {
     page?: number;
     pageSize?: number;
     search?: string;
+    sortBy?: string | null;
+    sortDir?: "asc" | "desc";
 } = {}): Promise<AccountPages> => {
     const params = new URLSearchParams();
     if (page) params.set("page", String(page));
     if (pageSize) params.set("pageSize", String(pageSize));
     if (search) params.set("search", search);
+    if (sortBy) params.set("sortBy", sortBy);
+    if (sortDir) params.set("sortDir", sortDir);
 
     const res = await fetch(`/api/accounts?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error(await res.text());
@@ -170,13 +176,19 @@ export const deleteAccount = async (acctId: number) => {
 export const getAllUsers = async ({
     page,
     pageSize,
+    sortBy,
+    sortDir,
 }: {
     page?: number;
     pageSize?: number;
+    sortBy?: string | null;
+    sortDir?: "asc" | "desc";
 } = {}): Promise<UserPages> => {
     const params = new URLSearchParams();
     if (page) params.set("page", String(page));
     if (pageSize) params.set("pageSize", String(pageSize));
+    if (sortBy) params.set("sortBy", sortBy);
+    if (sortDir) params.set("sortDir", sortDir);
 
     const res = await fetch(`/api/users?${params.toString()}`, { cache: "no-store" });
     if (!res.ok) throw new Error(await res.text());
@@ -222,6 +234,47 @@ export const updateReservation = async (reservationId: number, patch: Reservatio
         body: JSON.stringify(patch),
     });
     if (!res.ok) throw new Error(await res.text());
+};
+
+// ── Reviews admin calls ───────────────────────────────────────────────────────
+
+export interface ReviewPages {
+    data: import("../types/ReviewTypes").Review[];
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+}
+
+export const getAllReviews = async ({
+    page,
+    pageSize,
+}: { page?: number; pageSize?: number } = {}): Promise<ReviewPages> => {
+    const params = new URLSearchParams();
+    if (page) params.set("page", String(page));
+    if (pageSize) params.set("pageSize", String(pageSize));
+    const res = await fetch(`/api/reviews?${params.toString()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+};
+
+export const deleteReview = async (reviewId: number) => {
+    const res = await fetch(`/api/reviews/${reviewId}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(await res.text());
+};
+
+// ── Bookmarks admin calls ─────────────────────────────────────────────────────
+
+export const getAllBookmarks = async ({
+    page,
+    pageSize,
+}: { page?: number; pageSize?: number } = {}): Promise<AccountPages> => {
+    const params = new URLSearchParams();
+    if (page) params.set("page", String(page));
+    if (pageSize) params.set("pageSize", String(pageSize));
+    // Fetch accounts with bookmarkedCars populated
+    const res = await fetch(`/api/accounts?${params.toString()}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
 };
 
 export const deleteReservation = async (reservationId: number) => {

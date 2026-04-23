@@ -10,7 +10,7 @@ import { useBookmarkStore, BookmarkCar, removeBookmark as removeBookmarkApi, cle
 import { useBookmarkSync } from "@/app/hooks/useBookmarkSync";
 import DefaultProfilePhoto from "../defaultProfilePhoto";
 import Image from "next/image";
-import { BiTrash, BiGridAlt } from "react-icons/bi";
+import { BiTrash, BiGridAlt, BiError, BiUser } from "react-icons/bi";
 import { CartProps } from "@/app/types/CartTypes";
 import { BsCart2, BsCart3, BsBookmark, BsBookmarkFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -85,8 +85,18 @@ const HeaderMenu = () => {
 
                 {/* Profile section */}
                 <div className={styles.profileRow}>
-                    <div className={styles.avatarBorder}>
-                        <DefaultProfilePhoto totalHeight={48} headSize={16} />
+                    <div className={styles.avatarBorder} style={isAdmin ? { borderColor: role === "ADMIN" ? "rgba(239,68,68,0.4)" : "rgba(59,130,246,0.4)" } : undefined}>
+                        {role === "ADMIN" ? (
+                            <div className={styles.roleAvatar} style={{ background: "#ef4444" }}>
+                                <BiError style={{ fontSize: 22, color: "#fff" }} />
+                            </div>
+                        ) : role === "STAFF" ? (
+                            <div className={styles.roleAvatar} style={{ background: "#3b82f6" }}>
+                                <BiUser style={{ fontSize: 22, color: "#fff" }} />
+                            </div>
+                        ) : (
+                            <DefaultProfilePhoto totalHeight={48} headSize={16} />
+                        )}
                     </div>
                     <div className={styles.profileInfo}>
                         <p className={styles.profileName}>

@@ -5,10 +5,9 @@
 	cursor: pointer;
 	color: var(--color-foreground);
 	background-color: var(--color-primary);
-	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+	box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
 	display: flex;
 	flex-direction: column;
-	border: 1px solid var(--color-third);
 	transition: transform 150ms;
 }
 
@@ -23,11 +22,11 @@
 
 .imageWrapper {
 	position: relative;
+	height: 180px;
+	overflow: hidden;
 }
 
 .image {
-	width: 100%;
-	height: 180px;
 	object-fit: cover;
 }
 
@@ -35,33 +34,121 @@
 	padding: 14px 16px;
 	display: flex;
 	flex-direction: column;
+	justify-content: space-between;
 	gap: 10px;
 	flex: 1;
 }
 
-.titleGroup {
-	/* intentionally empty wrapper */
+/* Title */
+.titleRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 6px;
 }
 
-.carName {
-	font-size: 13pt;
-	font-weight: 500;
+.carModel {
+	font-size: 14pt;
+	font-weight: 400;
+	line-height: 1.1;
+	color: var(--color-foreground);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.carYear {
-	font-size: 10pt;
-	color: var(--color-secondary);
+.titleRight {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
 }
 
-.stats {
-	color: var(--color-foreground-light);
+.carMake {
+	font-size: 10.5pt;
+	font-weight: 500;
+	line-height: 1.1;
+	color: var(--color-foreground);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.carYear {
 	font-size: 10pt;
+	color: var(--color-foreground-light);
+}
+
+/* Year + badge row */
+.yearAvailabilityRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	margin-top: 2px;
+}
+
+/* Cart/conflict date lines */
+.inCartDates {
+	font-size: 8pt;
+	color: #1d4ed8;
+	font-weight: 500;
+	margin-top: 4px;
+}
+
+:global([data-theme="dark"]) .inCartDates {
+	color: #93c5fd;
+}
+
+.cartConflictDates {
+	font-size: 7.5pt;
+	color: #1d4ed8;
+	font-weight: 500;
+	margin-top: 4px;
+}
+
+:global([data-theme="dark"]) .cartConflictDates {
+	color: #93c5fd;
+}
+
+/* Features */
+.features {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	margin-top: 8px;
+}
+
+.featureTag {
+	font-size: 8pt;
+	font-weight: 500;
+	color: var(--color-foreground);
+	background: rgba(0, 0, 0, 0.06);
+	border-radius: 9999px;
+	padding: 2px 8px;
+}
+
+:global([data-theme="dark"]) .featureTag {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+/* Bottom section */
+.bottomRow {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 8px;
+}
+
+/* Stats grid — accent background, white text */
+.statsGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: 10px;
+	row-gap: 8px;
+	font-size: 9pt;
+	color: var(--color-primary);
+	padding: 7px 10px;
+	border-radius: 0.75rem;
+	background-color: var(--color-accent);
 }
 
 .stat {
@@ -70,51 +157,53 @@
 	align-items: center;
 }
 
-.statCapitalize {
-	text-transform: lowercase;
+.statIcon {
+	font-size: 13pt;
+	flex-shrink: 0;
+	line-height: 0;
+	vertical-align: middle;
 }
 
-.statCapitalize::first-letter {
-	text-transform: uppercase;
+.statLabel {
+	font-size: 9pt;
+	font-weight: 400;
 }
 
-.inCartDates {
-	font-size: 8pt;
-	color: #1d4ed8;
-	font-weight: 500;
-	margin-bottom: 4px;
-}
-
-:global([data-theme="dark"]) .inCartDates {
-	color: #93c5fd;
-}
-
-.priceRow {
+/* Price */
+.priceGroup {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: auto;
-	padding-top: 6px;
-}
-
-.badgeGroup {
-	display: flex;
-	gap: 4px;
-	flex-wrap: wrap;
-	justify-content: flex-end;
+	flex-direction: row;
+	align-items: baseline;
+	gap: 8px;
 }
 
 .price {
 	color: var(--color-accent);
-	font-size: 15pt;
+	font-size: 16pt;
 	font-weight: 600;
 }
 
 .priceUnit {
 	font-size: 10pt;
-	opacity: 0.6;
+	color: var(--color-foreground-light);
+	font-weight: 400;
 }
 
+.priceNote {
+	font-size: 9pt;
+	color: var(--color-foreground-light);
+}
+
+/* Badge skeleton */
+.badgeSkeleton {
+	height: 18px;
+	width: 66px;
+	border-radius: 9999px;
+	background-color: var(--color-third);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Availability badges */
 .badgeInCart,
 .badgeCartConflict,
 .badgeAvailable,
@@ -129,24 +218,15 @@
 }
 
 .badgeInCart {
-	color: #1d4ed8;
-	background-color: #dbeafe;
-	border: 1px solid #bfdbfe;
+	color: var(--color-foreground);
+	background-color: rgba(37, 99, 235, 0.1);
 }
 
 .badgeCartConflict {
-	color: #1d4ed8;
-	background-color: #dbeafe;
-	border: 1px solid #bfdbfe;
+	color: var(--color-foreground);
+	background-color: rgba(37, 99, 235, 0.1);
 	position: relative;
 	cursor: default;
-}
-
-.cartConflictDates {
-	font-size: 7.5pt;
-	color: #1d4ed8;
-	font-weight: 500;
-	margin-bottom: 4px;
 }
 
 .badgeCartConflict::after {
@@ -172,10 +252,35 @@
 	opacity: 1;
 }
 
+.badgeUserReserved {
+	color: var(--color-foreground);
+	background-color: rgba(109, 40, 217, 0.1);
+}
+
+.badgeAvailable {
+	color: var(--color-foreground);
+	background-color: rgba(22, 163, 74, 0.12);
+}
+
+.badgePartial {
+	color: var(--color-foreground);
+	background-color: rgba(217, 119, 6, 0.1);
+}
+
+.badgeUnavailable {
+	color: var(--color-foreground);
+	background-color: rgba(220, 38, 38, 0.1);
+}
+
+/* Dark mode badges */
+:global([data-theme="dark"]) .badgeInCart {
+	color: #93c5fd;
+	background-color: color-mix(in srgb, #93c5fd 15%, transparent);
+}
+
 :global([data-theme="dark"]) .badgeCartConflict {
 	color: #93c5fd;
 	background-color: color-mix(in srgb, #93c5fd 15%, transparent);
-	border-color: color-mix(in srgb, #93c5fd 30%, transparent);
 }
 
 :global([data-theme="dark"]) .badgeCartConflict::after {
@@ -183,64 +288,22 @@
 	color: #111827;
 }
 
-:global([data-theme="dark"]) .cartConflictDates {
-	color: #93c5fd;
-}
-
-.badgeUserReserved {
-	color: #6d28d9;
-	background-color: #ede9fe;
-	border: 1px solid #ddd6fe;
-}
-
 :global([data-theme="dark"]) .badgeUserReserved {
 	color: #c4b5fd;
 	background-color: color-mix(in srgb, #c4b5fd 15%, transparent);
-	border-color: color-mix(in srgb, #c4b5fd 30%, transparent);
-}
-
-.badgeAvailable {
-	color: #15803d;
-	background-color: #dcfce7;
-	border: 1px solid #bbf7d0;
-}
-
-.badgePartial {
-	color: #92400e;
-	background-color: #fef3c7;
-	border: 1px solid #fde68a;
-}
-
-.badgeUnavailable {
-	color: #b91c1c;
-	background-color: #fee2e2;
-	border: 1px solid #fecaca;
-}
-
-:global([data-theme="dark"]) .badgeInCart {
-	color: #93c5fd;
-	background-color: color-mix(in srgb, #93c5fd 15%, transparent);
-	border-color: color-mix(in srgb, #93c5fd 30%, transparent);
-}
-
-:global([data-theme="dark"]) .inCartDates {
-	color: #93c5fd;
 }
 
 :global([data-theme="dark"]) .badgeAvailable {
 	color: #4ade80;
 	background-color: color-mix(in srgb, #4ade80 15%, transparent);
-	border-color: color-mix(in srgb, #4ade80 30%, transparent);
 }
 
 :global([data-theme="dark"]) .badgePartial {
 	color: #fcd34d;
 	background-color: color-mix(in srgb, #fcd34d 15%, transparent);
-	border-color: color-mix(in srgb, #fcd34d 30%, transparent);
 }
 
 :global([data-theme="dark"]) .badgeUnavailable {
 	color: #f87171;
 	background-color: color-mix(in srgb, #f87171 15%, transparent);
-	border-color: color-mix(in srgb, #f87171 30%, transparent);
 }

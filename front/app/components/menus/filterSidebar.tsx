@@ -2,7 +2,6 @@
 
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useFilterParams } from "@/app/browse/components/useFilterParams";
-import FilterBarDropdown from "@/app/browse/components/filterBarDropdown";
 import FilterBarNumberRangeInline from "@/app/browse/components/filterBarNumberRangeInline";
 import PillSelect from "@/app/browse/components/pillSelect";
 import { BiX } from "react-icons/bi";
@@ -22,7 +21,7 @@ const toOptions = (values: string[] = []) =>
 
 const FilterSidebar = () => {
 	const { openPanel, close, filterEnums, makes } = useSidebarStore();
-	const { get, set, clear } = useFilterParams();
+	const { get, getArray, set, clear } = useFilterParams();
 	const isOpen = openPanel === "filter";
 
 	return (
@@ -56,15 +55,10 @@ const FilterSidebar = () => {
 					<>
 						<div className={styles.section}>
 							<SectionTitle>Make</SectionTitle>
-							<FilterBarDropdown
-								label="Make"
-								className="w-full"
-								defaultValue={get("make")}
-								onChange={(v) => set({ make: v ?? undefined })}
-								options={(makes ?? []).map((m) => ({
-									paramId: m,
-									displayText: m,
-								}))}
+							<PillSelect
+								selectedValues={getArray("make")}
+								onChangeMulti={(v) => set({ make: v.length ? v.join(",") : undefined })}
+								options={(makes ?? []).map((m) => ({ paramId: m, displayText: m }))}
 							/>
 						</div>
 
@@ -105,8 +99,8 @@ const FilterSidebar = () => {
 						<div className={styles.section}>
 							<SectionTitle>Body type</SectionTitle>
 							<PillSelect
-								selected={get("bodyType")}
-								onChange={(v) => set({ bodyType: v ?? undefined })}
+								selectedValues={getArray("bodyType")}
+								onChangeMulti={(v) => set({ bodyType: v.length ? v : undefined })}
 								options={toOptions(filterEnums.bodyType)}
 							/>
 						</div>
@@ -116,8 +110,8 @@ const FilterSidebar = () => {
 						<div className={styles.section}>
 							<SectionTitle>Vehicle class</SectionTitle>
 							<PillSelect
-								selected={get("vehicleClass")}
-								onChange={(v) => set({ vehicleClass: v ?? undefined })}
+								selectedValues={getArray("vehicleClass")}
+								onChangeMulti={(v) => set({ vehicleClass: v.length ? v : undefined })}
 								options={toOptions(filterEnums.vehicleClass)}
 							/>
 						</div>
@@ -127,8 +121,8 @@ const FilterSidebar = () => {
 						<div className={styles.section}>
 							<SectionTitle>Roof type</SectionTitle>
 							<PillSelect
-								selected={get("roofType")}
-								onChange={(v) => set({ roofType: v ?? undefined })}
+								selectedValues={getArray("roofType")}
+								onChangeMulti={(v) => set({ roofType: v.length ? v : undefined })}
 								options={toOptions(filterEnums.roofType)}
 							/>
 						</div>
@@ -136,33 +130,45 @@ const FilterSidebar = () => {
 						<Divider />
 
 						<div className={styles.section}>
+							<SectionTitle>Fuel</SectionTitle>
+							<PillSelect
+								selectedValues={getArray("fuel")}
+								onChangeMulti={(v) => set({ fuel: v.length ? v : undefined })}
+								options={toOptions(filterEnums.fuelType)}
+							/>
+						</div>
+
+						<Divider />
+
+						<div className={styles.section}>
+							<SectionTitle>Transmission</SectionTitle>
+							<PillSelect
+								selectedValues={getArray("transmission")}
+								onChangeMulti={(v) => set({ transmission: v.length ? v : undefined })}
+								options={toOptions(filterEnums.transmissionType)}
+							/>
+						</div>
+
+						<Divider />
+
+						<div className={styles.section}>
 							<SectionTitle>Drivetrain</SectionTitle>
-							<div className={styles.grid2}>
-								<FilterBarDropdown
-									label="Transmission"
-									defaultValue={get("transmission")}
-									onChange={(v) => set({ transmission: v ?? undefined })}
-									options={toOptions(filterEnums.transmissionType)}
-								/>
-								<FilterBarDropdown
-									label="Drivetrain"
-									defaultValue={get("drivetrain")}
-									onChange={(v) => set({ drivetrain: v ?? undefined })}
-									options={toOptions(filterEnums.drivetrain)}
-								/>
-								<FilterBarDropdown
-									label="Engine Layout"
-									defaultValue={get("engineLayout")}
-									onChange={(v) => set({ engineLayout: v ?? undefined })}
-									options={toOptions(filterEnums.engineLayout)}
-								/>
-								<FilterBarDropdown
-									label="Fuel"
-									defaultValue={get("fuel")}
-									onChange={(v) => set({ fuel: v ?? undefined })}
-									options={toOptions(filterEnums.fuelType)}
-								/>
-							</div>
+							<PillSelect
+								selectedValues={getArray("drivetrain")}
+								onChangeMulti={(v) => set({ drivetrain: v.length ? v : undefined })}
+								options={toOptions(filterEnums.drivetrain)}
+							/>
+						</div>
+
+						<Divider />
+
+						<div className={styles.section}>
+							<SectionTitle>Engine layout</SectionTitle>
+							<PillSelect
+								selectedValues={getArray("engineLayout")}
+								onChangeMulti={(v) => set({ engineLayout: v.length ? v : undefined })}
+								options={toOptions(filterEnums.engineLayout)}
+							/>
 						</div>
 
 						<Divider />
