@@ -17,7 +17,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
         return new NextResponse(null, { status: res.status });
     } catch (err) {
         console.error(`[DELETE /api/reviews/${reviewId}] error:`, err);
-        return NextResponse.json({ error: "Failed to delete review" }, { status: 502 });
+        return NextResponse.json({ error: "Failed to delete review", message: err }, { status: 502 });
     }
 }
 

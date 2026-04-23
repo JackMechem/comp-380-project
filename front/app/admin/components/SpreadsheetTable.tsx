@@ -22,6 +22,7 @@ import {
     BiCheck,
     BiX,
     BiPencil,
+    BiColumns,
 } from "react-icons/bi";
 import styles from "./spreadsheetTable.module.css";
 
@@ -85,6 +86,8 @@ export interface SpreadsheetTableProps<T> {
     emptyMessage?: string;
     // Inline edit mode
     onSaveEdits?: (edits: RowEdit<T>[]) => Promise<void>;
+    // Preview panel
+    renderPreview?: (item: T) => ReactNode;
     // Server-side sort (controlled)
     sortBy?: string | null;
     sortDir?: "asc" | "desc";
@@ -213,6 +216,7 @@ export default function SpreadsheetTable<T>({
     sortBy,
     sortDir = "asc",
     onSortChange,
+    renderPreview,
 }: SpreadsheetTableProps<T>) {
     // Column visibility
     const [visibleCols, setVisibleCols] = useState<Set<string>>(
@@ -655,11 +659,44 @@ export default function SpreadsheetTable<T>({
         URL.revokeObjectURL(url);
     };
 
+    // ── Preview panel ────────────────────────────────────────────────────
+    const [panelOpen, setPanelOpen] = useState(false);
+    const [panelWidth, setPanelWidth] = useState(360);
+    const [previewItem, setPreviewItem] = useState<T | null>(null);
+
+    const handlePanelResizeStart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = panelWidth;
+        const onMove = (ev: MouseEvent) => {
+            const diff = startX - ev.clientX;
+            setPanelWidth(Math.max(200, Math.min(window.innerWidth * 0.75, startWidth + diff)));
+        };
+        const onUp = () => {
+            document.removeEventListener("mousemove", onMove);
+            document.removeEventListener("mouseup", onUp);
+        };
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+    };
+
+    const togglePanel = () => {
+        setPanelOpen((o) => {
+            if (o) setPreviewItem(null);
+            return !o;
+        });
+    };
+
     // ── Fullscreen overlay ───────────────────────────────────────────────
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
-        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setIsFullscreen(false); };
+        const handler = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setIsFullscreen(false);
+                setPanelOpen(false);
+            }
+        };
         document.addEventListener("keydown", handler);
         return () => document.removeEventListener("keydown", handler);
     }, []);
@@ -788,6 +825,15 @@ export default function SpreadsheetTable<T>({
                         >
                             <BiMenu />
                         </button>
+                        {renderPreview && (
+                            <button
+                                onClick={togglePanel}
+                                className={`${styles.btnIcon} ${panelOpen ? styles.btnIconActive : ""}`}
+                                title={panelOpen ? "Close preview panel" : "Open preview panel"}
+                            >
+                                <BiColumns />
+                            </button>
+                        )}
                     </>
                 )}
             </div>
@@ -871,7 +917,8 @@ export default function SpreadsheetTable<T>({
                 </div>
             )}
 
-            {/* ── Table ─────────────────────────────────────────────────── */}
+            {/* ── Table + Preview panel ─────────────────────────────────── */}
+            <div className={styles.bodyRow}>
             <div className={styles.scrollContainer} ref={scrollContainerRef} onMouseDown={handleScrollMouseDown}>
                 {loading ? (
                     <div className={styles.loadingOverlay}>
@@ -962,8 +1009,14 @@ export default function SpreadsheetTable<T>({
                         <tbody>
                             {data.map((item) => {
                                 const id = getRowId(item);
+                                const isPreviewActive = panelOpen && renderPreview && previewItem && getRowId(previewItem) === id;
                                 return (
-                                    <tr key={String(id)}>
+                                    <tr
+                                        key={String(id)}
+                                        className={isPreviewActive ? styles.previewActiveRow : undefined}
+                                        onClick={panelOpen && renderPreview ? () => setPreviewItem(item) : undefined}
+                                        style={panelOpen && renderPreview ? { cursor: "pointer" } : undefined}
+                                    >
                                         <td className={styles.stickyCol}>
                                             <div className={styles.stickyColInner}>
                                                 <RowActionMenu
@@ -1091,6 +1144,41 @@ export default function SpreadsheetTable<T>({
                     </table>
                 )}
             </div>
+
+            {/* ── Preview panel ─────────────────────────────────────────── */}
+            {panelOpen && renderPreview && (
+                <>
+                    <div
+                        className={styles.panelResizeHandle}
+                        onMouseDown={handlePanelResizeStart}
+                    />
+                    <div
+                        className={styles.previewPanel}
+                        style={{ width: panelWidth, minWidth: panelWidth, maxWidth: panelWidth }}
+                    >
+                        <div className={styles.previewPanelHeader}>
+                            <span className={styles.previewPanelTitle}>Preview</span>
+                            <button
+                                className={styles.btnIcon}
+                                onClick={() => setPanelOpen(false)}
+                                title="Close panel"
+                            >
+                                <BiX />
+                            </button>
+                        </div>
+                        <div className={styles.previewPanelBody}>
+                            {previewItem ? (
+                                renderPreview(previewItem)
+                            ) : (
+                                <div className={styles.previewPanelEmpty}>
+                                    Click a row to preview
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+            </div>{/* end bodyRow */}
 
             {/* ── Right-click context menu ─────────────────────────────── */}
             {ctxMenu && createPortal(
