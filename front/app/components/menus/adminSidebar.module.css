@@ -408,12 +408,24 @@
 	opacity: 0.8;
 }
 
-/* Sub-items */
+/* Sub-items — animated collapse via grid trick */
+.subItemsWrap {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows 220ms ease;
+}
+
+.subItemsWrapOpen {
+	grid-template-rows: 1fr;
+}
+
 .subItems {
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
 	padding: 0;
+	overflow: hidden;
+	min-height: 0;
 }
 
 .subItem {
@@ -482,8 +494,15 @@
 	justify-content: center;
 	color: var(--color-foreground);
 	cursor: pointer;
-	transition: background-color 150ms;
+	transition: background-color 150ms, opacity 150ms;
 	z-index: 30;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.desktop:hover .toggleBtn {
+	opacity: 1;
+	pointer-events: auto;
 }
 
 .toggleBtn:hover {

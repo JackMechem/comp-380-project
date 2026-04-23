@@ -8,6 +8,8 @@ import {
     BiDotsVerticalRounded,
     BiChevronLeft,
     BiChevronRight,
+    BiChevronUp,
+    BiChevronDown,
     BiRefresh,
     BiSearch,
     BiHide,
@@ -16,6 +18,10 @@ import {
     BiMenu,
     BiFullscreen,
     BiExitFullscreen,
+    BiDownload,
+    BiCheck,
+    BiX,
+    BiPencil,
 } from "react-icons/bi";
 import styles from "./spreadsheetTable.module.css";
 
@@ -27,6 +33,19 @@ export interface Column<T> {
     defaultVisible: boolean;
     render: (item: T) => ReactNode;
     minWidth?: number;
+    // Edit mode
+    editable?: boolean;
+    editType?: "text" | "number" | "textarea" | "datetime-local" | "select";
+    editOptions?: string[];
+    getValue?: (item: T) => string | number;
+    // Sort — key sent to backend; defaults to col.key
+    sortKey?: string;
+}
+
+export interface RowEdit<T> {
+    id: string | number;
+    original: T;
+    patch: Record<string, unknown>;
 }
 
 export interface SpreadsheetTableProps<T> {
@@ -64,6 +83,12 @@ export interface SpreadsheetTableProps<T> {
     searchContent?: ReactNode;
     // Misc
     emptyMessage?: string;
+    // Inline edit mode
+    onSaveEdits?: (edits: RowEdit<T>[]) => Promise<void>;
+    // Server-side sort (controlled)
+    sortBy?: string | null;
+    sortDir?: "asc" | "desc";
+    onSortChange?: (col: string, dir: "asc" | "desc") => void;
 }
 
 // ── Row action menu ──────────────────────────────────────────────────────────
@@ -182,6 +207,10 @@ export default function SpreadsheetTable<T>({
     headerActions,
     searchContent,
     emptyMessage = "No data found.",
+    onSaveEdits,
+    sortBy,
+    sortDir = "asc",
+    onSortChange,
 }: SpreadsheetTableProps<T>) {
     // Column visibility
     const [visibleCols, setVisibleCols] = useState<Set<string>>(
@@ -526,8 +555,103 @@ export default function SpreadsheetTable<T>({
         closeCtx();
     };
 
+    // ── Single-cell edit ────────────────────────────────────────────────
+    const [editingCell, setEditingCell] = useState<{ id: string | number; colKey: string } | null>(null);
+    const [editingCellValue, setEditingCellValue] = useState<string>("");
+    const [cellSaving, setCellSaving] = useState(false);
+
+    const ctxEditCell = () => {
+        if (!ctxMenu?.rowItem || !onSaveEdits) return;
+        const col = columns.find((c) => c.key === ctxMenu.colKey);
+        if (!col?.editable) return;
+        const item = ctxMenu.rowItem as T;
+        const id = getRowId(item);
+        const initVal = col.getValue ? String(col.getValue(item)) : "";
+        setEditingCell({ id, colKey: ctxMenu.colKey });
+        setEditingCellValue(initVal);
+        closeCtx();
+    };
+
+    const saveCellEdit = async () => {
+        if (!editingCell || !onSaveEdits) { setEditingCell(null); return; }
+        const { id, colKey } = editingCell;
+        const col = columns.find((c) => c.key === colKey);
+        const original = data.find((item) => getRowId(item) === id);
+        if (!original || !col) { setEditingCell(null); return; }
+        let value: unknown = editingCellValue;
+        if (col.editType === "number") value = Number(editingCellValue);
+        setCellSaving(true);
+        try {
+            await onSaveEdits([{ id, original, patch: { [colKey]: value } }]);
+        } finally {
+            setCellSaving(false);
+            setEditingCell(null);
+        }
+    };
+
+    const cancelCellEdit = () => setEditingCell(null);
+
     // Helper: should a column wrap?
     const shouldWrap = (key: string) => colWrapOverrides[key] ?? wrapMode;
+
+    // ── Sort ─────────────────────────────────────────────────────────────
+    const handleColSort = (col: Column<T>) => {
+        if (!onSortChange) return;
+        const key = col.sortKey ?? col.key;
+        const newDir = sortBy === key && sortDir === "asc" ? "desc" : "asc";
+        onSortChange(key, newDir);
+    };
+
+    // ── Inline edit mode ────────────────────────────────────────────────
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editValues, setEditValues] = useState<Map<string | number, Record<string, unknown>>>(new Map());
+    const [isSaving, setIsSaving] = useState(false);
+
+    const enterEditMode = () => { setEditValues(new Map()); setIsEditMode(true); };
+    const cancelEditMode = () => { setEditValues(new Map()); setIsEditMode(false); };
+
+    const setEditCell = (id: string | number, colKey: string, value: unknown) => {
+        setEditValues((prev) => {
+            const next = new Map(prev);
+            const row = { ...(next.get(id) ?? {}) };
+            row[colKey] = value;
+            next.set(id, row);
+            return next;
+        });
+    };
+
+    const handleSaveEdits = async () => {
+        if (!onSaveEdits) { setIsEditMode(false); return; }
+        const edits: RowEdit<T>[] = [];
+        for (const [id, patch] of editValues.entries()) {
+            if (Object.keys(patch).length === 0) continue;
+            const original = data.find((item) => getRowId(item) === id);
+            if (original) edits.push({ id, original, patch });
+        }
+        if (edits.length === 0) { setIsEditMode(false); return; }
+        setIsSaving(true);
+        try {
+            await onSaveEdits(edits);
+            setIsEditMode(false);
+            setEditValues(new Map());
+        } catch (e) {
+            alert("Save failed: " + e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // ── Export JSON ─────────────────────────────────────────────────────
+    const handleExportJson = () => {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${title.replace(/\s+/g, "_").toLowerCase()}_page${page}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     // ── Fullscreen overlay ───────────────────────────────────────────────
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -579,7 +703,7 @@ export default function SpreadsheetTable<T>({
     return (
         <div className={`${styles.container} ${isFullscreen ? styles.containerFullscreen : ""}`}>
             {/* ── Header bar ───────────────────────────────────────────── */}
-            <div className={styles.topBar}>
+            <div className={`${styles.topBar} ${isEditMode ? styles.topBarEditMode : ""}`}>
                 <button
                     onClick={toggleFullscreen}
                     className={`${styles.btnIcon} ${isFullscreen ? styles.btnIconActive : ""}`}
@@ -588,33 +712,82 @@ export default function SpreadsheetTable<T>({
                     {isFullscreen ? <BiExitFullscreen /> : <BiFullscreen />}
                 </button>
                 <h2 className={styles.topTitle}>{title}</h2>
-                {subtitle && <span className={styles.topSubtitle}>{subtitle}</span>}
+                {isEditMode && (
+                    <span className={styles.editModeBadge}>EDITING</span>
+                )}
+                {subtitle && !isEditMode && <span className={styles.topSubtitle}>{subtitle}</span>}
                 <div style={{ flex: 1 }} />
-                {headerActions}
-                <button
-                    ref={searchBtnRef}
-                    onClick={openSearch}
-                    className={`${styles.btnIcon} ${searchOpen ? styles.btnIconActive : ""}`}
-                    title="Search"
-                >
-                    <BiSearch />
-                </button>
-                <button
-                    onClick={onRefresh}
-                    disabled={loading || refreshing}
-                    className={styles.btnIcon}
-                    title="Refresh"
-                >
-                    <BiRefresh className={refreshing ? styles.spinning : ""} />
-                </button>
-                <button
-                    ref={menuBtnRef}
-                    onClick={openColMenu}
-                    className={`${styles.btnIcon} ${colMenuOpen ? styles.btnIconActive : ""}`}
-                    title="Columns"
-                >
-                    <BiMenu />
-                </button>
+
+                {isEditMode ? (
+                    <>
+                        <span className={styles.editChangeCount}>
+                            {Array.from(editValues.values()).filter(p => Object.keys(p).length > 0).length} changed
+                        </span>
+                        <button
+                            onClick={handleSaveEdits}
+                            disabled={isSaving}
+                            className={styles.editSaveBtn}
+                            title="Save all changes"
+                        >
+                            {isSaving ? <BiRefresh className={styles.spinning} /> : <BiCheck />}
+                            Save
+                        </button>
+                        <button
+                            onClick={cancelEditMode}
+                            disabled={isSaving}
+                            className={styles.editCancelBtn}
+                            title="Cancel editing"
+                        >
+                            <BiX /> Cancel
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        {headerActions}
+                        <button
+                            onClick={handleExportJson}
+                            className={styles.btnIcon}
+                            title="Export current page as JSON"
+                            disabled={data.length === 0}
+                        >
+                            <BiDownload />
+                        </button>
+                        {onSaveEdits && (
+                            <button
+                                onClick={enterEditMode}
+                                className={styles.btnIcon}
+                                title="Enter edit mode"
+                                disabled={data.length === 0}
+                            >
+                                <BiPencil />
+                            </button>
+                        )}
+                        <button
+                            ref={searchBtnRef}
+                            onClick={openSearch}
+                            className={`${styles.btnIcon} ${searchOpen ? styles.btnIconActive : ""}`}
+                            title="Search"
+                        >
+                            <BiSearch />
+                        </button>
+                        <button
+                            onClick={onRefresh}
+                            disabled={loading || refreshing}
+                            className={styles.btnIcon}
+                            title="Refresh"
+                        >
+                            <BiRefresh className={refreshing ? styles.spinning : ""} />
+                        </button>
+                        <button
+                            ref={menuBtnRef}
+                            onClick={openColMenu}
+                            className={`${styles.btnIcon} ${colMenuOpen ? styles.btnIconActive : ""}`}
+                            title="Columns"
+                        >
+                            <BiMenu />
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* ── Column menu popup ─────────────────────────────────────── */}
@@ -743,29 +916,45 @@ export default function SpreadsheetTable<T>({
                                         )}
                                     </div>
                                 </th>
-                                {activeCols.map((col, i) => (
-                                    <th
-                                        key={col.key}
-                                        style={{
-                                            width: i < activeCols.length - 1 ? (colWidths[col.key] || undefined) : undefined,
-                                            minWidth: col.minWidth || undefined,
-                                            cursor: dragColIdx !== null ? "grabbing" : "grab",
-                                            opacity: dragColIdx === i ? 0.4 : 1,
-                                            borderLeft: dragOverColIdx === i && dragColIdx !== null && dragColIdx !== i
-                                                ? "2px solid var(--color-accent)"
-                                                : undefined,
-                                        }}
-                                        onMouseDown={(e) => handleColDragStart(i, e)}
-                                        onMouseEnter={() => handleColDragEnter(i)}
-                                        onContextMenu={(e) => handleContextMenu(e, col.key, null)}
-                                    >
-                                        {col.label}
-                                        <span
-                                            className={styles.resizeHandle}
-                                            onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(i, e); }}
-                                        />
-                                    </th>
-                                ))}
+                                {activeCols.map((col, i) => {
+                                    const isSortable = !!onSortChange && !!col.getValue;
+                                    const sortKey = col.sortKey ?? col.key;
+                                    const isSorted = sortBy === sortKey;
+                                    return (
+                                        <th
+                                            key={col.key}
+                                            style={{
+                                                width: i < activeCols.length - 1 ? (colWidths[col.key] || undefined) : undefined,
+                                                minWidth: col.minWidth || undefined,
+                                                cursor: dragColIdx !== null ? "grabbing" : "grab",
+                                                opacity: dragColIdx === i ? 0.4 : 1,
+                                                borderLeft: dragOverColIdx === i && dragColIdx !== null && dragColIdx !== i
+                                                    ? "2px solid var(--color-accent)"
+                                                    : undefined,
+                                            }}
+                                            onMouseDown={(e) => handleColDragStart(i, e)}
+                                            onMouseEnter={() => handleColDragEnter(i)}
+                                            onContextMenu={(e) => handleContextMenu(e, col.key, null)}
+                                        >
+                                            <span
+                                                className={isSortable ? styles.sortableColLabel : undefined}
+                                                onMouseDown={(e) => { if (isSortable) e.stopPropagation(); }}
+                                                onClick={() => { if (isSortable) handleColSort(col); }}
+                                            >
+                                                {col.label}
+                                                {isSortable && (
+                                                    isSorted
+                                                        ? (sortDir === "asc" ? <BiChevronUp className={styles.sortIcon} /> : <BiChevronDown className={styles.sortIcon} />)
+                                                        : <BiChevronUp className={`${styles.sortIcon} ${styles.sortIconHint}`} />
+                                                )}
+                                            </span>
+                                            <span
+                                                className={styles.resizeHandle}
+                                                onMouseDown={(e) => { e.stopPropagation(); handleResizeStart(i, e); }}
+                                            />
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody>
@@ -795,13 +984,101 @@ export default function SpreadsheetTable<T>({
                                         </td>
                                         {activeCols.map((col) => {
                                             const wrap = shouldWrap(col.key);
+                                            const editRow = editValues.get(id);
+                                            const isDirty = editRow && col.key in editRow;
+                                            const editVal = isDirty
+                                                ? String(editRow![col.key] ?? "")
+                                                : col.getValue
+                                                ? String(col.getValue(item) ?? "")
+                                                : "";
                                             return (
                                                 <td
                                                     key={col.key}
-                                                    className={wrap ? styles.wrappedCell : undefined}
+                                                    className={[
+                                                        wrap ? styles.wrappedCell : undefined,
+                                                        isEditMode && col.editable && isDirty ? styles.editedCell : undefined,
+                                                    ].filter(Boolean).join(" ") || undefined}
                                                     onContextMenu={(e) => handleContextMenu(e, col.key, item)}
                                                 >
-                                                    {col.render(item)}
+                                                    {editingCell?.id === id && editingCell?.colKey === col.key ? (
+                                                        // ── Single-cell edit ──
+                                                        col.editType === "textarea" ? (
+                                                            <textarea
+                                                                className={styles.editInput}
+                                                                autoFocus
+                                                                value={editingCellValue}
+                                                                rows={2}
+                                                                onChange={(e) => setEditingCellValue(e.target.value)}
+                                                                onBlur={saveCellEdit}
+                                                                onKeyDown={(e) => { if (e.key === "Escape") cancelCellEdit(); }}
+                                                            />
+                                                        ) : col.editType === "select" ? (
+                                                            <div className={styles.editSelectWrapper}>
+                                                                {col.render({ ...item, [col.key]: editingCellValue } as T)}
+                                                                <select
+                                                                    className={styles.editSelectOverlay}
+                                                                    autoFocus
+                                                                    value={editingCellValue}
+                                                                    onChange={(e) => setEditingCellValue(e.target.value)}
+                                                                    onBlur={saveCellEdit}
+                                                                    onKeyDown={(e) => { if (e.key === "Escape") cancelCellEdit(); }}
+                                                                >
+                                                                    {col.editOptions?.map((opt) => (
+                                                                        <option key={opt} value={opt}>{opt}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        ) : (
+                                                            <input
+                                                                className={`${styles.editInput} ${cellSaving ? styles.cellSaving : ""}`}
+                                                                autoFocus
+                                                                type={col.editType === "number" ? "number" : col.editType === "datetime-local" ? "datetime-local" : "text"}
+                                                                value={editingCellValue}
+                                                                onChange={(e) => setEditingCellValue(e.target.value)}
+                                                                onBlur={saveCellEdit}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") { e.preventDefault(); saveCellEdit(); }
+                                                                    if (e.key === "Escape") cancelCellEdit();
+                                                                }}
+                                                            />
+                                                        )
+                                                    ) : isEditMode && col.editable ? (
+                                                        // ── Full edit mode ──
+                                                        col.editType === "textarea" ? (
+                                                            <textarea
+                                                                className={styles.editInput}
+                                                                value={editVal}
+                                                                rows={2}
+                                                                onChange={(e) => setEditCell(id, col.key, e.target.value)}
+                                                            />
+                                                        ) : col.editType === "select" ? (
+                                                            <div className={styles.editSelectWrapper}>
+                                                                {col.render({ ...item, ...(editRow ?? {}) } as T)}
+                                                                <select
+                                                                    className={styles.editSelectOverlay}
+                                                                    value={editVal}
+                                                                    onChange={(e) => setEditCell(id, col.key, e.target.value)}
+                                                                >
+                                                                    {col.editOptions?.map((opt) => (
+                                                                        <option key={opt} value={opt}>{opt}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        ) : (
+                                                            <input
+                                                                className={styles.editInput}
+                                                                type={col.editType === "number" ? "number" : col.editType === "datetime-local" ? "datetime-local" : "text"}
+                                                                value={editVal}
+                                                                onChange={(e) => setEditCell(
+                                                                    id,
+                                                                    col.key,
+                                                                    col.editType === "number" ? Number(e.target.value) : e.target.value,
+                                                                )}
+                                                            />
+                                                        )
+                                                    ) : (
+                                                        col.render(item)
+                                                    )}
                                                 </td>
                                             );
                                         })}
@@ -836,6 +1113,14 @@ export default function SpreadsheetTable<T>({
                     <button className={styles.ctxItem} onClick={ctxCopyCell}>
                         <BiCopy /> Copy Cell
                     </button>
+                    {ctxMenu.rowItem && (() => {
+                        const col = columns.find((c) => c.key === ctxMenu.colKey);
+                        return col?.editable && onSaveEdits ? (
+                            <button className={styles.ctxItem} onClick={ctxEditCell}>
+                                <BiPencil /> Edit Cell
+                            </button>
+                        ) : null;
+                    })()}
 
                     {/* Row section (only if right-clicked on a data row) */}
                     {ctxMenu.rowItem && (

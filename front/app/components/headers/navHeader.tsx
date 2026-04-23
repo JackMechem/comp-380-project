@@ -160,10 +160,8 @@ const NavHeader = ({
 		COMPACT_SCROLL_HYSTERESIS,
 	);
 	const isWhite = white && isExpanded;
-	const isElevated = !isWhite && (role === "ADMIN" || role === "STAFF");
-	const elevatedClass = isElevated
-		? role === "ADMIN" ? styles.headerAdmin : styles.headerStaff
-		: "";
+	const isElevated = !isWhite && role === "ADMIN";
+	const elevatedClass = isElevated ? styles.headerAdmin : "";
 
 	const { suggestions, loadingSuggestions } = useSearchSuggestions(searchText);
 

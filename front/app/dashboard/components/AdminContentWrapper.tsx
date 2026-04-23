@@ -7,12 +7,15 @@ import InventoryPanel from "@/app/admin/components/InventoryPanel";
 import AdminReservationsPanel from "@/app/admin/components/ReservationsPanel";
 import UsersPanel from "@/app/admin/components/UsersPanel";
 import UserProfilesPanel from "@/app/admin/components/UserProfilesPanel";
+import ReviewsPanel from "@/app/admin/components/ReviewsPanel";
+import BookmarksPanel from "@/app/admin/components/BookmarksPanel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const ADMIN_VIEWS = new Set<UserDashboardView>([
     "admin-dashboard", "add-car", "edit-car", "view-data",
     "view-reservations", "view-accounts", "view-users",
+    "view-reviews", "view-bookmarks",
 ]);
 
 export function isAdminView(view: UserDashboardView): boolean {
@@ -47,6 +50,10 @@ export default function AdminContentWrapper() {
             return <UsersPanel />;
         case "view-users":
             return <UserProfilesPanel />;
+        case "view-reviews":
+            return <ReviewsPanel />;
+        case "view-bookmarks":
+            return <BookmarksPanel />;
         case "admin-dashboard":
         default:
             return <AdminDashboardPanel />;

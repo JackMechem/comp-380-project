@@ -5,6 +5,7 @@ import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCalendar, BiUser, BiChevronLeft, BiChevronRight, BiChevronDown,
     BiLogOut, BiCar, BiPlus, BiEdit, BiTable, BiGridAlt, BiShieldQuarter,
+    BiStar, BiBookmark,
 } from "react-icons/bi";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -56,11 +57,28 @@ const ADMIN_SECTIONS: NavSection[] = [
             { icon: <BiUser />,  label: "View Users",    view: "view-users"    },
         ],
     },
+    {
+        id: "reviews",
+        icon: <BiStar />,
+        label: "Reviews",
+        items: [
+            { icon: <BiTable />, label: "View Data", view: "view-reviews" },
+        ],
+    },
+    {
+        id: "bookmarks",
+        icon: <BiBookmark />,
+        label: "Bookmarks",
+        items: [
+            { icon: <BiTable />, label: "View Data", view: "view-bookmarks" },
+        ],
+    },
 ];
 
 const ADMIN_VIEWS = new Set<UserDashboardView>([
     "admin-dashboard", "add-car", "edit-car", "view-data",
     "view-reservations", "view-accounts", "view-users",
+    "view-reviews", "view-bookmarks",
 ]);
 
 const DesktopSidebar = () => {
@@ -240,7 +258,7 @@ const DesktopSidebar = () => {
                                                 <span className={styles.sectionBtnLabel}>{s.label}</span>
                                                 <BiChevronDown className={`${styles.sectionChevron} ${isOpen ? styles.sectionChevronOpen : ""}`} />
                                             </button>
-                                            {isOpen && (
+                                            <div className={`${styles.subItemsWrap} ${isOpen ? styles.subItemsWrapOpen : ""}`}>
                                                 <div className={styles.subItems}>
                                                     {s.items.map((item) => {
                                                         const isActive = activeView === item.view;
@@ -258,7 +276,7 @@ const DesktopSidebar = () => {
                                                         );
                                                     })}
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
                                     );
                                 })}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAllUsers, updateUser, deleteUser, User } from "@/app/lib/AdminApiCalls";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
-import SpreadsheetTable, { Column } from "./SpreadsheetTable";
+import SpreadsheetTable, { Column, RowEdit } from "./SpreadsheetTable";
 import styles from "./spreadsheetTable.module.css";
 import { BiSave, BiX, BiRefresh } from "react-icons/bi";
 
@@ -31,10 +31,10 @@ const fmtAddress = (u: User) => {
 
 const USER_COLUMNS: Column<User>[] = [
     { key: "userId",        label: "ID",           defaultVisible: true,  render: (u) => `#${u.userId}` },
-    { key: "firstName",     label: "First Name",   defaultVisible: true,  render: (u) => u.firstName },
-    { key: "lastName",      label: "Last Name",    defaultVisible: true,  render: (u) => u.lastName },
-    { key: "email",         label: "Email",        defaultVisible: true,  render: (u) => u.email, minWidth: 180 },
-    { key: "phoneNumber",   label: "Phone",        defaultVisible: true,  render: (u) => u.phoneNumber || "—" },
+    { key: "firstName",     label: "First Name",   defaultVisible: true,  render: (u) => u.firstName,      editable: true, editType: "text", getValue: (u) => u.firstName },
+    { key: "lastName",      label: "Last Name",    defaultVisible: true,  render: (u) => u.lastName,       editable: true, editType: "text", getValue: (u) => u.lastName },
+    { key: "email",         label: "Email",        defaultVisible: true,  render: (u) => u.email, minWidth: 180, editable: true, editType: "text", getValue: (u) => u.email },
+    { key: "phoneNumber",   label: "Phone",        defaultVisible: true,  render: (u) => u.phoneNumber || "—", editable: true, editType: "text", getValue: (u) => u.phoneNumber || "" },
     { key: "dateCreated",   label: "Created",      defaultVisible: false, render: (u) => fmtDate(u.dateCreated) },
     { key: "address",       label: "Address",      defaultVisible: false, render: (u) => <span className={styles.truncatedCell}>{fmtAddress(u)}</span>, minWidth: 200 },
     { key: "dlNumber",      label: "License #",    defaultVisible: false, render: (u) => u.driversLicense?.driversLicense || "—" },
@@ -190,11 +190,13 @@ const UserProfilesPanel = () => {
     const [selected, setSelected] = useState<Set<string | number>>(new Set());
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [editing, setEditing] = useState<User | null>(null);
+    const [sortBy, setSortBy] = useState<string | null>(null);
+    const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
-    const fetchPage = useCallback(async (p: number, ps: number, isRefresh = false) => {
+    const fetchPage = useCallback(async (p: number, ps: number, sb: string | null, sd: "asc" | "desc", isRefresh = false) => {
         if (isRefresh) setRefreshing(true); else setLoading(true);
         try {
-            const res = await getAllUsers({ page: p, pageSize: ps });
+            const res = await getAllUsers({ page: p, pageSize: ps, sortBy: sb ?? undefined, sortDir: sd });
             setUsers(res.data);
             setTotalPages(res.totalPages);
             setTotalItems(res.totalItems);
@@ -206,11 +208,16 @@ const UserProfilesPanel = () => {
         }
     }, []);
 
-    useEffect(() => { fetchPage(page, pageSize); }, [page, pageSize, fetchPage]);
+    useEffect(() => { fetchPage(page, pageSize, sortBy, sortDir); }, [page, pageSize, fetchPage]);
 
     const handlePageChange = (p: number) => { setPage(p); setSelected(new Set()); };
     const handlePageSizeChange = (ps: number) => { setPageSize(ps); setPage(1); setSelected(new Set()); };
-    const handleRefresh = () => fetchPage(page, pageSize, true);
+    const handleRefresh = () => fetchPage(page, pageSize, sortBy, sortDir, true);
+
+    const handleSortChange = (col: string, dir: "asc" | "desc") => {
+        setSortBy(col); setSortDir(dir); setPage(1);
+        fetchPage(1, pageSize, col, dir);
+    };
 
     const handleBulkDelete = async () => {
         const ids = [...selected] as number[];
@@ -221,7 +228,7 @@ const UserProfilesPanel = () => {
         setBulkDeleting(false);
         if (failed.length) alert(`${failed.length} deletion(s) failed.`);
         setSelected(new Set(failed));
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const handleEdit = (user: User) => {
@@ -233,17 +240,24 @@ const UserProfilesPanel = () => {
         if (!window.confirm(`Delete user #${user.userId} (${user.firstName} ${user.lastName})? This cannot be undone.`)) return;
         try {
             await deleteUser(user.userId);
-            fetchPage(page, pageSize, true);
+            fetchPage(page, pageSize, sortBy, sortDir, true);
         } catch (e) {
             alert("Delete failed: " + e);
         }
+    };
+
+    const handleSaveEdits = async (edits: RowEdit<User>[]) => {
+        await Promise.all(edits.map(({ id, patch }) =>
+            updateUser(id as number, patch as Partial<Pick<User, "firstName" | "lastName" | "email" | "phoneNumber">>)
+        ));
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const handleSaveEdit = async (patch: Partial<Pick<User, "firstName" | "lastName" | "email" | "phoneNumber" | "address" | "driversLicense">>) => {
         if (!editing) return;
         await updateUser(editing.userId, patch);
         setEditing(null);
-        fetchPage(page, pageSize, true);
+        fetchPage(page, pageSize, sortBy, sortDir, true);
     };
 
     const filtered = query
@@ -282,6 +296,10 @@ const UserProfilesPanel = () => {
                 onSearchChange={setQuery}
                 searchPlaceholder="Filter by name, email, ID or phone\u2026"
                 emptyMessage="No users found."
+                onSaveEdits={handleSaveEdits}
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSortChange={handleSortChange}
             />
             {editing && (
                 <EditForm

@@ -12,7 +12,9 @@ export type UserDashboardView =
     | "view-data"
     | "view-reservations"
     | "view-accounts"
-    | "view-users";
+    | "view-users"
+    | "view-reviews"
+    | "view-bookmarks";
 
 export interface DashboardReservation {
     reservationId: number;

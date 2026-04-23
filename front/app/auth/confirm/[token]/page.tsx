@@ -27,7 +27,8 @@ export default function ConfirmPage() {
             .then((data: { token?: string; acctId?: number; userId?: number | null; role?: string; sessionExpiresAt?: string; message?: string }) => {
                 if (data.token && data.acctId != null && data.role && data.sessionExpiresAt) {
                     setSession(data.token, data.acctId, data.role, data.sessionExpiresAt, data.userId);
-                    const exp = new Date(data.sessionExpiresAt);
+                    const isPrivileged = data.role === "ADMIN" || data.role === "STAFF";
+                    const exp = isPrivileged ? 365 : new Date(data.sessionExpiresAt);
                     Cookies.set("user-session", data.token, { path: "/", expires: exp });
                     Cookies.set("account-id", String(data.acctId), { path: "/", expires: exp });
                     Cookies.set("user-role", data.role, { path: "/", expires: exp });

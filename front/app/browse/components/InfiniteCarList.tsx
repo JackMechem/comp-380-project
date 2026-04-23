@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Car, CarApiParams } from "@/app/types/CarTypes";
 import { CartCardInfo, CartProps } from "@/app/types/CartTypes";
 import { useCartStore } from "@/stores/cartStore";
@@ -11,6 +11,9 @@ import CarGridCard from "@/app/components/cars/carGridCard";
 import CarListCardSkeleton from "@/app/components/skeletons/CarListCardSkeleton";
 import CarGridCardSkeleton from "@/app/components/skeletons/CarGridCardSkeleton";
 import styles from "./browseContent.module.css";
+
+const DEFAULT_LIST_PAGE_SIZE = 10;
+const DEFAULT_GRID_PAGE_SIZE = 12;
 
 interface UserReservation {
     vin: string;
@@ -50,6 +53,8 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 	const sentinelRef = useRef<HTMLDivElement>(null);
 	const loadingRef = useRef(false);
 	const pageRef = useRef(1);
+	const hasMoreRef = useRef(false);
+	const fetchNextPageRef = useRef<() => void>(() => {});
 
 	const cartItems = useCartStore((s) => s.carData);
 
@@ -66,7 +71,9 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 
 		fetchCarsPage({ ...filterParams, page: 1 }).then((result) => {
 			setCars(result.data);
-			setHasMore(result.totalPages > 1);
+			const more = result.totalPages > 1;
+			hasMoreRef.current = more;
+			setHasMore(more);
 			setCarsLoading(false);
 		}).catch(() => {
 			setCarsLoading(false);
@@ -128,8 +135,8 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 	};
 
 
-	const fetchNextPage = async () => {
-		if (loadingRef.current || !hasMore) return;
+	const fetchNextPage = useCallback(async () => {
+		if (loadingRef.current || !hasMoreRef.current) return;
 		loadingRef.current = true;
 		setLoading(true);
 		const nextPage = pageRef.current + 1;
@@ -139,19 +146,26 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 			return [...prev, ...result.data.filter((c) => !seen.has(c.vin))];
 		});
 		pageRef.current = nextPage;
-		setHasMore(nextPage < result.totalPages);
+		const more = nextPage < result.totalPages;
+		hasMoreRef.current = more;
+		setHasMore(more);
 		loadingRef.current = false;
 		setLoading(false);
-	};
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [JSON.stringify(filterParams)]);
 
+	// Keep the ref up-to-date so the observer always calls the latest version
+	useEffect(() => { fetchNextPageRef.current = fetchNextPage; }, [fetchNextPage]);
+
+	// Set up observer once — use ref so it never needs to reconnect
 	useEffect(() => {
 		const observer = new IntersectionObserver(
-			(entries) => { if (entries[0].isIntersecting) fetchNextPage(); },
-			{ rootMargin: "200px" }
+			(entries) => { if (entries[0].isIntersecting) fetchNextPageRef.current(); },
+			{ rootMargin: "0px 0px 300px 0px" }
 		);
 		if (sentinelRef.current) observer.observe(sentinelRef.current);
 		return () => observer.disconnect();
-	}, [hasMore]);
+	}, []);
 
 	// Client-side availability filter
 	const filterCar = (car: Car) => {
@@ -172,27 +186,18 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 	}, [visibleCars.length, hasMore, loading]);
 
 	const isList = layout === "list" && !isSmall;
+	const skeletonCount = filterParams.pageSize ?? (isList ? DEFAULT_LIST_PAGE_SIZE : DEFAULT_GRID_PAGE_SIZE);
 
 	if (carsLoading) {
 		return (
-			<div className={isList ? styles.listGrid : styles.carGrid}>
-				{isList ? (
-					<>
-						<CarListCardSkeleton />
-						<CarListCardSkeleton />
-						<CarListCardSkeleton />
-					</>
-				) : (
-					<>
-						<CarGridCardSkeleton />
-						<CarGridCardSkeleton />
-						<CarGridCardSkeleton />
-						<CarGridCardSkeleton />
-						<CarGridCardSkeleton />
-						<CarGridCardSkeleton />
-					</>
-				)}
-			</div>
+			<>
+				<div className={isList ? styles.listGrid : styles.carGrid}>
+					{Array.from({ length: skeletonCount }, (_, i) =>
+						isList ? <CarListCardSkeleton key={i} /> : <CarGridCardSkeleton key={i} />
+					)}
+				</div>
+				<div ref={sentinelRef} />
+			</>
 		);
 	}
 
@@ -220,23 +225,11 @@ const InfiniteCarList = ({ filterParams, layout = "list", fromDate, untilDate }:
 						/>
 					)
 				)}
-				{loading && (
-					isList ? (
-						<>
-							<CarListCardSkeleton />
-							<CarListCardSkeleton />
-						</>
-					) : (
-						<>
-							<CarGridCardSkeleton />
-							<CarGridCardSkeleton />
-							<CarGridCardSkeleton />
-							<CarGridCardSkeleton />
-						</>
-					)
+				{loading && Array.from({ length: isList ? 2 : 4 }, (_, i) =>
+					isList ? <CarListCardSkeleton key={i} /> : <CarGridCardSkeleton key={i} />
 				)}
 			</div>
-			{hasMore && <div ref={sentinelRef} className={styles.sentinel} />}
+			<div ref={sentinelRef} className={styles.sentinel} />
 		</>
 	);
 };

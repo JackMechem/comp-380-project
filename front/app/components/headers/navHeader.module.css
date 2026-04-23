@@ -16,10 +16,6 @@
 	background-color: var(--color-primary);
 }
 
-.headerStaff {
-	background-color: #1d4ed8;
-	border-bottom: none;
-}
 
 .headerWhite {
 	border: 1px solid transparent;
