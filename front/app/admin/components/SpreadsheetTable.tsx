@@ -65,10 +65,10 @@ export interface SpreadsheetTableProps<T> {
     // Selection + bulk delete
     selected: Set<string | number>;
     onSelectionChange: (s: Set<string | number>) => void;
-    onBulkDelete: () => void;
-    bulkDeleting: boolean;
+    onBulkDelete?: () => void;
+    bulkDeleting?: boolean;
     // Row actions
-    onEdit: (item: T) => void;
+    onEdit?: (item: T) => void;
     onDeleteOne?: (item: T) => void;
     // Header
     title: string;
@@ -101,7 +101,7 @@ function RowActionMenu<T>({
 }: {
     item: T;
     isAdmin: boolean;
-    onEdit: (item: T) => void;
+    onEdit?: (item: T) => void;
     onDelete?: (item: T) => void;
 }) {
     const [open, setOpen] = useState(false);
@@ -145,12 +145,14 @@ function RowActionMenu<T>({
                     className={styles.contextMenu}
                     style={{ top: pos.top, left: pos.left }}
                 >
-                    <button
-                        className={styles.ctxItem}
-                        onClick={() => { setOpen(false); onEdit(item); }}
-                    >
-                        <BiEdit /> Edit
-                    </button>
+                    {onEdit && (
+                        <button
+                            className={styles.ctxItem}
+                            onClick={() => { setOpen(false); onEdit(item); }}
+                        >
+                            <BiEdit /> Edit
+                        </button>
+                    )}
                     {isAdmin && onDelete && (
                         <button
                             className={`${styles.ctxItem} ${styles.rowMenuDanger}`}
@@ -538,7 +540,7 @@ export default function SpreadsheetTable<T>({
     };
 
     const ctxEditRow = () => {
-        if (ctxMenu?.rowItem) onEdit(ctxMenu.rowItem as T);
+        if (ctxMenu?.rowItem && onEdit) onEdit(ctxMenu.rowItem as T);
         closeCtx();
     };
 
@@ -843,7 +845,7 @@ export default function SpreadsheetTable<T>({
             )}
 
             {/* ── Bulk actions ──────────────────────────────────────────── */}
-            {selected.size > 0 && isAdmin && (
+            {selected.size > 0 && isAdmin && onBulkDelete && (
                 <div className={styles.bulkBar}>
                     <span>{selected.size} selected</span>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -1127,9 +1129,11 @@ export default function SpreadsheetTable<T>({
                         <>
                             <div className={styles.ctxDivider} />
                             <div className={styles.ctxSection}>Row</div>
-                            <button className={styles.ctxItem} onClick={ctxEditRow}>
-                                <BiEdit /> Edit Row
-                            </button>
+                            {onEdit && (
+                                <button className={styles.ctxItem} onClick={ctxEditRow}>
+                                    <BiEdit /> Edit Row
+                                </button>
+                            )}
                             {isAdmin && (
                                 <button className={styles.ctxItem} onClick={ctxSelectRow}>
                                     <input
