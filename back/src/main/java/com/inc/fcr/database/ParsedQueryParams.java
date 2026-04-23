@@ -115,7 +115,9 @@ public class ParsedQueryParams {
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private String searchText;
-    private List<String> parsedSearchText;
+    /** Potential parameters to be set post-query creation <br>
+     * May contain {@code Object} or {@code List<Object>} values */
+    private Map<String, Object> potentialParams = new HashMap<>();
 
     private final Class<?> clazz;
 
@@ -229,17 +231,20 @@ public class ParsedQueryParams {
 
         String properKey = FIELD_MAP.get(key);
         if (rangeType != null) {
-            if (TEMPORAL_FIELDS.contains(properKey))
-                filterFields.put(rangeType + "T_" + properKey, val); // Temporal type
-            else filterFields.put(rangeType + "_" + properKey, val); // Numeric type
+            if (TEMPORAL_FIELDS.contains(properKey)) {
+                String fullKey = rangeType + "T_" + properKey;
+                filterFields.put(fullKey, val); // Temporal type
+                potentialParams.put(fullKey, Instant.parse(val));
+            } // Numeric type
+            else filterFields.put(rangeType + "_" + properKey, val);
         }
         else filterFields.put(properKey, val);
     }
 
-    /** Parse and clean up raw search text and initialize parsedSearchText list */
+    /** Parse and clean up raw search text and initialize searchText params list */
     private String parseSearchText(String rawSearchText) {
         rawSearchText = rawSearchText.trim().toLowerCase();
-        parsedSearchText = List.of(rawSearchText.replaceAll(" -"," ").split(" "));
+        potentialParams.put("searchText", List.of(rawSearchText.replaceAll(" -"," ").split(" ")));
         return rawSearchText;
     }
 
@@ -358,17 +363,15 @@ public class ParsedQueryParams {
         return Strings.join(SEARCH_FIELDS.stream().map(e -> "c." + e).toList(), ", ");
     }
 
-    /** Fills out search parameter fields on given query expected to be generated from the same */
+    /** Populates the query with sensitive parameter values from constructed {@code potentialParams}, handling single values and lists. */
     public Query setPotentialParams(Query q) {
-        if (parsedSearchText != null) {
-            // fill in parsed search text safely
-            var i = new AtomicInteger();
-            parsedSearchText.forEach(e -> q.setParameter("searchText" + i.getAndIncrement(), e));
-        }
-        if (filterFields != null) {
-            filterFields.keySet().stream().filter(k -> k.startsWith("T_", 3))
-                    .forEach(k -> q.setParameter(k, Instant.parse(filterFields.get(k))) );
-        }
+        potentialParams.forEach((key,val) -> {
+            if (!(val instanceof List)) q.setParameter(key, val);
+            else { // val instanceof List
+                var i = new AtomicInteger();
+                ((List<?>) val).forEach(e -> q.setParameter(key + i.getAndIncrement(), e));
+            }
+        });
         return q;
      }
 
