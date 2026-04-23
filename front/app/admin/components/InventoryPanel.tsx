@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getAllCars, getCarAdmin, getFilteredCarsAdmin, deleteCar, editCar } from "@/app/lib/AdminApiCalls";
+import { createPortal } from "react-dom";
+import { getCarAdmin, getFilteredCarsAdmin, deleteCar, editCar } from "@/app/lib/AdminApiCalls";
 import { Car, CarStatus } from "@/app/types/CarTypes";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
 import SpreadsheetTable, { Column, RowEdit } from "./SpreadsheetTable";
 import styles from "./spreadsheetTable.module.css";
-import { BiSearch, BiX } from "react-icons/bi";
+import { BiSearch, BiX, BiImages } from "react-icons/bi";
 
 // ── Status badge ─────────────────────────────────────────────────────────────
 
@@ -57,6 +58,205 @@ const CAR_COLUMNS: Column<Car>[] = [
     { key: "images",       label: "Images",       defaultVisible: false, render: (c) => c.images?.length ?? 0 },
     { key: "description",  label: "Description",  defaultVisible: false, render: (c) => <span className={styles.truncatedCell}>{c.description || "—"}</span>, minWidth: 200, editable: true, editType: "textarea", getValue: (c) => c.description ?? "" },
 ];
+
+// ── Car preview panel ─────────────────────────────────────────────────────────
+
+function CarPreview({ car }: { car: Car }) {
+    const [showAll, setShowAll] = useState(false);
+    const [panelW, setPanelW] = useState(360);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const obs = new ResizeObserver((entries) => {
+            setPanelW(entries[0].contentRect.width);
+        });
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+
+    const images = car.images ?? [];
+    const isNarrow = panelW < 290;
+    const showGrid = !isNarrow && images.length > 1;
+    const thumbs = images.slice(1, 5);
+    const extra = images.length - 5;
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* ── Image gallery ── */}
+            {images.length > 0 ? (
+                <div style={{
+                    position: "relative",
+                    display: "flex",
+                    gap: 2,
+                    height: isNarrow ? 150 : 170,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                    background: "var(--color-primary-dark)",
+                }}>
+                    {/* Main image */}
+                    <img
+                        src={images[0]}
+                        alt={`${car.make} ${car.model}`}
+                        style={{
+                            width: showGrid ? "60%" : "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            flexShrink: 0,
+                            display: "block",
+                        }}
+                    />
+
+                    {/* thumbnail grid — hidden when narrow */}
+                    {showGrid && thumbs.length > 0 && (
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: thumbs.length === 1 ? "1fr" : "repeat(2, 1fr)",
+                            gridTemplateRows: thumbs.length <= 2 ? "repeat(2, 1fr)" : "repeat(2, 1fr)",
+                            width: "40%",
+                            gap: 2,
+                            flexShrink: 0,
+                        }}>
+                            {thumbs.map((url, i) => (
+                                <img
+                                    key={i}
+                                    src={url}
+                                    alt={`${car.make} ${car.model} ${i + 2}`}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        display: "block",
+                                        gridColumn: thumbs.length === 3 && i === 2 ? "1 / -1" : undefined,
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Overlay button */}
+                    {images.length > 1 && (
+                        <button
+                            onClick={() => setShowAll(true)}
+                            style={{
+                                position: "absolute",
+                                bottom: 8,
+                                right: 8,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                                background: "rgba(0,0,0,0.60)",
+                                backdropFilter: "blur(4px)",
+                                color: "#fff",
+                                border: "1px solid rgba(255,255,255,0.15)",
+                                borderRadius: 6,
+                                padding: "4px 9px",
+                                fontSize: "8pt",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                lineHeight: 1.4,
+                            }}
+                        >
+                            <BiImages style={{ fontSize: 11 }} />
+                            {isNarrow
+                                ? "See all images"
+                                : extra > 0
+                                    ? `+${extra} more`
+                                    : `${images.length} photos`}
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <div style={{
+                    height: 130,
+                    borderRadius: 8,
+                    background: "var(--color-primary-dark)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-foreground-light)",
+                    fontSize: "9pt",
+                }}>
+                    No images
+                </div>
+            )}
+
+            {/* ── Car info ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, fontSize: "9pt" }}>
+                <div style={{ fontWeight: 700, fontSize: "11pt", color: "var(--color-foreground)" }}>
+                    {car.modelYear} {car.make} {car.model}
+                </div>
+                <div style={{ color: "var(--color-foreground-light)", fontSize: "8pt" }}>{car.vin}</div>
+                <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 2 }}>
+                    {car.vehicleClass && <span className={styles.badge}>{car.vehicleClass}</span>}
+                    {car.bodyType && <span className={styles.badge}>{car.bodyType}</span>}
+                    {car.transmission && <span className={styles.badge}>{car.transmission}</span>}
+                </div>
+                <div style={{ color: "var(--color-accent)", fontWeight: 600, fontSize: "10pt", marginTop: 2 }}>
+                    ${car.pricePerDay} / day
+                </div>
+                {car.description && (
+                    <div style={{ color: "var(--color-foreground-light)", lineHeight: 1.5, marginTop: 4, fontSize: "9pt" }}>
+                        {car.description}
+                    </div>
+                )}
+            </div>
+
+            {/* ── Full gallery overlay ── */}
+            {showAll && createPortal(
+                <div style={{
+                    position: "fixed",
+                    inset: 0,
+                    background: "var(--color-primary)",
+                    zIndex: 10000,
+                    overflowY: "auto",
+                    padding: "60px 20px 20px",
+                }}>
+                    <button
+                        onClick={() => setShowAll(false)}
+                        style={{
+                            position: "fixed",
+                            top: 16,
+                            right: 16,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: "var(--color-primary-dark)",
+                            border: "1px solid var(--color-third)",
+                            borderRadius: 8,
+                            padding: "6px 14px",
+                            color: "var(--color-foreground)",
+                            fontSize: "9pt",
+                            cursor: "pointer",
+                            zIndex: 10001,
+                        }}
+                    >
+                        <BiX /> Close
+                    </button>
+                    <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: 8,
+                        maxWidth: 900,
+                        margin: "0 auto",
+                    }}>
+                        {images.map((url, i) => (
+                            <img
+                                key={i}
+                                src={url}
+                                alt={`${car.make} ${car.model} ${i + 1}`}
+                                style={{ width: "100%", borderRadius: 8, objectFit: "cover", display: "block" }}
+                            />
+                        ))}
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+}
 
 // ── Search modes ─────────────────────────────────────────────────────────────
 
@@ -317,6 +517,7 @@ const InventoryPanel = ({ role }: Props) => {
             sortBy={sortBy}
             sortDir={sortDir}
             onSortChange={handleSortChange}
+            renderPreview={(car) => <CarPreview car={car} />}
         />
     );
 };
