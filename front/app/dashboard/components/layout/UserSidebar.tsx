@@ -5,7 +5,7 @@ import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCalendar, BiUser, BiChevronLeft, BiChevronRight, BiChevronDown,
     BiLogOut, BiCar, BiPlus, BiEdit, BiTable, BiGridAlt, BiShieldQuarter,
-    BiStar, BiBookmark, BiX, BiMenu,
+    BiStar, BiBookmark, BiX, BiMenu, BiSlider,
 } from "react-icons/bi";
 import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
@@ -79,7 +79,7 @@ const ADMIN_SECTIONS: NavSection[] = [
 const ADMIN_VIEWS = new Set<UserDashboardView>([
     "admin-dashboard", "add-car", "edit-car", "view-data",
     "view-reservations", "view-accounts", "view-users",
-    "view-reviews", "view-bookmarks",
+    "view-reviews", "view-bookmarks", "view-permissions",
 ]);
 
 const DesktopSidebar = () => {
@@ -145,6 +145,15 @@ const DesktopSidebar = () => {
                             >
                                 <span className={styles.collapsedBtnIcon}><BiShieldQuarter /></span>
                             </button>
+                            {role === "ADMIN" && (
+                                <button
+                                    onClick={() => setActiveView("view-permissions")}
+                                    title="Permissions"
+                                    className={`${styles.collapsedIconBtn} ${activeView === "view-permissions" ? styles.collapsedIconBtnActive : ""}`}
+                                >
+                                    <span className={styles.collapsedBtnIcon}><BiSlider /></span>
+                                </button>
+                            )}
                             {ADMIN_SECTIONS.map((s) => {
                                 const sectionActive = s.items.some((i) => i.view === activeView);
                                 return (
@@ -281,8 +290,18 @@ const DesktopSidebar = () => {
                                         </div>
                                     );
                                 })}
+                                {role === "ADMIN" && (
+                                    <button
+                                        onClick={() => setActiveView("view-permissions")}
+                                        className={`${styles.dashBtn} ${activeView === "view-permissions" ? styles.dashBtnActive : ""}`}
+                                    >
+                                        <BiSlider className={styles.dashBtnIcon} />
+                                        <span className={styles.dashBtnLabel}>Permissions</span>
+                                    </button>
+                                )}
                         </>
                     )}
+
                     </div>
 
                     {/* Admin warning */}
@@ -427,6 +446,15 @@ const MobileSidebar = () => {
                                         </div>
                                     );
                                 })}
+                                {role === "ADMIN" && (
+                                    <button
+                                        onClick={() => pick("view-permissions")}
+                                        className={`${styles.dashBtn} ${activeView === "view-permissions" ? styles.dashBtnActive : ""}`}
+                                    >
+                                        <BiSlider className={styles.dashBtnIcon} />
+                                        <span className={styles.dashBtnLabel}>Permissions</span>
+                                    </button>
+                                )}
                             </>
                         )}
                     </div>
