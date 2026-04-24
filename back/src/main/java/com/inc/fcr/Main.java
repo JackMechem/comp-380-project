@@ -12,6 +12,7 @@ import com.inc.fcr.reviews.Review;
 import com.inc.fcr.user.User;
 import com.inc.fcr.utils.APIController;
 import com.inc.fcr.utils.PostmanController;
+import com.inc.fcr.utils.TableConfigController;
 import com.inc.fcr.utils.VersionController;
 import com.inc.fcr.car.enums.EnumController;
 import com.inc.fcr.utils.HibernateUtil;
@@ -181,6 +182,16 @@ public class Main {
                     get(EnumController::getAllEnums, Role.ANYONE);
                     path("{enum}", () -> {
                         get(EnumController::getEnum, Role.ANYONE);
+                    });
+                });
+
+                // GET /table-config        — full table permission config
+                // GET /table-config/{table} — config for a specific table
+                path("table-config", () -> {
+                    get(TableConfigController::getAll, Role.ANYONE);
+                    path("{table}", () -> {
+                        get(TableConfigController::getOne, Role.ANYONE);
+                        patch(TableConfigController::update, Role.ADMIN);
                     });
                 });
 
