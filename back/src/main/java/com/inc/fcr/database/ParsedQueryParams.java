@@ -325,10 +325,14 @@ public class ParsedQueryParams {
                     boolean inverted = field.startsWith("not_"); String _field;
                     if (inverted) _field = field.substring(4);
                     else _field = field;
-                    sb.append(" AND ").append(inverted ? "NOT ":"").append("(1=0 "); // new condition group
-                    Arrays.stream(value.split(",")).forEach(v ->
-                            sb.append(" OR c.").append(_field).append(" like '%").append(v).append("%'"));
-                    sb.append(")"); // close the condition group
+                    sb.append(" AND ").append(inverted ? "NOT ":"").append("(1=0 ");
+                    // new condition group
+                    var values = Arrays.stream(value.split(",")).toList();
+                    potentialParams.put(field, values.stream().map(v -> "%"+v+"%").toList());
+                    var i = new AtomicInteger(); // adds filters with param keys to be set after query creation
+                    values.forEach(v -> sb.append(" OR c.").append(_field).append(" like :").append(field).append(i.getAndIncrement()));
+                    // close the condition group
+                    sb.append(")");
                 }
             }
         }
