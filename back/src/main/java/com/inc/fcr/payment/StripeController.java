@@ -10,10 +10,18 @@ import com.inc.fcr.utils.HibernateUtil;
 import com.stripe.Stripe;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Customer;
+import com.stripe.model.CustomerCollection;
 import com.stripe.model.Event;
+import com.stripe.model.Invoice;
+import com.stripe.model.InvoiceItem;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
+import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.CustomerListParams;
+import com.stripe.param.InvoiceCreateParams;
+import com.stripe.param.InvoiceItemCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import io.javalin.http.Context;
@@ -359,6 +367,154 @@ public class StripeController {
     }
 
     /**
+     * GET /stripe/{id}
+     * Returns the local Payment record and its associated reservations for a given Stripe ID
+     * (payment intent ID, checkout session ID, or invoice ID).
+     * Returns 404 if no local record exists for the given ID.
+     */
+    public static void getByStripeId(Context ctx) {
+        String stripeId = ctx.pathParam("id");
+        try (org.hibernate.Session dbSession = HibernateUtil.getSessionFactory().openSession()) {
+            Payment payment = dbSession.createQuery(
+                    "SELECT p FROM Payment p LEFT JOIN FETCH p.reservations r LEFT JOIN FETCH r.car LEFT JOIN FETCH r.user WHERE p.paymentId = :id",
+                    Payment.class)
+                    .setParameter("id", stripeId)
+                    .uniqueResult();
+
+            if (payment == null) {
+                ctx.status(404).json("{\"error\": \"No record found for Stripe ID: " + stripeId + "\"}");
+                return;
+            }
+
+            payment.parseFullObjects = true;
+            for (Reservation r : payment.getReservations()) {
+                r.parseFullObjects = true;
+            }
+
+            ctx.json(payment);
+        } catch (Exception e) {
+            System.err.println("getByStripeId error: " + e.getMessage());
+            e.printStackTrace();
+            ctx.status(500).json("{\"error\": \"Internal server error\"}");
+        }
+    }
+
+    /**
+     * POST /stripe/invoice
+     * Creates a generic Stripe Invoice for any email address, sends it, creates a local
+     * Payment record (paymentId = Stripe invoice ID, amountPaid=0), and links it to the
+     * given reservation.
+     * Body: {
+     *   "email": "customer@example.com",
+     *   "reservationId": 5,
+     *   "items": [
+     *     { "description": "Car rental deposit", "amount": 150.00 }
+     *   ],
+     *   "daysUntilDue": 30
+     * }
+     */
+    public static void sendInvoice(Context ctx) {
+        try {
+            JsonNode body = ctx.bodyAsClass(JsonNode.class);
+
+            if (!body.has("email") || !body.has("reservationId") || !body.has("items")
+                    || !body.get("items").isArray() || body.get("items").isEmpty()) {
+                ctx.status(400).json("{\"error\": \"email, reservationId, and items array are required\"}");
+                return;
+            }
+
+            String email = body.get("email").asText().trim();
+            long reservationId = body.get("reservationId").asLong();
+            int daysUntilDue = body.has("daysUntilDue") ? body.get("daysUntilDue").asInt() : 30;
+
+            Reservation reservation = (Reservation) DatabaseController.getOne(Reservation.class, reservationId);
+            if (reservation == null) {
+                ctx.status(404).json("{\"error\": \"Reservation not found: " + reservationId + "\"}");
+                return;
+            }
+
+            // Find or create a Stripe Customer for this email
+            CustomerCollection existing = Customer.list(
+                CustomerListParams.builder().setEmail(email).setLimit(1L).build()
+            );
+            String customerId;
+            if (!existing.getData().isEmpty()) {
+                customerId = existing.getData().get(0).getId();
+            } else {
+                customerId = Customer.create(
+                    CustomerCreateParams.builder().setEmail(email).build()
+                ).getId();
+            }
+
+            // Create one InvoiceItem per line item
+            long totalCents = 0;
+            for (JsonNode item : body.get("items")) {
+                if (!item.has("description") || !item.has("amount")) {
+                    ctx.status(400).json("{\"error\": \"Each item requires description and amount\"}");
+                    return;
+                }
+                long amountCents = Math.round(item.get("amount").asDouble() * 100);
+                totalCents += amountCents;
+                InvoiceItem.create(
+                    InvoiceItemCreateParams.builder()
+                        .setCustomer(customerId)
+                        .setAmount(amountCents)
+                        .setCurrency("usd")
+                        .setDescription(item.get("description").asText())
+                        .build()
+                );
+            }
+
+            Invoice invoice = Invoice.create(
+                InvoiceCreateParams.builder()
+                    .setCustomer(customerId)
+                    .setCollectionMethod(InvoiceCreateParams.CollectionMethod.SEND_INVOICE)
+                    .setDaysUntilDue((long) daysUntilDue)
+                    .build()
+            );
+
+            invoice = invoice.finalizeInvoice();
+
+            try {
+                invoice = invoice.sendInvoice();
+            } catch (StripeException e) {
+                System.err.println("sendInvoice: Stripe could not send email — " + e.getMessage());
+            }
+
+            // Create local Payment record and link to reservation
+            double totalAmount = totalCents / 100.0;
+            Payment payment = new Payment(totalAmount, 0.0, Instant.now(), PaymentType.INVOICE);
+            payment.setPaymentId(invoice.getId());
+            DatabaseController.insert(payment);
+
+            reservation.addPayment(payment);
+            DatabaseController.update(reservation);
+
+            String hostedUrl = invoice.getHostedInvoiceUrl();
+            String pdfUrl    = invoice.getInvoicePdf();
+
+            MailController.sendInvoiceEmail(email, invoice.getId(), totalAmount, hostedUrl, pdfUrl);
+
+            ctx.status(200).json(
+                "{\"invoiceId\": \"" + invoice.getId() + "\""
+                + ", \"status\": \"" + invoice.getStatus() + "\""
+                + ", \"hostedInvoiceUrl\": " + (hostedUrl != null ? "\"" + hostedUrl + "\"" : "null")
+                + ", \"invoicePdf\": " + (pdfUrl != null ? "\"" + pdfUrl + "\"" : "null")
+                + ", \"totalAmount\": " + totalAmount
+                + ", \"reservationId\": " + reservationId + "}"
+            );
+
+        } catch (StripeException e) {
+            ctx.status(500).json("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}");
+        } catch (Exception e) {
+            System.err.println("sendInvoice error: " + e.getMessage());
+            e.printStackTrace();
+            ctx.status(500).json("{\"error\": \"Internal server error\"}");
+        }
+    }
+
+
+    /**
      * POST /stripe/webhook
      * Called by Stripe after a successful payment. Creates reservations from session metadata.
      */
@@ -382,7 +538,40 @@ public class StripeController {
             return;
         }
 
-        if ("payment_intent.succeeded".equals(event.getType())) {
+        if ("invoice.paid".equals(event.getType())) {
+            Invoice invoice;
+            try {
+                invoice = (Invoice) event.getDataObjectDeserializer()
+                        .getObject()
+                        .orElseThrow(() -> new RuntimeException("Could not deserialize invoice"));
+            } catch (Exception e) {
+                ctx.status(400).json("{\"error\": \"" + e.getMessage() + "\"}");
+                return;
+            }
+
+            ctx.status(200).json("{\"received\": true}");
+
+            String invoiceId = invoice.getId();
+            long amountPaidCents = invoice.getAmountPaid();
+            new Thread(() -> {
+                try (org.hibernate.Session dbSession = HibernateUtil.getSessionFactory().openSession()) {
+                    Payment payment = dbSession.get(Payment.class, invoiceId);
+                    if (payment != null) {
+                        org.hibernate.Transaction tx = dbSession.beginTransaction();
+                        payment.setAmountPaid(amountPaidCents / 100.0);
+                        dbSession.merge(payment);
+                        tx.commit();
+                        System.out.println("Webhook: invoice.paid — updated amountPaid for " + invoiceId);
+                    } else {
+                        System.err.println("Webhook: invoice.paid — no local payment found for " + invoiceId);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Webhook: invoice.paid processing error: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }).start();
+
+        } else if ("payment_intent.succeeded".equals(event.getType())) {
             PaymentIntent intent;
             try {
                 intent = (PaymentIntent) event.getDataObjectDeserializer()

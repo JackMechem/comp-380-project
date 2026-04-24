@@ -47,6 +47,7 @@ import static io.javalin.apibuilder.ApiBuilder.*;
  *   <li>{@code POST /stripe/user}                    — find or create a user by email</li>
  *   <li>{@code POST /stripe/checkout}                — create a hosted Stripe Checkout session</li>
  *   <li>{@code POST /stripe/payment-intent}          — create a Stripe PaymentIntent</li>
+ *   <li>{@code POST /stripe/invoice}                 — create and send a Stripe Invoice to a user</li>
  *   <li>{@code POST /stripe/webhook}                 — handle Stripe payment events</li>
  *   <li>{@code GET  /enums}                          — all enum metadata for UI dropdowns</li>
  *   <li>{@code GET  /enums/{enum}}                   — metadata for a specific enum</li>
@@ -170,7 +171,9 @@ public class Main {
                     post("/user", StripeController::findOrCreateUser, Role.ANYONE);
                     post("/checkout", StripeController::createCheckoutSession, Role.ANYONE);
                     post("/payment-intent", StripeController::createPaymentIntent, Role.ANYONE);
+                    post("/invoice", StripeController::sendInvoice, Role.WRITE);
                     post("/webhook", StripeController::handleWebhook, Role.ANYONE);
+                    path("{id}", () -> get(StripeController::getByStripeId, Role.READ));
                 });
 
                 // redirect to enums (/enums) and (/enums{enum})
