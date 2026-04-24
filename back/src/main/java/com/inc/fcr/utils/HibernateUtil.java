@@ -47,10 +47,12 @@ public class HibernateUtil {
             // Connection pool (HikariCP — bundled with Hibernate 6)
             configuration.setProperty("hibernate.connection.provider_class",
                     "org.hibernate.hikaricp.internal.HikariCPConnectionProvider");
-            configuration.setProperty("hibernate.hikari.minimumIdle", "2");
-            configuration.setProperty("hibernate.hikari.maximumPoolSize", "10");
-            configuration.setProperty("hibernate.hikari.idleTimeout", "30000");
-            configuration.setProperty("hibernate.hikari.connectionTimeout", "20000");
+            configuration.setProperty("hibernate.hikari.minimumIdle", "5");
+            configuration.setProperty("hibernate.hikari.maximumPoolSize", "12");
+            configuration.setProperty("hibernate.hikari.idleTimeout", "45000"); // 45s
+            configuration.setProperty("hibernate.hikari.connectionTimeout", "15000"); // 15s
+            configuration.setProperty("hibernate.hikari.maxLifetime", "900000"); // 15 min
+            configuration.setProperty("hibernate.default_batch_fetch_size", "16");
 
             // 2. SQL Dialect - Tells Hibernate how to write MySQL-specific SQL
             configuration.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQLDialect");
@@ -72,7 +74,6 @@ public class HibernateUtil {
             configuration.addAnnotatedClass(Reservation.class);
             configuration.addAnnotatedClass(Payment.class);
             configuration.addAnnotatedClass(Review.class);
-
 
             return configuration.buildSessionFactory();
         } catch (Throwable ex) {
