@@ -10,12 +10,8 @@ import com.inc.fcr.car.CarMakeController;
 import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.reviews.Review;
 import com.inc.fcr.user.User;
-import com.inc.fcr.utils.APIController;
-import com.inc.fcr.utils.PostmanController;
-import com.inc.fcr.utils.TableConfigController;
-import com.inc.fcr.utils.VersionController;
+import com.inc.fcr.utils.*;
 import com.inc.fcr.car.enums.EnumController;
-import com.inc.fcr.utils.HibernateUtil;
 
 import io.javalin.Javalin;
 
@@ -117,7 +113,7 @@ public class Main {
                 });
 
                 path("cars", () -> {
-                    get(cars::getAll, Role.ANYONE);
+                    get(TimeIt.timeThisAPI(cars::getAll, "getAllCars"), Role.ANYONE);
                     post(cars::create, Role.WRITE);
                     path("/makes", () -> {
                         get(CarMakeController::getDistinctMakes, Role.ANYONE);
@@ -130,7 +126,7 @@ public class Main {
                 });
 
                 path("reservations", () -> {
-                    get(reservations::getAll, Role.ANYONE);
+                    get(TimeIt.timeThisAPI(reservations::getAll, "getAllReservations"), Role.ANYONE);
                     post(reservations::create, Role.WRITE);
                     path("{id}", () -> {
                         get(reservations::getOne, Role.ANYONE);
