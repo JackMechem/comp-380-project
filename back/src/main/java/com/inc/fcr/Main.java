@@ -8,6 +8,7 @@ import com.inc.fcr.payment.Payment;
 import com.inc.fcr.payment.StripeController;
 import com.inc.fcr.car.CarMakeController;
 import com.inc.fcr.reservation.Reservation;
+import com.inc.fcr.reservation.StatsController;
 import com.inc.fcr.reviews.Review;
 import com.inc.fcr.user.User;
 import com.inc.fcr.utils.*;
@@ -174,6 +175,10 @@ public class Main {
                     post("/invoice", StripeController::sendInvoice, Role.WRITE);
                     post("/webhook", StripeController::handleWebhook, Role.ANYONE);
                     path("{id}", () -> get(StripeController::getByStripeId, Role.READ));
+                });
+
+                path("stats", () -> {
+                    get("revenue", StatsController::getRevenue, Role.READ);
                 });
 
                 // redirect to enums (/enums) and (/enums{enum})

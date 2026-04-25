@@ -63,7 +63,7 @@ public class DatabaseController {
         // Get entities
         List<?> entities = params.setPotentialParams(session.createQuery(queryString, clazz))
                 .setFirstResult(offset).setMaxResults(limit).getResultList();
-        if (params.getParseFullObjects()) entities.stream().forEach(c -> ((APIEntity) c).parseFullObjects = true);
+        if (params.getParseFullObjects()) entities.forEach(c -> ((APIEntity) c).parseFullObjects = true);
 
         if (!params.isSelecting()) {
             return new PagesWrapper(entities, page, totalPages, totalItems);
