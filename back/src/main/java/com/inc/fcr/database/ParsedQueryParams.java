@@ -8,12 +8,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.inc.fcr.car.Car;
 import com.inc.fcr.errorHandling.QueryParamException;
 import com.inc.fcr.utils.APIEntity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Query;
+import jakarta.persistence.*;
 import joptsimple.internal.Strings;
 
 /**
@@ -115,9 +113,12 @@ public class ParsedQueryParams {
     private int page = 1;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private String searchText;
+    /** List used for popularity sorting, expects exactly 2 values: (startDate, endDate)
+     * <br> Defaults to a range covering the past 4 months */
+    private List<Instant> popularityRange = Arrays.asList(Instant.now().minusSeconds(10512000), Instant.now());
     /** Potential parameters to be set post-query creation <br>
      * May contain {@code Object} or {@code List<Object>} values */
-    private Map<String, Object> potentialParams = new HashMap<>();
+    private Map<String, Object> potentialParams = new LinkedHashMap<>();
 
     private final Class<?> clazz;
 
@@ -126,7 +127,7 @@ public class ParsedQueryParams {
     private Set<String> TEMPORAL_FIELDS = new LinkedHashSet<>(); // date type fields
     private Map<String, String> FIELD_MAP = new LinkedHashMap<>(); // contains alpha & numeric
     private Map<String, String> ALPHA_FIELD_MAP = new LinkedHashMap<>(); // strings only
-    private Map<String, List<String>> ENUM_VALUES = new HashMap<>();
+    private Map<String, List<String>> ENUM_VALUES = new LinkedHashMap<>();
     private Map<String, String> RELATION_ID_PATHS = new LinkedHashMap<>(); // @ManyToOne/@OneToOne: fieldName -> "field.idField"
     private Set<String> NUMERIC_RELATION_FIELDS  = new LinkedHashSet<>(); // relation fields whose FK is numeric
 
@@ -158,12 +159,7 @@ public class ParsedQueryParams {
             switch (key) {
                 case "parsefullobjects" -> parseFullObjects = Boolean.parseBoolean(val);
                 case "select" -> parseSelect(entry.getValue());
-                case "sortby" -> {
-                    if (FIELD_MAP.containsKey(val.toLowerCase())) {
-                        sortBy = FIELD_MAP.get(val.toLowerCase());
-                        sortBySet = true;
-                    }
-                }
+                case "sortby" -> parseSortBy(val.toLowerCase());
                 case "sortdir" -> sortDir = val.equalsIgnoreCase("desc") ? SortStyle.DESCENDING : SortStyle.ASCENDING;
                 case "page" -> page = Math.max(1, Integer.parseInt(val));
                 case "pagesize" -> pageSize = Integer.parseInt(val) < 1 ? DEFAULT_PAGE_SIZE : Integer.parseInt(val);
@@ -185,6 +181,9 @@ public class ParsedQueryParams {
                         parseFilter(key, val, null);
                     } else if (key.endsWith("!") && FIELD_MAP.containsKey(key.substring(0, key.length()-1)) ) {
                         parseFilter(key.substring(0, key.length()-1), val, "not");
+                    } else if (key.startsWith("popularity")) {
+                        if (key.equals("popularitystartdate")) popularityRange.set(0, Instant.parse(val));
+                        else if (key.equals("popularityenddate")) popularityRange.set(1, Instant.parse(val));
                     }
                 }
             }
@@ -246,6 +245,19 @@ public class ParsedQueryParams {
         rawSearchText = rawSearchText.trim().toLowerCase();
         potentialParams.put("searchText", List.of(rawSearchText.replaceAll(" -"," ").split(" ")));
         return rawSearchText;
+    }
+
+    /** Parse raw sortBy field and build popularity sub-query */
+    private void parseSortBy(String rawSortBy) {
+        if (FIELD_MAP.containsKey(rawSortBy)) {
+            sortBy = "c." + FIELD_MAP.get(rawSortBy);
+            sortBySet = true;
+        } else if (rawSortBy.equals("popularity") && clazz.isAssignableFrom(Car.class)) {
+            sortBy = "(SELECT COUNT(DISTINCT r.id) FROM Reservation r WHERE r.car = c" +
+                    " AND (r.dateBooked BETWEEN :popularityDate0 AND :popularityDate1 ))";
+            potentialParams.put("popularityDate", popularityRange);
+            sortBySet = true;
+        }
     }
 
     // Getters
@@ -336,7 +348,7 @@ public class ParsedQueryParams {
                 }
             }
         }
-        if (searchText != null) sb.append(" AND " + getSearchClause() + " > 0");
+        if (searchText != null) sb.append(" AND ").append(getSearchClause()).append(" > 0");
         return sb.toString();
     }
 
@@ -354,12 +366,12 @@ public class ParsedQueryParams {
     private String getSearchClause() {
         if (searchText == null) return "";
         var i = new AtomicInteger(); // java stupidity equivalent to: int i = 0; and i++ below
-        return Strings.join(Arrays.stream(searchText.split(" ")).map(e -> {
+        return "("+Strings.join(Arrays.stream(searchText.split(" ")).map(e -> {
             boolean invertedMatch = e.startsWith("-");
             if (invertedMatch) e = e.substring(1);
             return " CAST( REGEXP_LIKE(CONCAT_WS(' ', " + searchFieldsToStr() + "), :searchText"+ i.getAndIncrement() +", 'i') AS int) "
                     + (invertedMatch ? "*-10" : ""); // large negative weight against inverted matches
-        }).toList(), " + ");
+        }).toList(), " + ")+")";
     }
 
     /** Helper function for search field processing called by {@code getSearchClause()} */
@@ -369,7 +381,10 @@ public class ParsedQueryParams {
 
     /** Populates the query with sensitive parameter values from constructed {@code potentialParams}, handling single values and lists. */
     public Query setPotentialParams(Query q) {
-        potentialParams.forEach((key,val) -> {
+        var possibleParams = q.getParameters().stream().map(Parameter::getName).toList();
+        potentialParams.forEach((key,val) -> { // skip if not present in this query
+            if (possibleParams.stream().filter((p) -> p.startsWith(key)).toList().isEmpty()) return;
+            System.out.println("Setting param: " + key + " = " + val + (val instanceof List));
             if (!(val instanceof List)) q.setParameter(key, val);
             else { // val instanceof List
                 var i = new AtomicInteger();
@@ -389,9 +404,9 @@ public class ParsedQueryParams {
      * @return the ORDER BY clause string
      */
     public String getSortClause() {
-        return (sortBySet || searchText == null) ?
-                " ORDER BY c." + (sortBySet ? sortBy : idName) + getSortDirClause()
-                : " ORDER BY " + getSearchClause() + " DESC";
+        return (searchText == null) ?
+                " ORDER BY " + (sortBySet ? sortBy : "c."+idName) + getSortDirClause()
+                : " ORDER BY " + getSearchClause() + " DESC" + (sortBySet ? ", "+sortBy+getSortDirClause() : "");
     }
 
     private String getSortDirClause() {
