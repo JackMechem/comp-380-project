@@ -70,6 +70,10 @@ public class TableConfigController {
         "reviews", new TableConfig(
             new RoleConfig(true, true, true, List.of(), List.of()),
             new RoleConfig(true, false, false, List.of("account", "car"), List.of("account", "car"))
+        ),
+        "payments", new TableConfig(
+            new RoleConfig(true, true, false, List.of(), List.of("paymentId")),
+            new RoleConfig(false, false, false, List.of(), List.of("paymentId"))
         )
     ));
 

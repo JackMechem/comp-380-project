@@ -110,6 +110,57 @@ public class MailController {
      * @param cars           per-car detail maps (keys: vin, make, model, year, pickUpTime, dropOffTime)
      * @return a self-contained HTML string suitable for use as the email body
      */
+    /**
+     * Sends an invoice email containing the hosted Stripe invoice URL and PDF link.
+     *
+     * @param toEmail        recipient email address
+     * @param invoiceId      Stripe invoice ID
+     * @param totalAmount    total amount due in USD
+     * @param hostedUrl      Stripe hosted invoice URL (may be null)
+     * @param pdfUrl         Stripe invoice PDF URL (may be null)
+     */
+    public static void sendInvoiceEmail(String toEmail, String invoiceId, double totalAmount, String hostedUrl, String pdfUrl) {
+        if (API_KEY == null || API_KEY.isBlank()) {
+            System.err.println("Mail: RESEND_API_KEY not set — skipping invoice email");
+            return;
+        }
+
+        String amountStr = String.format("$%.2f", totalAmount);
+
+        StringBuilder html = new StringBuilder();
+        html.append("<div style='font-family:sans-serif;max-width:600px;margin:auto'>");
+        html.append("<h2>Invoice from FCR Inc</h2>");
+        html.append("<p>You have a new invoice for <strong>").append(amountStr).append("</strong>.</p>");
+        html.append("<table style='width:100%;margin-bottom:16px'>");
+        html.append("<tr><td style='padding:6px;font-weight:bold'>Invoice ID</td><td style='padding:6px'>").append(invoiceId).append("</td></tr>");
+        html.append("<tr><td style='padding:6px;font-weight:bold'>Amount Due</td><td style='padding:6px'>").append(amountStr).append("</td></tr>");
+        html.append("</table>");
+        if (hostedUrl != null) {
+            html.append("<p><a href='").append(hostedUrl).append("' style='display:inline-block;padding:12px 24px;")
+                .append("background:#0070f3;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold'>")
+                .append("View &amp; Pay Invoice</a></p>");
+        }
+        if (pdfUrl != null) {
+            html.append("<p><a href='").append(pdfUrl).append("'>Download PDF</a></p>");
+        }
+        html.append("<p>Thank you for choosing FCR Inc!</p></div>");
+
+        try {
+            Resend resend = new Resend(API_KEY);
+            CreateEmailOptions email = CreateEmailOptions.builder()
+                    .from(MAIL_FROM != null ? MAIL_FROM : "onboarding@resend.dev")
+                    .to(toEmail)
+                    .subject("Your Invoice from FCR Inc — " + amountStr)
+                    .html(html.toString())
+                    .build();
+            resend.emails().send(email);
+            System.out.println("Mail: invoice email sent to " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Mail: failed to send invoice email — " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private static String buildHtml(String firstName, long userId, String paymentId, List<Long> reservationIds, List<Map<String, String>> cars) {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style='font-family: sans-serif; max-width: 600px; margin: auto;'>");
