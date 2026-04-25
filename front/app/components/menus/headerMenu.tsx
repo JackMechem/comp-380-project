@@ -281,15 +281,15 @@ const HeaderMenu = () => {
                             <button className={styles.cartHeaderBtn} onClick={() => setBookmarksOpen(o => !o)}>
                                 <BsBookmark className={styles.cartIcon} />
                                 <p className={styles.cartTitle}>Bookmarks</p>
-                                {bookmarkCount > 0 && <span className={styles.cartCount}>{bookmarkCount} {bookmarkCount === 1 ? "car" : "cars"}</span>}
                                 <span className={styles.cartHeaderSpacer} />
                             </button>
+                            {bookmarkCount > 0 && <span className={styles.cartCount}>{bookmarkCount} {bookmarkCount === 1 ? "car" : "cars"}</span>}
                             {bookmarkCount > 0 && (
                                 <button onClick={() => { if (accountId) clearBookmarksApi(accountId); }} className={styles.clearBtn}>
                                     Clear
                                 </button>
                             )}
-                            <button className={styles.cartHeaderBtn} onClick={() => setBookmarksOpen(o => !o)}>
+                            <button onClick={() => setBookmarksOpen(o => !o)} className={styles.chevronBtn}>
                                 {bookmarksOpen ? <BiChevronUp className={styles.collapseIcon} /> : <BiChevronDown className={styles.collapseIcon} />}
                             </button>
                         </div>
