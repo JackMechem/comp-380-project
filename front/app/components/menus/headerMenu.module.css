@@ -358,6 +358,17 @@
 	flex: 1;
 }
 
+.chevronBtn {
+	display: flex;
+	align-items: center;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	color: inherit;
+	flex-shrink: 0;
+}
+
 .clearBtn {
 	font-size: 9pt;
 	font-weight: 500;
