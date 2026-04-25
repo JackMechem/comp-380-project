@@ -78,5 +78,21 @@
             "lockedCols": ["account", "car"],
             "permanentlyLockedCols": ["account", "car"]
         }
+    },
+    "payments": {
+        "admin": {
+            "canEdit": true,
+            "canDelete": true,
+            "canAddRow": false,
+            "lockedCols": [],
+            "permanentlyLockedCols": ["paymentId"]
+        },
+        "staff": {
+            "canEdit": false,
+            "canDelete": false,
+            "canAddRow": false,
+            "lockedCols": [],
+            "permanentlyLockedCols": ["paymentId"]
+        }
     }
 }

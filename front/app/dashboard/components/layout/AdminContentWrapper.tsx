@@ -12,13 +12,17 @@ import UserProfilesPanel from "@/app/admin/components/panels/UserProfilesPanel";
 import ReviewsPanel from "@/app/admin/components/panels/ReviewsPanel";
 import BookmarksPanel from "@/app/admin/components/panels/BookmarksPanel";
 import PermissionsPanel from "@/app/admin/components/panels/PermissionsPanel";
+import CreateInvoicePanel from "@/app/admin/components/panels/CreateInvoicePanel";
+import ViewPaymentsPanel from "@/app/admin/components/panels/ViewPaymentsPanel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const ADMIN_VIEWS = new Set<UserDashboardView>([
     "admin-dashboard", "add-car", "edit-car", "view-data",
     "view-reservations", "view-accounts", "view-users",
-    "view-reviews", "view-bookmarks", "view-permissions",
+    "view-reviews", "view-bookmarks",
+    "view-permissions-admin", "view-permissions-staff",
+    "create-invoice", "view-payments",
 ]);
 
 export function isAdminView(view: UserDashboardView): boolean {
@@ -61,8 +65,14 @@ export default function AdminContentWrapper() {
             return <ReviewsPanel />;
         case "view-bookmarks":
             return <BookmarksPanel />;
-        case "view-permissions":
-            return <PermissionsPanel />;
+        case "view-permissions-admin":
+            return <PermissionsPanel roleFilter="admin" />;
+        case "view-permissions-staff":
+            return <PermissionsPanel roleFilter="staff" />;
+        case "create-invoice":
+            return <CreateInvoicePanel />;
+        case "view-payments":
+            return <ViewPaymentsPanel />;
         case "admin-dashboard":
         default:
             return <AdminDashboardPanel />;

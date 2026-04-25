@@ -15,7 +15,10 @@ export type UserDashboardView =
     | "view-users"
     | "view-reviews"
     | "view-bookmarks"
-    | "view-permissions";
+    | "view-permissions-admin"
+    | "view-permissions-staff"
+    | "create-invoice"
+    | "view-payments";
 
 export interface DashboardReservation {
     reservationId: number;
