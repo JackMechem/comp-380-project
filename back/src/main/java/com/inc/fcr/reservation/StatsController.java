@@ -94,7 +94,7 @@ public class StatsController {
     private static String parseTimeUnit(Context ctx, ParsedQueryParams params) throws QueryParamException {
         String timeUnit = ctx.queryParam("timeUnit");
         if (timeUnit == null) {
-            var popularityRange = (List<Instant>) params.getPotentialParams().get("popularity");
+            var popularityRange = (List<Instant>) params.getPotentialParams().get("popularityDate");
             long dayRange = ChronoUnit.DAYS.between(popularityRange.get(0), popularityRange.get(1));
             if (dayRange <= 30) timeUnit = timeUnits.get(0); // day
             else if (dayRange <= 124) timeUnit = timeUnits.get(1); // week
