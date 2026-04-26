@@ -1,6 +1,5 @@
 .footer {
     background-color: var(--color-primary-dark);
-    border-top: 1px solid var(--color-third);
     margin-top: 80px;
 }
 

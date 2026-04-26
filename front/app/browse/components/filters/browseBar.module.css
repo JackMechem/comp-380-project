@@ -31,55 +31,65 @@
 .filterBtnWrapper {
 	position: relative;
 	display: flex;
-	height: 100%;
+	flex-shrink: 0;
 }
 
 .filterActiveDot {
 	position: absolute;
-	top: 6px;
-	right: 6px;
-	width: 8px;
-	height: 8px;
+	top: 2px;
+	right: 2px;
+	width: 7px;
+	height: 7px;
 	border-radius: 50%;
 	background-color: var(--color-accent);
 	pointer-events: none;
 }
 
 .filterBtn {
+	display: flex;
+	align-items: center;
+	gap: 0;
 	font-size: 20pt;
-	color: color-mix(in srgb, var(--color-accent) 80%, transparent);
-	border: 1px solid transparent;
+	color: var(--color-accent);
+	background: transparent;
+	border: none;
+	border-radius: 9999px;
+	padding: 4px 10px 4px 6px;
 	cursor: pointer;
-	border-radius: 1rem;
-	text-align: center;
-	padding: 8px 15px;
-	height: 100%;
-	background: none;
-	transition: background-color 150ms, border-color 150ms;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	overflow: hidden;
+	transition: background-color 150ms, gap 200ms;
 }
 
 .filterBtn:hover {
-	background-color: var(--color-primary-dark);
-	border-color: color-mix(in srgb, var(--color-third) 70%, transparent);
+	gap: 6px;
+	background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.filterBtnText {
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+	max-width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: max-width 200ms ease, opacity 150ms ease;
+}
+
+@media (min-width: 768px) {
+	.filterBtn:hover .filterBtnText {
+		max-width: 80px;
+		opacity: 1;
+	}
 }
 
 /* ── SortButtons ─────────────────────────────────────────────────────────────── */
 .sortGroup {
 	display: flex;
-	gap: 0;
-	border: 1px solid transparent;
-	border-radius: 0.75rem;
-	padding: 5px;
-	align-items: stretch;
-	transition: border-color 150ms, background-color 150ms;
-}
-
-.sortGroup:hover {
-	border-color: color-mix(in srgb, var(--color-third) 50%, transparent);
-	background-color: var(--color-primary-dark);
+	gap: 4px;
+	align-items: center;
+	padding: 0;
+	background-color: transparent;
+	border: none;
 }
 
 .sortDirBtn {
@@ -87,21 +97,20 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: auto;
-	padding: 0 6px;
-	margin-right: -10px;
-	z-index: 1;
-	height: auto;
-	border-radius: 0.75rem;
-	border: 1px solid transparent;
+	height: 36px;
+	padding: 0 10px;
+	border-radius: 9999px;
+	border: 1px solid var(--color-third);
 	cursor: pointer;
-	font-size: 18pt;
-	background: none;
-	transition: background-color 200ms;
+	font-size: 16pt;
+	background-color: var(--color-primary);
+	box-shadow: 0 2px 8px rgb(0 0 0 / 0.10);
+	transition: background-color 150ms, border-color 150ms;
 }
 
 .sortDirBtn:hover {
-	background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+	background-color: var(--color-primary-dark);
+	border-color: var(--color-accent);
 }
 
 /* ── ActiveFilters ───────────────────────────────────────────────────────────── */
@@ -148,16 +157,17 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 5px 6px;
-	border-radius: 0.75rem;
-	border: 1px solid transparent;
+	padding: 6px 10px;
+	border-radius: 9999px;
+	border: 1px solid var(--color-third);
 	cursor: pointer;
-	font-size: 18pt;
-	background: none;
+	font-size: 16pt;
+	background-color: var(--color-primary);
+	box-shadow: 0 2px 8px rgb(0 0 0 / 0.10);
 	transition: background-color 150ms, border-color 150ms;
 }
 
 .layoutToggleBtn:hover {
 	background-color: var(--color-primary-dark);
-	border-color: color-mix(in srgb, var(--color-third) 80%, transparent);
+	border-color: var(--color-accent);
 }

@@ -49,6 +49,11 @@
     margin-left: 6px;
 }
 
+.noRatings {
+    font-size: 11px;
+    color: var(--color-foreground-light);
+}
+
 /* ── CarRatingBadge ──────────────────────────────────────────────────────────── */
 
 .ratingBadge {

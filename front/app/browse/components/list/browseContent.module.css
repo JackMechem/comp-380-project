@@ -104,30 +104,64 @@
 }
 
 .toolbar {
-	margin-top: 8px;
-	margin-bottom: 16px;
+	position: sticky;
+	top: 124px; /* mobile: below compact header (64px) + search row (60px) */
+	z-index: 9;
 	width: 100%;
-	padding: 0 16px;
+	padding: 8px 16px;
 	display: flex;
 	flex-direction: row;
-	gap: 16px;
+	flex-wrap: wrap;
 	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
+	pointer-events: none;
+}
+
+.toolbar > * {
+	pointer-events: auto;
+}
+
+/* Active filter chips row — full width second row inside the toolbar, mobile only */
+.toolbarFiltersRow {
+	width: 100%;
+	order: 3;
+	overflow-x: auto;
+	scrollbar-width: none;
+	padding-top: 6px;
+}
+
+.toolbarFiltersRow:empty {
+	display: none;
+}
+
+.toolbarActiveFilters {
+	flex-wrap: nowrap;
+}
+
+@media (min-width: 1024px) {
+	.toolbarFiltersRow {
+		display: none;
+	}
+}
+
+@media (min-width: 1024px) {
+	.toolbar {
+		top: 64px;
+	}
 }
 
 .toolbarLeft {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
+	gap: 6px;
 }
 
 .layoutToggleWrap {
-	display: none;
+	display: flex;
 }
 
-@media (min-width: 640px) {
-	.layoutToggleWrap { display: block; }
+.layoutToggleWrap {
+	display: block;
 }
 
 .filterBtnSkeleton {

@@ -841,6 +841,26 @@
 }
 
 /* ── CarPage layout ───────────────────────────────────────────────────────────── */
+.backButtonRow {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .backButtonRow {
+        display: block;
+        position: sticky;
+        top: 64px;
+        z-index: 100;
+        margin-top: 0;
+        margin-bottom: 0;
+        margin-left: -20px;
+        width: fit-content;
+        background-color: var(--color-primary);
+        border-bottom-right-radius: 16px;
+        padding: 4px;
+    }
+}
+
 .twoColRow {
 	display: flex;
 	flex-direction: column;

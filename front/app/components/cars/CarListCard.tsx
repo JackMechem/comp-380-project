@@ -86,6 +86,7 @@ const CarListCard = ({
 					</div>
 					<div className={styles.yearAvailabilityRow}>
 						<p className={styles.carYear}>{car.modelYear}</p>
+						<CarRatingBadge averageRating={car.averageRating} />
 						{!datesReady ? (
 							<div className={styles.badgeSkeleton} />
 						) : (
@@ -117,8 +118,6 @@ const CarListCard = ({
 							Reserved: {formatConflicts(conflicts)}
 						</p>
 					)}
-
-					<CarRatingBadge vin={car.vin} />
 
 					{car.features?.length > 0 && (
 						<div className={styles.features}>
