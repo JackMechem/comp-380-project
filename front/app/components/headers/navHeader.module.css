@@ -12,6 +12,7 @@
 	height: auto;
 }
 
+
 .headerAdmin {
 	background-color: var(--color-primary);
 }
@@ -55,6 +56,62 @@
     display: flex;
 }
 
+/* Desktop left tab slot — stretches full header height, hidden on mobile */
+.leftSlotTab {
+	align-self: stretch;
+	display: flex;
+	align-items: stretch;
+	flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+	.leftSlotTab { display: none; }
+}
+
+/* Browse icon link */
+.browseNavLink {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	font-size: 22pt;
+	text-decoration: none;
+	padding: 4px 14px 4px 6px;
+	border-radius: 9999px;
+	flex-shrink: 0;
+	transition: background-color 150ms, gap 200ms;
+	overflow: hidden;
+}
+
+.browseNavLink:hover {
+	gap: 6px;
+	background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.browseNavLinkWhite {
+	color: var(--color-primary);
+}
+
+.browseNavLinkCompact {
+	color: var(--color-accent);
+}
+
+.browseNavLinkText {
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+	max-width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: max-width 200ms ease, opacity 150ms ease;
+}
+
+@media (min-width: 768px) {
+	.browseNavLink:hover .browseNavLinkText {
+		max-width: 120px;
+		opacity: 1;
+	}
+}
+
 /* Mobile-only left slot — hidden once the desktop search bar appears */
 .mobileLeftSlot {
 	display: flex;
@@ -62,9 +119,6 @@
 	flex-shrink: 0;
 }
 
-@media (min-width: 768px) {
-	.mobileLeftSlot { display: none; }
-}
 
 .desktopSearch {
     box-sizing: border-box;
@@ -452,4 +506,147 @@
 	align-self: stretch;
 	flex-shrink: 0;
 	margin: 0 14px;
+}
+
+/* ── Desktop header pills (Search + Dates) ── */
+.headerPill {
+	position: relative;
+	display: flex;
+	align-items: stretch;
+	height: 50px;
+	background-color: var(--color-primary-dark);
+	border: 1px solid transparent;
+	border-radius: 9999px;
+	overflow: visible;
+	transition: border-color 150ms;
+	flex-shrink: 0;
+}
+
+.headerPillOpen {
+	border-color: var(--color-accent);
+}
+
+/* Icon/label trigger button */
+.headerPillIcon {
+	all: unset;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	padding: 0 14px;
+	font-size: 18px;
+	color: var(--color-foreground);
+	cursor: pointer;
+	border-radius: 9999px;
+	white-space: nowrap;
+	flex-shrink: 0;
+	transition: color 150ms;
+}
+
+.headerPillIcon:hover {
+	color: var(--color-accent);
+}
+
+/* Label text shown when pill is closed */
+.headerPillLabel {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: color-mix(in srgb, var(--color-foreground) 75%, transparent);
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.headerPillLabelActive {
+	color: var(--color-foreground);
+}
+
+/* Mobile pill: fills available space */
+.headerPillMobile {
+	flex: 1;
+	min-width: 0;
+}
+
+/* Expandable body */
+.headerPillBody {
+	max-width: 0;
+	overflow: hidden;
+	transition: max-width 300ms ease;
+	display: flex;
+	align-items: center;
+}
+
+.headerPillBodyOpen {
+	max-width: 400px;
+}
+
+/* Text input inside search pill */
+.headerPillInput {
+	all: unset;
+	box-sizing: border-box;
+	width: 200px;
+	font-size: 0.875rem;
+	color: var(--color-foreground);
+	white-space: nowrap;
+	align-self: center;
+}
+
+.headerPillInput::placeholder {
+	color: color-mix(in srgb, var(--color-foreground) 45%, transparent);
+}
+
+/* Submit button inside pill */
+.headerPillSubmit {
+	all: unset;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	min-width: 36px;
+	background-color: var(--color-accent);
+	color: var(--color-primary);
+	border-radius: 9999px;
+	font-size: 15px;
+	cursor: pointer;
+	margin: 6px;
+	flex-shrink: 0;
+	align-self: center;
+	transition: filter 150ms;
+}
+
+.headerPillSubmit:hover {
+	filter: brightness(1.1);
+}
+
+/* Date group inside dates pill */
+.headerPillDateGroup {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 0 14px;
+	white-space: nowrap;
+	height: 100%;
+}
+
+.headerPillDateLabel {
+	font-size: 8.5pt;
+	font-weight: 600;
+	color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+	margin: 0 0 3px 0;
+	line-height: 1;
+}
+
+/* Vertical separator between From / Until */
+.headerPillSep {
+	width: 1px;
+	height: 26px;
+	background-color: color-mix(in srgb, var(--color-third) 60%, transparent);
+	flex-shrink: 0;
+	align-self: center;
 }

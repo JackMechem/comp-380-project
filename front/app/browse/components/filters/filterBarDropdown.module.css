@@ -9,26 +9,87 @@
 	font-size: 8pt;
 }
 
-.select {
-	background-color: color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
-	outline: none;
+/* Pill trigger button */
+.selectWrap,
+.selectWrapNoLabel {
+	all: unset;
+	box-sizing: border-box;
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	background-color: var(--color-primary);
 	border: 1px solid var(--color-third);
-	border-radius: 0.75rem;
-	padding: 8px 12px;
-	width: 100%;
-	font-size: 11pt;
+	border-radius: 9999px;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 0.10);
+	transition: border-color 150ms;
+	height: 36px;
+	padding: 0 10px 0 14px;
 	cursor: pointer;
-	color: var(--color-foreground);
+	white-space: nowrap;
 }
 
-.selectNoLabel {
-	background-color: color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
-	outline: none;
-	border-radius: 0.75rem;
-	padding: 8px 12px;
-	width: 100%;
-	font-size: 11pt;
-	cursor: pointer;
+.selectWrap:hover,
+.selectWrapNoLabel:hover,
+.selectWrapOpen {
+	border-color: var(--color-accent);
+}
+
+.selectInner {
+	font-size: 0.85rem;
+	font-weight: 500;
 	color: var(--color-foreground);
-	border: none;
+	flex: 1;
+}
+
+.chevron {
+	font-size: 1.1rem;
+	color: color-mix(in srgb, var(--color-foreground) 50%, transparent);
+	flex-shrink: 0;
+	transition: transform 200ms ease;
+	display: flex;
+	align-items: center;
+}
+
+.chevronOpen {
+	transform: rotate(180deg);
+}
+
+/* Context-menu style dropdown */
+.menu {
+	background: var(--color-primary);
+	border: 1px solid var(--color-third);
+	border-radius: 10px;
+	padding: 4px 0;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.1);
+	animation: popIn 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+	from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+	to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.menuItem {
+	all: unset;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	width: calc(100% - 8px);
+	margin: 0 4px;
+	padding: 6px 10px;
+	font-size: 9.5pt;
+	color: var(--color-foreground);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 100ms;
+}
+
+.menuItem:hover {
+	background-color: var(--color-primary-dark);
+}
+
+.menuItemActive {
+	color: var(--color-accent);
+	font-weight: 600;
 }

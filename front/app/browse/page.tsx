@@ -93,18 +93,20 @@ const BrowsePage = async ({
 				}
 				activeFilters={<ActiveFilters className="self-center" />}
 			/>
-			<BrowseContentWrapper>
-				<ActiveFilters className={styles.activeFiltersMt} />
-				<div className={styles.toolbar}>
-					<div className={styles.toolbarLeft}>
-						<SortButtons />
-					</div>
-					<div className={styles.layoutToggleWrap}>
-						<Suspense>
-							<LayoutToggle />
-						</Suspense>
-					</div>
+			<div className={styles.toolbar}>
+				<div className={styles.toolbarLeft}>
+					<SortButtons />
 				</div>
+				<div className={styles.layoutToggleWrap}>
+					<Suspense>
+						<LayoutToggle />
+					</Suspense>
+				</div>
+				<div className={styles.toolbarFiltersRow}>
+					<ActiveFilters className={styles.toolbarActiveFilters} />
+				</div>
+			</div>
+			<BrowseContentWrapper>
 				<InfiniteCarList
 					filterParams={filterParams}
 					layout={layout}

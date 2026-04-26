@@ -16,6 +16,7 @@ const HeaderMenuButton = () => {
 
     return (
         <div className={styles.button} onClick={toggleMenu}>
+            <span className={styles.menuText}>Menu</span>
             <CartButton />
             {isAuthenticated && (
                 <div className={styles.iconWrapper}>

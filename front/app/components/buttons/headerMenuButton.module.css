@@ -10,9 +10,26 @@
 	cursor: pointer;
 }
 
+.menuText {
+	font-size: 0.8rem;
+	font-weight: 600;
+	white-space: nowrap;
+	max-width: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: max-width 200ms ease, opacity 150ms ease;
+}
+
+@media (min-width: 768px) {
+	.button:hover .menuText {
+		max-width: 60px;
+		opacity: 1;
+	}
+}
+
 .button:hover {
-	border-color: color-mix(in srgb, var(--color-third) 50%, transparent);
-	background-color: color-mix(in srgb, var(--color-primary-dark) 50%, transparent);
+	border-color: transparent;
+	background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	transform: scale(1.05);
 }
 

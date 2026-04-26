@@ -10,6 +10,7 @@ import HeaderMenuButton from "../buttons/headerMenuButton";
 import DatePicker from "../DatePicker";
 import SuggestionsDropdown from "../ui/SuggestionsDropdown";
 import { BiSearch, BiCalendar } from "react-icons/bi";
+import { MdOutlineExplore } from "react-icons/md";
 import { useFilterParams } from "@/app/hooks/useFilterParams";
 import { useScrollCollapse } from "@/app/hooks/useScrollCollapse";
 import { useSearchSuggestions } from "@/app/hooks/useSearchSuggestions";
@@ -44,9 +45,14 @@ const NavHeader = ({
 }: NavHeaderProps) => {
 	const [showSuggestions, setShowSuggestions] = useState(false);
 	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-	const [mobileDatesOpen, setMobileDatesOpen] = useState(false);
-	const searchBarRef = useRef<HTMLDivElement>(null);
-	const mobileDatesRef = useRef<HTMLDivElement>(null);
+	const [searchOpen, setSearchOpen] = useState(false);
+	const [datesOpen, setDatesOpen] = useState(false);
+	const searchPillRef = useRef<HTMLDivElement>(null);
+	const datesPillRef = useRef<HTMLDivElement>(null);
+	const mobileSearchPillRef = useRef<HTMLDivElement>(null);
+	const mobileDatesPillRef = useRef<HTMLDivElement>(null);
+	const searchInputRef = useRef<HTMLInputElement>(null);
+	const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
 	const router = useRouter();
 	const pathname = usePathname();
@@ -173,47 +179,72 @@ const NavHeader = ({
 
 	const { suggestions, loadingSuggestions } = useSearchSuggestions(searchText);
 
+
 	useEffect(() => {
 		const handler = (e: MouseEvent) => {
+			const t = e.target as Node;
 			if (
-				searchBarRef.current &&
-				!searchBarRef.current.contains(e.target as Node)
-			)
-				setShowSuggestions(false);
+				!searchPillRef.current?.contains(t) &&
+				!mobileSearchPillRef.current?.contains(t)
+			) setShowSuggestions(false);
 		};
 		document.addEventListener("mousedown", handler);
 		return () => document.removeEventListener("mousedown", handler);
 	}, []);
 
+	const formatShortDate = (d: Date) =>
+		d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+	const datesLabel =
+		fromDate && untilDate
+			? `${formatShortDate(fromDate)} – ${formatShortDate(untilDate)}`
+			: fromDate
+			? formatShortDate(fromDate)
+			: "Dates";
+
+	// Auto-focus search input when pill opens
 	useEffect(() => {
-		if (!mobileDatesOpen) return;
+		if (searchOpen) {
+			searchInputRef.current?.focus();
+			mobileSearchInputRef.current?.focus();
+		}
+	}, [searchOpen]);
+
+	// Close search pill on outside click
+	useEffect(() => {
+		if (!searchOpen) return;
 		const handler = (e: MouseEvent) => {
-			const target = e.target as Element;
-			if (
-				mobileDatesRef.current &&
-				!mobileDatesRef.current.contains(target) &&
-				!target.closest("[data-datepicker-portal]")
-			) {
-				setMobileDatesOpen(false);
+			const t = e.target as Node;
+			if (!searchPillRef.current?.contains(t) && !mobileSearchPillRef.current?.contains(t)) {
+				setSearchOpen(false);
+				setShowSuggestions(false);
 			}
 		};
 		document.addEventListener("mousedown", handler);
 		return () => document.removeEventListener("mousedown", handler);
-	}, [mobileDatesOpen]);
+	}, [searchOpen]);
 
-	const formatShortDate = (d: Date) =>
-		d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-	const mobileDateLabel =
-		fromDate && untilDate
-			? `${formatShortDate(fromDate)} – ${formatShortDate(untilDate)}`
-			: fromDate
-			? `From ${formatShortDate(fromDate)}`
-			: "Dates";
+	// Close dates pill on outside click (allow datepicker portals)
+	useEffect(() => {
+		if (!datesOpen) return;
+		const handler = (e: MouseEvent) => {
+			const t = e.target as Element;
+			if (
+				!datesPillRef.current?.contains(t) &&
+				!mobileDatesPillRef.current?.contains(t) &&
+				!t.closest("[data-datepicker-portal]")
+			) {
+				setDatesOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handler);
+		return () => document.removeEventListener("mousedown", handler);
+	}, [datesOpen]);
 
 	const handleSearch = () => {
 		setShowSuggestions(false);
 		setHighlightedIndex(-1);
+		setSearchOpen(false);
 		if (pathname === "/browse") {
 			set({ search: searchText || undefined });
 		} else {
@@ -224,8 +255,17 @@ const NavHeader = ({
 	};
 
 	const handleSuggestionClick = (s: Suggestion) => {
-		setSearchText(`${s.make} ${s.model}`);
+		const text = `${s.make} ${s.model}`;
+		setSearchText(text);
 		setShowSuggestions(false);
+		setSearchOpen(false);
+		if (pathname === "/browse") {
+			set({ search: text });
+		} else {
+			const p = new URLSearchParams();
+			p.set("search", text);
+			router.push(`/browse?${p}`);
+		}
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -296,78 +336,106 @@ const NavHeader = ({
 					)}
 				</Link>
 
-				{/* Desktop search bar + filter (centered) */}
+				{/* Browse icon link */}
+				<Link href="/browse" className={`${styles.browseNavLink} ${isWhite ? styles.browseNavLinkWhite : styles.browseNavLinkCompact}`}>
+					<MdOutlineExplore />
+					<span className={styles.browseNavLinkText}>Browse Cars</span>
+				</Link>
+
+				{/* Desktop search pills (centered) */}
 				{!isWhite && (
-					<div
-						className={`${styles.desktopSearch} ${mobileFilterButton ? styles.desktopSearchHideLg : styles.desktopSearchHideMd}`}
-					>
-						{leftSlot}
-						<div ref={searchBarRef} className={styles.searchBar}>
-							<div className={styles.searchField}>
-								<p className={styles.searchFieldLabel}>What</p>
+					<div className={`${styles.desktopSearch} ${mobileFilterButton ? styles.desktopSearchHideLg : styles.desktopSearchHideMd}`}>
+
+						{/* Search pill */}
+						<div ref={searchPillRef} className={`${styles.headerPill} ${searchOpen ? styles.headerPillOpen : ""}`}>
+							<button
+								type="button"
+								onClick={() => { setSearchOpen(v => !v); setDatesOpen(false); }}
+								className={styles.headerPillIcon}
+							>
+								<BiSearch />
+								{!searchOpen && (
+									<span className={`${styles.headerPillLabel} ${searchText ? styles.headerPillLabelActive : ""}`}>
+										{searchText || "Search"}
+									</span>
+								)}
+							</button>
+							<div className={`${styles.headerPillBody} ${searchOpen ? styles.headerPillBodyOpen : ""}`}>
 								<input
+									ref={searchInputRef}
 									placeholder="Make & model"
 									value={searchText}
-									onChange={(e) => {
-										setSearchText(e.target.value);
-										setShowSuggestions(true);
-									}}
-									onFocus={() => {
-										if (suggestions.length > 0) setShowSuggestions(true);
-									}}
+									onChange={(e) => { setSearchText(e.target.value); setShowSuggestions(true); }}
+									onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
 									onKeyDown={handleKeyDown}
-									className={styles.searchInput}
+									className={styles.headerPillInput}
 								/>
 							</div>
-							{separator}
-							<div className={styles.datepickerSlot110}>
-								<div className={styles.dateLabelRow}>
-									<p className={styles.searchFieldLabel}>From</p>
-									{hasCartDateConflict && fromDate && (
-										<span className={styles.dateDot} />
-									)}
-								</div>
-								<DatePicker
-									label="From"
-									showLabel={false}
-									selected={fromDate}
-									onSelect={handleFromDateChange}
-									cartRanges={cartDateRanges}
+							{searchOpen && (
+								<button type="button" onClick={handleSearch} className={styles.headerPillSubmit}>
+									<BiSearch />
+								</button>
+							)}
+							{showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
+								<SuggestionsDropdown
+									suggestions={suggestions}
+									loading={loadingSuggestions}
+									highlightedIndex={highlightedIndex}
+									onSelect={handleSuggestionClick}
+									onHover={setHighlightedIndex}
 								/>
-							</div>
-							{separator}
-							<div className={styles.datepickerSlot100}>
-								<div className={styles.dateLabelRow}>
-									<p className={styles.searchFieldLabel}>Until</p>
-									{hasCartDateConflict && untilDate && (
-										<span className={styles.dateDot} />
-									)}
-								</div>
-								<DatePicker
-									label="Until"
-									showLabel={false}
-									selected={untilDate}
-									onSelect={handleUntilDateChange}
-									fromDate={fromDate}
-									cartRanges={cartDateRanges}
-								/>
-							</div>
-							{searchButton}
-							{showSuggestions &&
-								(loadingSuggestions || suggestions.length > 0) && (
-									<SuggestionsDropdown
-										suggestions={suggestions}
-										loading={loadingSuggestions}
-										highlightedIndex={highlightedIndex}
-										onSelect={handleSuggestionClick}
-										onHover={setHighlightedIndex}
-									/>
-								)}
+							)}
 						</div>
-						{filterControls && (
-							<div className={styles.filterControlsWrapper}>
-								{filterControls}
+
+						{/* Dates pill */}
+						<div ref={datesPillRef} className={`${styles.headerPill} ${datesOpen ? styles.headerPillOpen : ""}`}>
+							<button
+								type="button"
+								onClick={() => { setDatesOpen(v => !v); setSearchOpen(false); }}
+								className={styles.headerPillIcon}
+							>
+								<BiCalendar />
+								{!datesOpen && (
+									<span className={styles.headerPillLabel}>
+										{datesLabel}
+										{hasCartDateConflict && (fromDate || untilDate) && (
+											<span className={styles.dateDotInline} />
+										)}
+									</span>
+								)}
+							</button>
+							<div className={`${styles.headerPillBody} ${datesOpen ? styles.headerPillBodyOpen : ""}`}>
+								<div className={styles.headerPillDateGroup}>
+									<p className={styles.headerPillDateLabel}>From</p>
+									<DatePicker
+										label="From"
+										showLabel={false}
+										placeholder="Add date"
+										selected={fromDate}
+										onSelect={handleFromDateChange}
+										cartRanges={cartDateRanges}
+										portal
+									/>
+								</div>
+								<div className={styles.headerPillSep} />
+								<div className={styles.headerPillDateGroup}>
+									<p className={styles.headerPillDateLabel}>Until</p>
+									<DatePicker
+										label="Until"
+										showLabel={false}
+										placeholder="Add date"
+										selected={untilDate}
+										onSelect={(d) => { handleUntilDateChange(d); if (d) setDatesOpen(false); }}
+										fromDate={fromDate}
+										cartRanges={cartDateRanges}
+										portal
+									/>
+								</div>
 							</div>
+						</div>
+
+						{filterControls && (
+							<div className={styles.filterControlsWrapper}>{filterControls}</div>
 						)}
 					</div>
 				)}
@@ -384,83 +452,95 @@ const NavHeader = ({
 			{/* ── Mobile search + filter row ── */}
 			{!isWhite && mobileFilterButton && (
 				<div className={`${styles.mobileRow} ${styles.mobileRowHideDesktop}`}>
-					<div className={styles.mobileDateWrapper} ref={mobileDatesRef}>
-						<div ref={searchBarRef} className={styles.mobileSearchBar}>
+
+					{/* Mobile search pill */}
+					<div ref={mobileSearchPillRef} className={`${styles.headerPill} ${styles.headerPillMobile} ${searchOpen ? styles.headerPillOpen : ""}`}>
+						<button
+							type="button"
+							onClick={() => { setSearchOpen(v => !v); setDatesOpen(false); }}
+							className={styles.headerPillIcon}
+						>
+							<BiSearch />
+							{!searchOpen && (
+								<span className={`${styles.headerPillLabel} ${searchText ? styles.headerPillLabelActive : ""}`}>
+									{searchText || "Search"}
+								</span>
+							)}
+						</button>
+						<div className={`${styles.headerPillBody} ${searchOpen ? styles.headerPillBodyOpen : ""}`}>
 							<input
+								ref={mobileSearchInputRef}
 								placeholder="Make & model"
 								value={searchText}
-								onChange={(e) => {
-									setSearchText(e.target.value);
-									setShowSuggestions(true);
-								}}
-								onFocus={() => {
-									if (suggestions.length > 0) setShowSuggestions(true);
-								}}
+								onChange={(e) => { setSearchText(e.target.value); setShowSuggestions(true); }}
+								onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
 								onKeyDown={handleKeyDown}
-								className={styles.mobileSearchInput}
+								className={styles.headerPillInput}
 							/>
-							<div className={styles.mobileSeparator} />
-							<button
-								type="button"
-								onClick={() => setMobileDatesOpen((v) => !v)}
-								className={`${styles.mobileDateBtn} ${mobileDatesOpen ? styles.mobileDateBtnOpen : ""}`}
-							>
-								<BiCalendar />
-								<span>{mobileDateLabel}</span>
-								{hasCartDateConflict && (fromDate || untilDate) && (
-									<span className={styles.dateDotInline} />
-								)}
-							</button>
-							<button type="button" onClick={handleSearch} className={styles.mobileSearchBtn}>
+						</div>
+						{searchOpen && (
+							<button type="button" onClick={handleSearch} className={styles.headerPillSubmit}>
 								<BiSearch />
 							</button>
-							{showSuggestions &&
-								(loadingSuggestions || suggestions.length > 0) && (
-									<SuggestionsDropdown
-										suggestions={suggestions}
-										loading={loadingSuggestions}
-										highlightedIndex={highlightedIndex}
-										onSelect={handleSuggestionClick}
-										onHover={setHighlightedIndex}
-									/>
-								)}
-						</div>
-						{mobileDatesOpen && (
-							<div className={styles.mobileDatePopover}>
-								<div className={styles.mobileDateRow}>
-									<div className={styles.mobileDatePickerGroup}>
-										<p className={styles.mobileDatePickerLabel}>From</p>
-										<DatePicker
-											label="From"
-											showLabel={false}
-											placeholder="Add date"
-											selected={fromDate}
-											onSelect={handleFromDateChange}
-											cartRanges={cartDateRanges}
-											portal
-										/>
-									</div>
-									<div className={styles.mobileDateDivider} />
-									<div className={styles.mobileDatePickerGroup}>
-										<p className={styles.mobileDatePickerLabel}>Until</p>
-										<DatePicker
-											label="Until"
-											showLabel={false}
-											placeholder="Add date"
-											selected={untilDate}
-											onSelect={(d) => {
-												handleUntilDateChange(d);
-												if (d) setMobileDatesOpen(false);
-											}}
-											fromDate={fromDate}
-											cartRanges={cartDateRanges}
-											portal
-										/>
-									</div>
-								</div>
-							</div>
+						)}
+						{showSuggestions && (loadingSuggestions || suggestions.length > 0) && (
+							<SuggestionsDropdown
+								suggestions={suggestions}
+								loading={loadingSuggestions}
+								highlightedIndex={highlightedIndex}
+								onSelect={handleSuggestionClick}
+								onHover={setHighlightedIndex}
+							/>
 						)}
 					</div>
+
+					{/* Mobile dates pill */}
+					<div ref={mobileDatesPillRef} className={`${styles.headerPill} ${styles.headerPillMobile} ${datesOpen ? styles.headerPillOpen : ""}`}>
+						<button
+							type="button"
+							onClick={() => { setDatesOpen(v => !v); setSearchOpen(false); }}
+							className={styles.headerPillIcon}
+						>
+							<BiCalendar />
+							{!datesOpen && (
+								<span className={styles.headerPillLabel}>
+									{datesLabel}
+									{hasCartDateConflict && (fromDate || untilDate) && (
+										<span className={styles.dateDotInline} />
+									)}
+								</span>
+							)}
+						</button>
+						<div className={`${styles.headerPillBody} ${datesOpen ? styles.headerPillBodyOpen : ""}`}>
+							<div className={styles.headerPillDateGroup}>
+								<p className={styles.headerPillDateLabel}>From</p>
+								<DatePicker
+									label="From"
+									showLabel={false}
+									placeholder="Add date"
+									selected={fromDate}
+									onSelect={handleFromDateChange}
+									cartRanges={cartDateRanges}
+									portal
+								/>
+							</div>
+							<div className={styles.headerPillSep} />
+							<div className={styles.headerPillDateGroup}>
+								<p className={styles.headerPillDateLabel}>Until</p>
+								<DatePicker
+									label="Until"
+									showLabel={false}
+									placeholder="Add date"
+									selected={untilDate}
+									onSelect={(d) => { handleUntilDateChange(d); if (d) setDatesOpen(false); }}
+									fromDate={fromDate}
+									cartRanges={cartDateRanges}
+									portal
+								/>
+							</div>
+						</div>
+					</div>
+
 					{mobileFilterButton}
 				</div>
 			)}

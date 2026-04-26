@@ -24,6 +24,7 @@ export interface Car {
     modelYear: number;
     carStatus?: CarStatus;
     reservationDates?: number[][];
+    averageRating?: number;
     [key: string]: string | number | string[] | number[][] | undefined;
 }
 

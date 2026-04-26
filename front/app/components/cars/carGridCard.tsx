@@ -64,6 +64,7 @@ const CarGridCard = ({
 					</div>
 					<div className={styles.yearAvailabilityRow}>
 						<p className={styles.carYear}>{car.modelYear}</p>
+						<CarRatingBadge averageRating={car.averageRating} />
 						{!datesReady ? (
 							<div className={styles.badgeSkeleton} />
 						) : (
@@ -88,8 +89,6 @@ const CarGridCard = ({
 							Cart: {fmtDate(cartItem.startDate)} – {fmtDate(cartItem.endDate)}
 						</p>
 					)}
-
-					<CarRatingBadge vin={car.vin} />
 
 					{car.features?.length > 0 && (
 						<div className={styles.features}>

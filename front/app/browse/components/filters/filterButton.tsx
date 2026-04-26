@@ -31,6 +31,7 @@ const FilterButton = ({ enums, makes }: FilterButtonProps) => {
         <div className={styles.filterBtnWrapper}>
             <button onClick={toggleFilter} className={styles.filterBtn}>
                 <VscSettings />
+                <span className={styles.filterBtnText}>Filters</span>
             </button>
             {hasActiveFilters && <span className={styles.filterActiveDot} />}
         </div>
