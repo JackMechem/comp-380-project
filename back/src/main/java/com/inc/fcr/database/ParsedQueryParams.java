@@ -449,6 +449,10 @@ public class ParsedQueryParams {
         return parseFullObjects;
     }
 
+    public Map<String, Object> getPotentialParams() {
+        return potentialParams;
+    }
+
     /**
      * OBSOLETE / DEPRECATED
      * Adds a VIN equality filter to the existing filter fields.

@@ -28,7 +28,9 @@ import java.util.List;
  * Duration helpers convert the time delta into seconds, hours, or days.</p>
  */
 @Entity
-@Table(name = "stripe_reservations")
+@Table(name = "stripe_reservations", indexes = {
+        @Index(name = "idx_reservation_car_dateBooked", columnList = "vin, dateBooked"),
+})
 public class Reservation extends APIEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
