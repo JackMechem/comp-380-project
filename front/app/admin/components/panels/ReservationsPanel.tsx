@@ -496,9 +496,18 @@ const ReservationsPanel = () => {
             const apiPatch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number } = {};
             const changingDates = patch.pickUpTime !== undefined || patch.dropOffTime !== undefined;
             if (changingDates) {
-                // Send dropOffTime first so backend setter sees it before validating pickUpTime
-                apiPatch.dropOffTime = patch.dropOffTime !== undefined ? fromDateString(String(patch.dropOffTime)) : original.dropOffTime;
-                apiPatch.pickUpTime  = patch.pickUpTime  !== undefined ? fromDateString(String(patch.pickUpTime))  : original.pickUpTime;
+                const newPickUp  = patch.pickUpTime  !== undefined ? fromDateString(String(patch.pickUpTime))  : original.pickUpTime  as number;
+                const newDropOff = patch.dropOffTime !== undefined ? fromDateString(String(patch.dropOffTime)) : original.dropOffTime as number;
+                // Backend validates each field against the persisted counterpart when set.
+                // Moving earlier → send pickUpTime first (new pick < old pick, so new drop still > new pick).
+                // Moving later   → send dropOffTime first (new drop > old drop, so new pick still < new drop).
+                if (newPickUp < (original.pickUpTime as number)) {
+                    apiPatch.pickUpTime  = newPickUp;
+                    apiPatch.dropOffTime = newDropOff;
+                } else {
+                    apiPatch.dropOffTime = newDropOff;
+                    apiPatch.pickUpTime  = newPickUp;
+                }
             }
             if (patch.car !== undefined)     apiPatch.car  = String(patch.car);
             if (patch.userId !== undefined)  apiPatch.user = Number(patch.userId);

@@ -92,7 +92,7 @@ function LogEntry({ log }: { log: RequestLog }) {
                         <p className={styles.detailLabel}>Response</p>
                         <pre className={styles.detailPre}>
                             {log.responseBody !== null && log.responseBody !== undefined
-                                ? JSON.stringify(log.responseBody, null, 2)
+                                ? JSON.stringify(log.responseBody, null, 2).replace(/\\n/g, "\n")
                                 : "(empty)"}
                         </pre>
                     </div>
