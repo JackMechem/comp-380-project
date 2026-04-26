@@ -48,27 +48,30 @@ const userIdOf = (r: Reservation) =>
 
 interface EditFormProps {
     res: Reservation;
-    onSave: (patch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number }) => Promise<void>;
+    onSave: (patch: { pickUpTime?: number; dropOffTime?: number; dateBooked?: number; car?: string; user?: number }) => Promise<void>;
     onCancel: () => void;
 }
 
 const EditForm = ({ res, onSave, onCancel }: EditFormProps) => {
-    const [pickUp,  setPickUp]  = useState(toDateStr(res.pickUpTime));
-    const [dropOff, setDropOff] = useState(toDateStr(res.dropOffTime));
-    const [vinVal,  setVinVal]  = useState(carVin(res));
-    const [uid,     setUid]     = useState(String(userIdOf(res)));
-    const [saving,  setSaving]  = useState(false);
-    const [error,   setError]   = useState<string | null>(null);
+    const [pickUp,     setPickUp]     = useState(toDateStr(res.pickUpTime));
+    const [dropOff,    setDropOff]    = useState(toDateStr(res.dropOffTime));
+    const [dateBooked, setDateBooked] = useState(toDateStr(res.dateBooked));
+    const [vinVal,     setVinVal]     = useState(carVin(res));
+    const [uid,        setUid]        = useState(String(userIdOf(res)));
+    const [saving,     setSaving]     = useState(false);
+    const [error,      setError]      = useState<string | null>(null);
 
     const handleSave = async () => {
         setSaving(true);
         setError(null);
         try {
             const patch: Parameters<typeof onSave>[0] = {};
-            const newPickUp  = fromDateStr(pickUp);
-            const newDropOff = fromDateStr(dropOff);
-            if (newPickUp  !== res.pickUpTime)  patch.pickUpTime  = newPickUp;
-            if (newDropOff !== res.dropOffTime) patch.dropOffTime = newDropOff;
+            const newPickUp     = fromDateStr(pickUp);
+            const newDropOff    = fromDateStr(dropOff);
+            const newDateBooked = fromDateStr(dateBooked);
+            if (newPickUp     !== res.pickUpTime)  patch.pickUpTime  = newPickUp;
+            if (newDropOff    !== res.dropOffTime) patch.dropOffTime = newDropOff;
+            if (newDateBooked !== res.dateBooked)  patch.dateBooked  = newDateBooked;
             if (vinVal !== carVin(res)) patch.car = vinVal;
             const newUid = Number(uid);
             if (newUid !== userIdOf(res)) patch.user = newUid;
@@ -88,6 +91,10 @@ const EditForm = ({ res, onSave, onCancel }: EditFormProps) => {
                 <div className={styles.fieldGroup}>
                     <label className={styles.fieldLabel}>Drop-off</label>
                     <input type="date" className={styles.fieldInput} value={dropOff} onChange={(e) => setDropOff(e.target.value)} />
+                </div>
+                <div className={styles.fieldGroup}>
+                    <label className={styles.fieldLabel}>Date Booked</label>
+                    <input type="date" className={styles.fieldInput} value={dateBooked} onChange={(e) => setDateBooked(e.target.value)} />
                 </div>
                 <div className={styles.fieldGroup}>
                     <label className={styles.fieldLabel}>Car VIN</label>
@@ -169,7 +176,7 @@ export default function ReservationsListPanel() {
         finally { setDeletingId(null); }
     };
 
-    const handleSaveEdit = async (res: Reservation, patch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number }) => {
+    const handleSaveEdit = async (res: Reservation, patch: { pickUpTime?: number; dropOffTime?: number; dateBooked?: number; car?: string; user?: number }) => {
         await updateReservation(res.reservationId, patch);
         setEditingId(null);
         fetchPage(page, activeFilters);

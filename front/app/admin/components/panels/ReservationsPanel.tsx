@@ -69,7 +69,7 @@ const RES_COLUMNS: Column<Reservation>[] = [
     { key: "pickUpTime",    label: "Pick-up",   defaultVisible: true,  render: (r) => fmtTimestamp(r.pickUpTime as number | string),  editable: true, editType: "date", getValue: (r) => toDateString(r.pickUpTime) },
     { key: "dropOffTime",   label: "Drop-off",  defaultVisible: true,  render: (r) => fmtTimestamp(r.dropOffTime as number | string), editable: true, editType: "date", getValue: (r) => toDateString(r.dropOffTime) },
     { key: "durationDays",  label: "Days",      defaultVisible: true,  render: (r) => `${r.durationDays}d ${r.durationHours % 24}h` },
-    { key: "dateBooked",    label: "Booked",    defaultVisible: false, render: (r) => fmtTimestamp(r.dateBooked as number | string) },
+    { key: "dateBooked",    label: "Booked",    defaultVisible: false, render: (r) => fmtTimestamp(r.dateBooked as number | string), editable: true, editType: "date", getValue: (r) => toDateString(r.dateBooked) },
     { key: "payments",      label: "Payments",  defaultVisible: true,  render: (r) => Array.isArray(r.payments) ? r.payments.length : 0,
         editable: true, editType: "tags",
         getTagsValue: (r) => Array.isArray(r.payments)
@@ -493,7 +493,7 @@ const ReservationsPanel = () => {
             }
         }
         await Promise.all(edits.map(({ id, original, patch }) => {
-            const apiPatch: { pickUpTime?: number; dropOffTime?: number; car?: string; user?: number } = {};
+            const apiPatch: { pickUpTime?: number; dropOffTime?: number; dateBooked?: number; car?: string; user?: number } = {};
             const changingDates = patch.pickUpTime !== undefined || patch.dropOffTime !== undefined;
             if (changingDates) {
                 const newPickUp  = patch.pickUpTime  !== undefined ? fromDateString(String(patch.pickUpTime))  : original.pickUpTime  as number;
@@ -509,9 +509,10 @@ const ReservationsPanel = () => {
                     apiPatch.pickUpTime  = newPickUp;
                 }
             }
-            if (patch.car !== undefined)     apiPatch.car  = String(patch.car);
-            if (patch.userId !== undefined)  apiPatch.user = Number(patch.userId);
-            if (patch.payments !== undefined) (apiPatch as Record<string, unknown>).payments = patch.payments;
+            if (patch.car !== undefined)        apiPatch.car        = String(patch.car);
+            if (patch.userId !== undefined)     apiPatch.user       = Number(patch.userId);
+            if (patch.dateBooked !== undefined) apiPatch.dateBooked = fromDateString(String(patch.dateBooked));
+            if (patch.payments !== undefined)   (apiPatch as Record<string, unknown>).payments = patch.payments;
             return updateReservation(id as number, apiPatch);
         }));
         fetchPage(page, pageSize, sortBy, sortDir, activeFilters, true);
