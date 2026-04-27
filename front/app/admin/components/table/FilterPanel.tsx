@@ -17,6 +17,10 @@ export interface FilterableColumn {
     label: string;
     type: FilterFieldType;
     options?: string[];
+    /** Numeric lower bound for range-slider UI */
+    min?: number;
+    /** Numeric upper bound for range-slider UI */
+    max?: number;
 }
 
 export interface ActiveFilter {
@@ -78,8 +82,14 @@ export function operatorNeedsValue(op: string): boolean {
 }
 
 export function formatFilterLabel(f: ActiveFilter): string {
+    if (f.operator === "in") {
+        const vals = f.value.split(",").filter(Boolean);
+        return vals.length === 1 ? `${f.label}: ${vals[0]}` : `${f.label}: ${vals.length} selected`;
+    }
     const op = FILTER_OPERATORS[f.type]?.find((o) => o.value === f.operator)?.label ?? f.operator;
     if (!operatorNeedsValue(f.operator)) return `${f.label} ${op}`;
+    if (f.operator === "gte") return `${f.label} ≥ ${f.value}`;
+    if (f.operator === "lte") return `${f.label} ≤ ${f.value}`;
     return `${f.label} ${op} ${f.value}`;
 }
 
@@ -93,6 +103,7 @@ export function filtersToRecord(filters: ActiveFilter[]): Record<string, string 
             case "equals":
             case "contains":
             case "starts_with":
+            case "in":
                 result[f.field] = f.value;
                 break;
             case "not_equals":

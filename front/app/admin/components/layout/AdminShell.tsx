@@ -15,6 +15,7 @@ import CarsListPanel from "../panels/CarsListPanel";
 import ReservationsListPanel from "../panels/ReservationsListPanel";
 import AccountsListPanel from "../panels/AccountsListPanel";
 import UsersListPanel from "../panels/UsersListPanel";
+import PopularityPanel from "../panels/PopularityPanel";
 import { useAdminSidebarStore } from "@/stores/adminSidebarStore";
 import SessionSwitcher from "./SessionSwitcher";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
@@ -38,6 +39,7 @@ export default function AdminShell() {
     const FULL_HEIGHT_VIEWS = [
         "view-data", "view-reservations", "view-accounts", "view-users",
         "list-data", "list-reservations", "list-accounts", "list-users",
+        "popularity",
     ];
     const isTableView = FULL_HEIGHT_VIEWS.includes(activeView ?? "");
 
@@ -65,6 +67,7 @@ export default function AdminShell() {
             case "list-reservations": return <ReservationsListPanel />;
             case "list-accounts":     return <AccountsListPanel />;
             case "list-users":        return <UsersListPanel />;
+            case "popularity":        return <PopularityPanel />;
             default:                  return <DashboardPanel />;
         }
     };

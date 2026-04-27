@@ -38,7 +38,8 @@ import { format as dateFnsFormat } from "date-fns";
 import DatePicker from "@/app/components/DatePicker";
 import styles from "./spreadsheetTable.module.css";
 import { useTablePrefsStore } from "@/stores/tablePrefsStore";
-import FilterPanel, { FilterableColumn, ActiveFilter, formatFilterLabel } from "./FilterPanel";
+import { FilterableColumn, ActiveFilter, formatFilterLabel } from "./FilterPanel";
+import BrowseFilterPanel from "./BrowseFilterPanel";
 export type { FilterableColumn, ActiveFilter } from "./FilterPanel";
 
 // ── Public types ─────────────────────────────────────────────────────────────
@@ -1324,19 +1325,12 @@ export default function SpreadsheetTable<T>({
     // ── Fullscreen overlay ───────────────────────────────────────────────
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    // ── Filter panel ─────────────────────────────────────────────────────
+    // ── Filter side panel ─────────────────────────────────────────────────
     const filterBtnRef = useRef<HTMLButtonElement>(null);
     const [filterOpen, setFilterOpen] = useState(false);
-    const [filterPos, setFilterPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
-    const [filterEditingId, setFilterEditingId] = useState<string | null>(null);
+    const [filterPanelWidth, setFilterPanelWidth] = useState(280);
 
-    const openFilter = (editId?: string) => {
-        if (!filterBtnRef.current) return;
-        const r = filterBtnRef.current.getBoundingClientRect();
-        setFilterPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
-        setFilterEditingId(editId ?? null);
-        setFilterOpen(true);
-    };
+    const openFilter = () => setFilterOpen((o) => !o);
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
@@ -1345,6 +1339,7 @@ export default function SpreadsheetTable<T>({
                 setPanelOpen(false);
                 setMarkdownPanelOpen(false);
                 setImagePanelOpen(false);
+                setFilterOpen(false);
             }
         };
         document.addEventListener("keydown", handler);
@@ -1464,7 +1459,7 @@ export default function SpreadsheetTable<T>({
                         <button
                             key={f.id}
                             className={styles.filterChip}
-                            onClick={() => openFilter(f.id)}
+                            onClick={() => setFilterOpen(true)}
                         >
                             {formatFilterLabel(f)}
                             <span
@@ -2191,6 +2186,18 @@ export default function SpreadsheetTable<T>({
                 )}
             </div>
 
+            {/* ── Browse filter side panel ─────────────────────────────── */}
+            {filterOpen && filterableColumns && filterableColumns.length > 0 && onFiltersChange && (
+                <BrowseFilterPanel
+                    filterableColumns={filterableColumns}
+                    activeFilters={activeFilters ?? []}
+                    onFiltersChange={onFiltersChange}
+                    width={filterPanelWidth}
+                    onWidthChange={setFilterPanelWidth}
+                    onClose={() => setFilterOpen(false)}
+                />
+            )}
+
             {/* ── Preview panel ─────────────────────────────────────────── */}
             {panelOpen && renderPreview && (
                 <>
@@ -2370,20 +2377,6 @@ export default function SpreadsheetTable<T>({
                         </button>
                     </div>
                 </div>
-            )}
-
-            {/* ── Filter panel ─────────────────────────────────────────── */}
-            {filterOpen && filterableColumns && onFiltersChange && (
-                <FilterPanel
-                    filterableColumns={filterableColumns}
-                    activeFilters={activeFilters ?? []}
-                    onAdd={(f) => onFiltersChange([...(activeFilters ?? []), f])}
-                    onRemove={(id) => onFiltersChange((activeFilters ?? []).filter((f) => f.id !== id))}
-                    onUpdate={(updated) => onFiltersChange((activeFilters ?? []).map((f) => f.id === updated.id ? updated : f))}
-                    onClose={() => setFilterOpen(false)}
-                    pos={filterPos}
-                    initialEditId={filterEditingId}
-                />
             )}
 
             {/* ── Inline cell edit action buttons ──────────────────────── */}

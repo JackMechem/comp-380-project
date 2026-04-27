@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { getCarsFiltered, getCarById, deleteCar, updateCar, addCar } from "../../actions";
 import { Car, CarStatus } from "@/app/types/CarTypes";
@@ -9,21 +9,11 @@ import SpreadsheetTable, { Column, RowEdit } from "../table/SpreadsheetTable";
 import { useTablePermissions } from "../../config/useTablePermissions";
 import { ActiveFilter, FilterableColumn, filtersToRecord } from "../table/FilterPanel";
 import { useTablePrefsStore } from "@/stores/tablePrefsStore";
+import { getFilterBarData } from "@/app/browse/actions";
 import styles from "../table/spreadsheetTable.module.css";
 
 const TABLE_TITLE = "Cars Database";
 const EMPTY_FILTERS: ActiveFilter[] = [];
-
-const FILTERABLE_COLUMNS: FilterableColumn[] = [
-    { field: "make",         label: "Make",         type: "text" },
-    { field: "model",        label: "Model",        type: "text" },
-    { field: "modelYear",    label: "Year",         type: "number" },
-    { field: "vehicleClass", label: "Class",        type: "select", options: ["ECONOMY", "LUXURY", "PERFORMANCE", "OFFROAD", "FULL_SIZE", "ELECTRIC"] },
-    { field: "carStatus",    label: "Status",       type: "select", options: ["AVAILABLE", "DISABLED", "ARCHIVED", "LOANED", "SERVICE"] },
-    { field: "transmission", label: "Transmission", type: "select", options: ["AUTOMATIC", "MANUAL"] },
-    { field: "bodyType",     label: "Body Type",    type: "select", options: ["SEDAN", "SUV", "TRUCK", "CONVERTIBLE", "HATCHBACK", "FULL_SIZE", "COMPACT", "WAGON", "ELECTRIC", "COUPE"] },
-    { field: "pricePerDay",  label: "Price / Day",  type: "number" },
-];
 import { BiSearch, BiX, BiImages } from "react-icons/bi";
 import ReactMarkdown from "react-markdown";
 import { callGemini } from "@/app/lib/gemini";
@@ -332,6 +322,31 @@ const InventoryPanel = () => {
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>((storedFilters ?? EMPTY_FILTERS) as ActiveFilter[]);
     const handleFiltersChange = (f: ActiveFilter[]) => { setActiveFilters(f); storeSetFilters(TABLE_TITLE, f); };
 
+    // Makes (fetched for multi-select pill)
+    const [makes, setMakes] = useState<string[]>([]);
+    useEffect(() => { getFilterBarData().then(({ makes }) => setMakes(makes as string[])); }, []);
+
+    const filterableColumns = useMemo<FilterableColumn[]>(() => [
+        { field: "make",         label: "Make",           type: "select", options: makes },
+        { field: "model",        label: "Model",          type: "text" },
+        { field: "pricePerDay",  label: "Price per day",  type: "number", min: 0, max: 2000 },
+        { field: "modelYear",    label: "Model year",     type: "number", min: 1900, max: new Date().getFullYear() },
+        { field: "bodyType",     label: "Body type",      type: "select", options: ["SEDAN", "SUV", "TRUCK", "CONVERTIBLE", "HATCHBACK", "FULL_SIZE", "COMPACT", "WAGON", "ELECTRIC", "COUPE"] },
+        { field: "vehicleClass", label: "Vehicle class",  type: "select", options: ["ECONOMY", "LUXURY", "PERFORMANCE", "OFFROAD", "FULL_SIZE", "ELECTRIC"] },
+        { field: "roofType",     label: "Roof type",      type: "select", options: ["SOFTTOP", "HARDTOP", "TARGA", "SLICKTOP", "SUNROOF", "PANORAMIC"] },
+        { field: "fuel",         label: "Fuel",           type: "select", options: ["GASOLINE", "DIESEL", "ELECTRIC", "HYBRID"] },
+        { field: "transmission", label: "Transmission",   type: "select", options: ["AUTOMATIC", "MANUAL"] },
+        { field: "drivetrain",   label: "Drivetrain",     type: "select", options: ["FWD", "RWD", "AWD"] },
+        { field: "engineLayout", label: "Engine layout",  type: "select", options: ["V", "INLINE", "FLAT", "SINGLE_MOTOR", "DUAL_MOTOR"] },
+        { field: "horsepower",   label: "Horsepower",     type: "number", min: 0, max: 2000 },
+        { field: "torque",       label: "Torque (lb-ft)", type: "number", min: 0, max: 2000 },
+        { field: "mpg",          label: "MPG",            type: "number", min: 0, max: 200 },
+        { field: "seats",        label: "Seats",          type: "number", min: 1, max: 12 },
+        { field: "cylinders",    label: "Cylinders",      type: "number", min: 0, max: 16 },
+        { field: "gears",        label: "Gears",          type: "number", min: 1, max: 12 },
+        { field: "carStatus",    label: "Status",         type: "select", options: ["AVAILABLE", "DISABLED", "ARCHIVED", "LOANED", "SERVICE"] },
+    ], [makes]);
+
     // Cancel any in-flight fetch when a new one starts
     const fetchIdRef = useRef(0);
 
@@ -579,7 +594,7 @@ const InventoryPanel = () => {
             onEdit={handleEdit}
             onDeleteOne={canDelete ? handleDeleteOne : undefined}
             onRefresh={handleRefresh}
-            filterableColumns={FILTERABLE_COLUMNS}
+            filterableColumns={filterableColumns}
             activeFilters={activeFilters}
             onFiltersChange={handleFiltersChange}
             title="Cars Database"
