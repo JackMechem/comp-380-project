@@ -475,6 +475,7 @@ const ReservationsPanel = () => {
             user:        Number(data.userId ?? 0),
             pickUpTime:  fromDateString(String(data.pickUpTime ?? "")),
             dropOffTime: fromDateString(String(data.dropOffTime ?? "")),
+            dateBooked:  Math.floor(Date.now() / 1000),
             ...(paymentIds.length > 0 ? { payments: paymentIds } : {}),
         });
         fetchPage(page, pageSize, sortBy, sortDir, activeFilters, true);

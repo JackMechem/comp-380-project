@@ -295,6 +295,8 @@ const reservations = {
         user: number;
         pickUpTime: number;
         dropOffTime: number;
+        dateBooked: number;
+        payments?: string[];
     }): Promise<unknown> {
         const res = await fetch("/api/reservations", {
             method: "POST",
@@ -351,10 +353,10 @@ const reviews = {
     ): Promise<Review[]> {
         const qs = buildQuery({
             account: acctId,
-            "objects-per-page": opts?.objectsPerPage ?? 500,
+            pageSize: opts?.objectsPerPage ?? 500,
         });
         try {
-            const res = await fetch(`/api/reviews?${qs}`);
+            const res = await fetch(`/api/reviews?${qs}`, { cache: "no-store" });
             if (!res.ok) return [];
             const data = await res.json();
             return data?.data ?? [];

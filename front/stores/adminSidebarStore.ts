@@ -5,7 +5,7 @@ export type AdminView =
     | "add-car" | "edit-car"
     | "view-data" | "view-reservations" | "view-accounts" | "view-users"
     | "list-data" | "list-reservations" | "list-accounts" | "list-users"
-    | "popularity"
+    | "popularity" | "csv-generator"
     | null;
 
 // Views that are transient and should not be restored on refresh.

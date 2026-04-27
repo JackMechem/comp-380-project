@@ -16,6 +16,7 @@ import ReservationsListPanel from "../panels/ReservationsListPanel";
 import AccountsListPanel from "../panels/AccountsListPanel";
 import UsersListPanel from "../panels/UsersListPanel";
 import PopularityPanel from "../panels/PopularityPanel";
+import CsvGeneratorPanel from "../panels/CsvGeneratorPanel";
 import { useAdminSidebarStore } from "@/stores/adminSidebarStore";
 import SessionSwitcher from "./SessionSwitcher";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
@@ -68,6 +69,7 @@ export default function AdminShell() {
             case "list-accounts":     return <AccountsListPanel />;
             case "list-users":        return <UsersListPanel />;
             case "popularity":        return <PopularityPanel />;
+            case "csv-generator":    return <CsvGeneratorPanel />;
             default:                  return <DashboardPanel />;
         }
     };

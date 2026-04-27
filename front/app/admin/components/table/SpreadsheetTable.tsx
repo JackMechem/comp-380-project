@@ -34,9 +34,11 @@ import {
     BiTable,
     BiCode,
     BiPrinter,
+    BiClipboard,
+    BiUpload,
 } from "react-icons/bi";
 import ExportButton, { ExportOption } from "./ExportButton";
-import { downloadData, safeFilename, buildCsv, escapeCell } from "./exportUtils";
+import { downloadData, safeFilename, buildCsv, escapeCell, parseCsv } from "./exportUtils";
 import { PiSortAscending, PiSortDescending, PiSparkleFill } from "react-icons/pi";
 import ReactMarkdown from "react-markdown";
 import { format as dateFnsFormat } from "date-fns";
@@ -154,6 +156,9 @@ export interface SpreadsheetTableProps<T> {
     filterableColumns?: FilterableColumn[];
     activeFilters?: ActiveFilter[];
     onFiltersChange?: (filters: ActiveFilter[]) => void;
+    // When set, CSV import matches rows by this column key — matched rows are
+    // queued as edits instead of new drafts.
+    importMatchKey?: string;
 }
 
 // ── Row action menu ──────────────────────────────────────────────────────────
@@ -303,7 +308,16 @@ interface ContextMenuState {
     rowItem: any;
     cellText: string;
     isNewRow?: boolean;
+    draftId?: string;
 }
+
+// ── Draft row type ────────────────────────────────────────────────────────────
+type DraftRow = {
+    id: string;
+    values: Record<string, string | string[]>;
+    aiLoading: Record<string, boolean>;
+    fillAiLoading: boolean;
+};
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -348,6 +362,7 @@ export default function SpreadsheetTable<T>({
     filterableColumns,
     activeFilters,
     onFiltersChange,
+    importMatchKey,
 }: SpreadsheetTableProps<T>) {
     const { visibleCols: savedVisibleCols, colWidths: savedColWidths, colOrder: savedColOrder, lockedCols: savedLockedCols,
             setVisibleCols: saveVisibleCols, setColWidths: saveColWidths, setColOrder: saveColOrder, setLockedCols: saveLockedCols } = useTablePrefsStore();
@@ -750,11 +765,11 @@ export default function SpreadsheetTable<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [ctxMenu?.x, ctxMenu?.y]);
 
-    const handleContextMenu = (e: React.MouseEvent, colKey: string, rowItem: T | null, isNewRow = false) => {
+    const handleContextMenu = (e: React.MouseEvent, colKey: string, rowItem: T | null, isNewRow = false, draftId?: string) => {
         e.preventDefault();
         const td = (e.target as HTMLElement).closest("td, th");
         const cellText = td?.textContent?.trim() ?? "";
-        setCtxMenu({ x: e.clientX, y: e.clientY, colKey, rowItem: rowItem as unknown, cellText, isNewRow });
+        setCtxMenu({ x: e.clientX, y: e.clientY, colKey, rowItem: rowItem as unknown, cellText, isNewRow, draftId });
     };
 
     const closeCtx = () => setCtxMenu(null);
@@ -851,8 +866,9 @@ export default function SpreadsheetTable<T>({
         const col = columns.find((c) => c.key === ctxMenu.colKey);
         if (!col?.editable || !col.aiGenerate) return;
         if (ctxMenu.isNewRow) {
+            if (!ctxMenu.draftId) return;
             closeCtx();
-            handleNewRowAiGenerate(col);
+            handleNewRowAiGenerate(col, ctxMenu.draftId);
             return;
         }
         if (!ctxMenu.rowItem || !onSaveEdits) return;
@@ -876,32 +892,37 @@ export default function SpreadsheetTable<T>({
         }
     };
 
-    const handleNewRowAiGenerate = async (col: Column<T>) => {
-        if (!col.aiGenerate || newRowAiLoading[col.key]) return;
-        setNewRowAiLoading((prev) => ({ ...prev, [col.key]: true }));
+    const handleNewRowAiGenerate = async (col: Column<T>, draftId: string) => {
+        const draft = draftRows.find(d => d.id === draftId);
+        if (!col.aiGenerate || !draft || draft.aiLoading[col.key]) return;
+        updateDraft(draftId, d => ({ ...d, aiLoading: { ...d.aiLoading, [col.key]: true } }));
         try {
-            const result = await col.aiGenerate(newRowValues as unknown as T);
+            const result = await col.aiGenerate(draft.values as unknown as T);
             if (col.editType === "tags") {
                 const match = result.match(/\[[\s\S]*\]/);
                 const tags: string[] = match ? JSON.parse(match[0]) : [];
-                setNewRowValues((prev) => ({ ...prev, [col.key]: tags }));
+                updateDraft(draftId, d => ({ ...d, values: { ...d.values, [col.key]: tags } }));
             } else {
-                setNewRowValues((prev) => ({ ...prev, [col.key]: result }));
+                updateDraft(draftId, d => ({ ...d, values: { ...d.values, [col.key]: result } }));
             }
         } catch (e) {
             alert("AI error: " + e);
         } finally {
-            setNewRowAiLoading((prev) => ({ ...prev, [col.key]: false }));
+            updateDraft(draftId, d => ({ ...d, aiLoading: { ...d.aiLoading, [col.key]: false } }));
         }
     };
 
-    const handleFillRowWithAi = async () => {
-        if (fillRowAiLoading || !newRowAiReady) return;
+    const handleFillRowWithAi = async (draftId: string) => {
+        const draft = draftRows.find(d => d.id === draftId);
+        if (!draft || draft.fillAiLoading || !isDraftAiReady(draft)) return;
         const aiCols = columns.filter((c) => c.editable && c.aiGenerate && c.editType !== "images");
         if (aiCols.length === 0) return;
-        setFillRowAiLoading(true);
-        setNewRowAiLoading(Object.fromEntries(aiCols.map((c) => [c.key, true])));
-        const partialItem = newRowValues as unknown as T;
+        updateDraft(draftId, d => ({
+            ...d,
+            fillAiLoading: true,
+            aiLoading: Object.fromEntries(aiCols.map((c) => [c.key, true])),
+        }));
+        const partialItem = draft.values as unknown as T;
         const results = await Promise.allSettled(
             aiCols.map(async (col) => ({ col, result: await col.aiGenerate!(partialItem) }))
         );
@@ -917,9 +938,7 @@ export default function SpreadsheetTable<T>({
                 }
             }
         }
-        setNewRowValues((prev) => ({ ...prev, ...updates }));
-        setNewRowAiLoading({});
-        setFillRowAiLoading(false);
+        updateDraft(draftId, d => ({ ...d, values: { ...d.values, ...updates }, aiLoading: {}, fillAiLoading: false }));
     };
 
     const saveCellEdit = (andMoveDown = false) => {
@@ -1010,24 +1029,44 @@ export default function SpreadsheetTable<T>({
 
     const dirtyCount = Array.from(editValues.values()).filter(p => Object.keys(p).length > 0).length;
 
-    // ── New row draft ────────────────────────────────────────────────────
-    const [newRowOpen, setNewRowOpen] = useState(false);
-    const [newRowValues, setNewRowValues] = useState<Record<string, string | string[]>>({});
-    const [newRowAiLoading, setNewRowAiLoading] = useState<Record<string, boolean>>({});
-    const [fillRowAiLoading, setFillRowAiLoading] = useState(false);
+    // ── Draft rows ───────────────────────────────────────────────────────
+    const [draftRows, setDraftRows] = useState<DraftRow[]>([]);
+    const [rowClipboard, setRowClipboard] = useState<Record<string, string | string[]> | null>(null);
 
-    // AI is gated on required fields being filled (e.g. VIN, make, model, year for cars)
-    const newRowAiReady = !aiRequiredFields || aiRequiredFields.every((key) => {
-        const val = newRowValues[key];
-        return Array.isArray(val) ? val.length > 0 : String(val ?? "").trim() !== "";
-    });
-    const totalPending = dirtyCount + (newRowOpen ? 1 : 0);
+    const updateDraft = (draftId: string, updater: (d: DraftRow) => DraftRow) =>
+        setDraftRows(prev => prev.map(d => d.id === draftId ? updater(d) : d));
+
+    const isDraftAiReady = (draft: DraftRow) =>
+        !aiRequiredFields || aiRequiredFields.every((key) => {
+            const val = draft.values[key];
+            return Array.isArray(val) ? val.length > 0 : Boolean(val);
+        });
+
+    // ── Page-size picker ─────────────────────────────────────────────────
+    const PAGE_SIZE_PRESETS = [10, 25, 50, 100];
+    const isCustomPageSize = !PAGE_SIZE_PRESETS.includes(pageSize);
+    const [pageSizeDropOpen, setPageSizeDropOpen] = useState(false);
+    const [showCustomInput, setShowCustomInput] = useState(isCustomPageSize);
+    const [customPageSize, setCustomPageSize] = useState(isCustomPageSize ? String(pageSize) : "");
+    const pageSizeDropRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!pageSizeDropOpen) return;
+        const handler = (e: MouseEvent) => {
+            if (pageSizeDropRef.current && !pageSizeDropRef.current.contains(e.target as Node))
+                setPageSizeDropOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, [pageSizeDropOpen]);
+
+    const totalPending = dirtyCount + draftRows.length;
 
     const enterEditMode = () => { setIsEditMode(true); };
     // Exit edit mode but keep queued changes (commit bar remains visible)
     const exitEditMode = () => { setIsEditMode(false); setFocusedEditCell(null); };
     // Discard all queued changes and exit edit mode
-    const discardChanges = () => { setEditValues(new Map()); setIsEditMode(false); setFocusedEditCell(null); setEditingCell(null); setNewRowOpen(false); setNewRowValues({}); };
+    const discardChanges = () => { setEditValues(new Map()); setIsEditMode(false); setFocusedEditCell(null); setEditingCell(null); setDraftRows([]); };
 
     const navigateEditCell = (fromId: string | number, fromColKey: string, direction: "up" | "down" | "left" | "right") => {
         const editableCols = activeCols.filter(c => c.editable);
@@ -1060,8 +1099,9 @@ export default function SpreadsheetTable<T>({
     };
 
     const setEditCell = (id: string | number, colKey: string, value: unknown) => {
-        if (id === "__new_row__") {
-            setNewRowValues(prev => ({ ...prev, [colKey]: value as string | string[] }));
+        if (typeof id === "string" && id.startsWith("__new__")) {
+            const draftId = id.slice(7);
+            updateDraft(draftId, d => ({ ...d, values: { ...d.values, [colKey]: value as string | string[] } }));
             return;
         }
         setEditValues((prev) => {
@@ -1098,17 +1138,19 @@ export default function SpreadsheetTable<T>({
             });
             results.push({ id, changes, status: "idle" });
         }
-        if (newRowOpen && onCreateRow) {
-            const changes = activeCols
-                .filter(c => c.editable && newRowValues[c.key])
-                .map(c => {
-                    const val = newRowValues[c.key];
-                    const to = Array.isArray(val)
-                        ? c.editType === "images" ? `${val.length} image(s)` : val.join(", ")
-                        : String(val ?? "");
-                    return { key: c.key, label: c.label, from: "—", to };
-                });
-            results.push({ id: "__new_row__", changes, status: "idle" });
+        if (onCreateRow) {
+            for (const draft of draftRows) {
+                const changes = activeCols
+                    .filter(c => c.editable && draft.values[c.key])
+                    .map(c => {
+                        const val = draft.values[c.key];
+                        const to = Array.isArray(val)
+                            ? c.editType === "images" ? `${val.length} image(s)` : val.join(", ")
+                            : String(val ?? "");
+                        return { key: c.key, label: c.label, from: "—", to };
+                    });
+                results.push({ id: `__new__${draft.id}`, changes, status: "idle" });
+            }
         }
         if (results.length === 0) return;
         setCommitResults(results);
@@ -1122,7 +1164,7 @@ export default function SpreadsheetTable<T>({
         const tasks: Promise<void>[] = [];
         if (onSaveEdits) {
             const edits = commitResults
-                .filter(r => r.id !== "__new_row__")
+                .filter(r => !(typeof r.id === "string" && r.id.startsWith("__new__")))
                 .map(result => {
                     const original = data.find(item => getRowId(item) === result.id);
                     const patch = editValues.get(result.id);
@@ -1136,16 +1178,21 @@ export default function SpreadsheetTable<T>({
                     .catch((e: unknown) => setCommitResults(prev => prev.map(r => r.id === edit.id ? { ...r, status: "error" as const, error: String(e) } : r)))
             ));
         }
-        if (onCreateRow && commitResults.some(r => r.id === "__new_row__")) {
-            tasks.push(
-                onCreateRow(newRowValues)
-                    .then(() => {
-                        setCommitResults(prev => prev.map(r => r.id === "__new_row__" ? { ...r, status: "success" as const } : r));
-                        setNewRowOpen(false);
-                        setNewRowValues({});
-                    })
-                    .catch((e: unknown) => setCommitResults(prev => prev.map(r => r.id === "__new_row__" ? { ...r, status: "error" as const, error: String(e) } : r)))
-            );
+        if (onCreateRow) {
+            for (const result of commitResults) {
+                if (typeof result.id !== "string" || !result.id.startsWith("__new__")) continue;
+                const draftId = result.id.slice(7);
+                const draft = draftRows.find(d => d.id === draftId);
+                if (!draft) continue;
+                tasks.push(
+                    onCreateRow(draft.values)
+                        .then(() => {
+                            setCommitResults(prev => prev.map(r => r.id === result.id ? { ...r, status: "success" as const } : r));
+                            setDraftRows(prev => prev.filter(d => d.id !== draftId));
+                        })
+                        .catch((e: unknown) => setCommitResults(prev => prev.map(r => r.id === result.id ? { ...r, status: "error" as const, error: String(e) } : r)))
+                );
+            }
         }
         await Promise.all(tasks);
         setIsCommitting(false);
@@ -1198,11 +1245,140 @@ export default function SpreadsheetTable<T>({
 
     const handlePrint = () => window.print();
 
+    // ── CSV import ───────────────────────────────────────────────────────
+    const [importModalOpen, setImportModalOpen] = useState(false);
+    const [importText, setImportText] = useState("");
+    const [importError, setImportError] = useState<string | null>(null);
+    type ImportDuplicate = { id: string | number; values: Record<string, string | string[]> };
+    const [importDuplicates, setImportDuplicates] = useState<ImportDuplicate[]>([]);
+    const [importPending, setImportPending] = useState<{ newDrafts: DraftRow[]; duplicates: ImportDuplicate[] } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const applyImportCsv = (text: string) => {
+        const rows = parseCsv(text.trim());
+        if (rows.length < 2) { setImportError("CSV must have a header row and at least one data row."); return; }
+        const headers = rows[0].map(h => h.trim().toLowerCase());
+        const labelToKey: Record<string, string> = {};
+        for (const col of columns) {
+            labelToKey[col.label.trim().toLowerCase()] = col.key;
+        }
+        const dataRows = rows.slice(1).filter(r => r.some(cell => cell.trim() !== ""));
+        if (dataRows.length === 0) { setImportError("No data rows found."); return; }
+
+        // Build a set of existing row IDs for fast lookup
+        const existingIdMap = new Map<string, string | number>();
+        for (const item of data) {
+            existingIdMap.set(String(getRowId(item)).toLowerCase(), getRowId(item));
+        }
+
+        const newDrafts: DraftRow[] = [];
+        const duplicates: ImportDuplicate[] = [];
+
+        dataRows.forEach((row, i) => {
+            const values: Record<string, string | string[]> = {};
+            headers.forEach((header, hi) => {
+                const key = labelToKey[header];
+                if (!key || row[hi] === undefined) return;
+                const col = columns.find(c => c.key === key);
+                if (col?.editType === "tags") {
+                    try { values[key] = JSON.parse(row[hi]); }
+                    catch { values[key] = row[hi] ? row[hi].split(",").map(s => s.trim()).filter(Boolean) : []; }
+                } else {
+                    values[key] = row[hi];
+                }
+            });
+
+            // Check importMatchKey first (VIN-style matching)
+            let matchedId: string | number | undefined;
+            if (importMatchKey && values[importMatchKey] !== undefined) {
+                const matchVal = String(values[importMatchKey]).trim().toLowerCase();
+                const matchedItem = data.find(item => {
+                    const col = columns.find(c => c.key === importMatchKey);
+                    const cellVal = col?.getValue ? col.getValue(item) : (item as Record<string, unknown>)[importMatchKey];
+                    return String(cellVal ?? "").trim().toLowerCase() === matchVal;
+                });
+                if (matchedItem) matchedId = getRowId(matchedItem);
+            }
+
+            // Check if the locked (ID) column value matches an existing row ID
+            if (matchedId === undefined) {
+                const lockedKeys = new Set(columns.filter(c => c.locked).map(c => c.key));
+                for (const [key, val] of Object.entries(values)) {
+                    if (!lockedKeys.has(key)) continue;
+                    const strVal = String(val).trim().toLowerCase();
+                    if (strVal && existingIdMap.has(strVal)) {
+                        matchedId = existingIdMap.get(strVal)!;
+                        break;
+                    }
+                }
+            }
+
+            if (matchedId !== undefined) {
+                duplicates.push({ id: matchedId, values });
+            } else {
+                newDrafts.push({ id: `import_${Date.now()}_${i}`, values, aiLoading: {}, fillAiLoading: false });
+            }
+        });
+
+        if (duplicates.length > 0) {
+            // Stage for user confirmation
+            setImportPending({ newDrafts, duplicates });
+            setImportDuplicates(duplicates);
+        } else {
+            commitImportResult(newDrafts, []);
+        }
+    };
+
+    const commitImportResult = (newDrafts: DraftRow[], duplicatesToEdit: ImportDuplicate[]) => {
+        if (duplicatesToEdit.length > 0) {
+            setEditValues(prev => {
+                const next = new Map(prev);
+                for (const { id, values } of duplicatesToEdit) {
+                    const patch = { ...(next.get(id) ?? {}) };
+                    for (const [key, val] of Object.entries(values)) {
+                        const col = columns.find(c => c.key === key);
+                        if (!col?.editable) continue;
+                        if (permanentlyLockedCols?.includes(key)) continue;
+                        patch[key] = val;
+                    }
+                    next.set(id, patch);
+                }
+                return next;
+            });
+        }
+        setVisibleCols(new Set(columns.map(c => c.key)));
+        if (newDrafts.length > 0) setDraftRows(prev => [...prev, ...newDrafts]);
+        // Show all rows so imported/edited rows are immediately visible
+        const total = totalItems + newDrafts.length;
+        if (total > pageSize) onPageSizeChange(total);
+        setImportModalOpen(false);
+        setImportText("");
+        setImportError(null);
+        setImportPending(null);
+        setImportDuplicates([]);
+    };
+
+    const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const text = ev.target?.result as string;
+            applyImportCsv(text);
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+    };
+
     const exportOptions: ExportOption[] = [
         { label: "CSV",              icon: <BiTable />,   onClick: handleExportCsv,  disabled: data.length === 0 },
         { label: "JSON",             icon: <BiCode />,    onClick: handleExportJson,  disabled: data.length === 0 },
         { label: "Copy as CSV",      icon: <BiCopy />,    onClick: handleCopyCsv,     disabled: data.length === 0, divider: true },
         { label: "Print",            icon: <BiPrinter />, onClick: handlePrint },
+        ...(onCreateRow ? [
+            { label: "Import CSV File",  icon: <BiUpload />,  onClick: () => fileInputRef.current?.click(), divider: true, section: "Import" },
+            { label: "Paste CSV",        icon: <BiClipboard />, onClick: () => { setImportText(""); setImportError(null); setImportModalOpen(true); } },
+        ] : []),
     ];
 
     // ── Preview panel ────────────────────────────────────────────────────
@@ -1257,15 +1433,19 @@ export default function SpreadsheetTable<T>({
         if (markdownPanelRowId === null || !markdownPanelColKey || markdownAiLoading) return;
         const col = columns.find(c => c.key === markdownPanelColKey);
         if (!col?.aiGenerate) return;
-        const item = markdownPanelRowId === "__new_row__"
-            ? (newRowValues as unknown as T)
+        const rowIdStr = String(markdownPanelRowId);
+        const isDraftRow = rowIdStr.startsWith("__new__");
+        const draftId = isDraftRow ? rowIdStr.slice(7) : null;
+        const draft = draftId ? draftRows.find(d => d.id === draftId) : null;
+        const item = isDraftRow
+            ? (draft ? (draft.values as unknown as T) : null)
             : data.find(d => getRowId(d) === markdownPanelRowId);
         if (!item) return;
         setMarkdownAiLoading(true);
         try {
             const result = await col.aiGenerate(item);
-            if (markdownPanelRowId === "__new_row__") {
-                setNewRowValues((prev) => ({ ...prev, [markdownPanelColKey]: result }));
+            if (isDraftRow && draftId) {
+                updateDraft(draftId, d => ({ ...d, values: { ...d.values, [markdownPanelColKey]: result } }));
             } else {
                 setEditCell(markdownPanelRowId, markdownPanelColKey, result);
             }
@@ -1295,7 +1475,12 @@ export default function SpreadsheetTable<T>({
     const markdownPanelCol = markdownPanelColKey ? columns.find(c => c.key === markdownPanelColKey) : undefined;
     const markdownPanelValue = (() => {
         if (markdownPanelRowId === null || !markdownPanelColKey) return "";
-        if (markdownPanelRowId === "__new_row__") return String(newRowValues[markdownPanelColKey] ?? "");
+        const rowIdStr = String(markdownPanelRowId);
+        if (rowIdStr.startsWith("__new__")) {
+            const draftId = rowIdStr.slice(7);
+            const draft = draftRows.find(d => d.id === draftId);
+            return String(draft?.values[markdownPanelColKey] ?? "");
+        }
         const editRow = editValues.get(markdownPanelRowId);
         if (editRow && markdownPanelColKey in editRow) return String(editRow[markdownPanelColKey] ?? "");
         const mdItem = data.find(d => getRowId(d) === markdownPanelRowId);
@@ -1337,7 +1522,12 @@ export default function SpreadsheetTable<T>({
     const imagePanelCol = imagePanelColKey ? columns.find(c => c.key === imagePanelColKey) : undefined;
     const imagePanelValue = (() => {
         if (imagePanelRowId === null || !imagePanelColKey) return [] as string[];
-        if (imagePanelRowId === "__new_row__") return (newRowValues[imagePanelColKey] as string[]) ?? [];
+        const rowIdStr = String(imagePanelRowId);
+        if (rowIdStr.startsWith("__new__")) {
+            const draftId = rowIdStr.slice(7);
+            const draft = draftRows.find(d => d.id === draftId);
+            return (draft?.values[imagePanelColKey] as string[]) ?? [];
+        }
         const editRow = editValues.get(imagePanelRowId);
         if (editRow && imagePanelColKey in editRow) return editRow[imagePanelColKey] as string[];
         const imgItem = data.find(d => getRowId(d) === imagePanelRowId);
@@ -1345,8 +1535,14 @@ export default function SpreadsheetTable<T>({
     })();
 
     const setImagePanelImages = (imgs: string[]) => {
-        if (imagePanelRowId !== null && imagePanelColKey)
+        if (imagePanelRowId === null || !imagePanelColKey) return;
+        const rowIdStr = String(imagePanelRowId);
+        if (rowIdStr.startsWith("__new__")) {
+            const draftId = rowIdStr.slice(7);
+            updateDraft(draftId, d => ({ ...d, values: { ...d.values, [imagePanelColKey]: imgs } }));
+        } else {
             setEditCell(imagePanelRowId, imagePanelColKey, imgs);
+        }
     };
 
     // ── Fullscreen overlay ───────────────────────────────────────────────
@@ -2018,60 +2214,97 @@ export default function SpreadsheetTable<T>({
                                     </tr>
                                 );
                             })}
-                            {/* ── New row draft ── */}
-                            {onCreateRow && newRowOpen && (
-                                <tr className={styles.newDraftRow}>
+                            {/* ── New row drafts ── */}
+                            {onCreateRow && draftRows.map((draft) => (
+                                <tr key={draft.id} className={styles.newDraftRow}>
                                     <td className={styles.stickyCol}>
-                                        <div className={styles.stickyColInner}>
+                                        <div className={styles.draftRowActions}>
                                             <button
                                                 className={styles.dotsBtn}
                                                 title="Cancel new row"
-                                                onClick={() => { setNewRowOpen(false); setNewRowValues({}); }}
+                                                onClick={() => setDraftRows(prev => prev.filter(d => d.id !== draft.id))}
                                             >
                                                 <BiX />
                                             </button>
+                                            <button
+                                                className={styles.dotsBtn}
+                                                title="Copy row values"
+                                                onClick={() => {
+                                                    const clipboard: Record<string, string | string[]> = {};
+                                                    for (const col of columns) {
+                                                        if (!col.editable) continue;
+                                                        if (permanentlyLockedCols?.includes(col.key)) continue;
+                                                        if (draft.values[col.key] !== undefined) clipboard[col.key] = draft.values[col.key];
+                                                    }
+                                                    setRowClipboard(clipboard);
+                                                }}
+                                            >
+                                                <BiCopy />
+                                            </button>
+                                            {rowClipboard && (
+                                                <button
+                                                    className={styles.dotsBtn}
+                                                    title="Paste row values"
+                                                    onClick={() => {
+                                                        updateDraft(draft.id, d => ({
+                                                            ...d,
+                                                            values: {
+                                                                ...d.values,
+                                                                ...Object.fromEntries(
+                                                                    Object.entries(rowClipboard).filter(([key]) => {
+                                                                        const col = columns.find(c => c.key === key);
+                                                                        return col?.editable && !permanentlyLockedCols?.includes(key);
+                                                                    })
+                                                                ),
+                                                            },
+                                                        }));
+                                                    }}
+                                                >
+                                                    <BiClipboard />
+                                                </button>
+                                            )}
                                         </div>
                                     </td>
                                     {activeCols.map((col) => (
                                         <td key={col.key} style={{ minWidth: col.minWidth, width: colWidths[col.key] }}
-                                            onContextMenu={(e) => handleContextMenu(e, col.key, null, true)}>
+                                            onContextMenu={(e) => handleContextMenu(e, col.key, null, true, draft.id)}>
                                             {(col.editable && !isColLocked(col.key)) || col.newRowEditable || (col.editable && onCreateRow != null && permanentlyLockedCols?.includes(col.key)) ? (
                                                 col.editType === "tags" ? (
                                                     <div className={styles.newRowAiWrap}>
                                                         <TagsEditor
-                                                            tags={(newRowValues[col.key] as string[]) ?? []}
-                                                            onChange={(tags) => setNewRowValues(prev => ({ ...prev, [col.key]: tags }))}
+                                                            tags={(draft.values[col.key] as string[]) ?? []}
+                                                            onChange={(tags) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: tags } }))}
                                                         />
                                                         {col.aiGenerate && (
                                                             <span className={styles.newRowAiBtn}>
                                                                 <button
                                                                     className={`${styles.markdownCellBtn} ${styles.markdownCellBtnActive}`}
-                                                                    onClick={() => handleNewRowAiGenerate(col)}
-                                                                    disabled={newRowAiLoading[col.key] || !newRowAiReady}
-                                                                    title={!newRowAiReady ? "Fill in required fields first" : "Fill with AI"}
-                                                                ><PiSparkleFill className={newRowAiLoading[col.key] ? "animate-pulse" : ""} /></button>
+                                                                    onClick={() => handleNewRowAiGenerate(col, draft.id)}
+                                                                    disabled={draft.aiLoading[col.key] || !isDraftAiReady(draft)}
+                                                                    title={!isDraftAiReady(draft) ? "Fill in required fields first" : "Fill with AI"}
+                                                                ><PiSparkleFill className={draft.aiLoading[col.key] ? "animate-pulse" : ""} /></button>
                                                             </span>
                                                         )}
                                                     </div>
                                                 ) : col.editType === "markdown" ? (
                                                     <div className={styles.markdownCell}>
                                                         <span style={{ color: "var(--color-foreground-light)", fontSize: 11, opacity: 0.6 }}>
-                                                            {(newRowValues[col.key] as string)?.slice(0, 40) || "—"}
+                                                            {(draft.values[col.key] as string)?.slice(0, 40) || "—"}
                                                         </span>
                                                         <button
-                                                            className={`${styles.markdownCellBtn} ${markdownPanelOpen && markdownPanelRowId === "__new_row__" && markdownPanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
-                                                            onClick={(e) => { e.stopPropagation(); openMarkdownPanel("__new_row__", col.key); }}
+                                                            className={`${styles.markdownCellBtn} ${markdownPanelOpen && markdownPanelRowId === "__new__" + draft.id && markdownPanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
+                                                            onClick={(e) => { e.stopPropagation(); openMarkdownPanel("__new__" + draft.id, col.key); }}
                                                             title="Open editor"
                                                         ><BiPencil /></button>
                                                     </div>
                                                 ) : col.editType === "images" ? (
                                                     <div className={styles.markdownCell}>
                                                         <span style={{ color: "var(--color-foreground-light)", fontSize: 11, opacity: 0.6 }}>
-                                                            {((newRowValues[col.key] as string[])?.length ?? 0)} image{((newRowValues[col.key] as string[])?.length ?? 0) !== 1 ? "s" : ""}
+                                                            {((draft.values[col.key] as string[])?.length ?? 0)} image{((draft.values[col.key] as string[])?.length ?? 0) !== 1 ? "s" : ""}
                                                         </span>
                                                         <button
-                                                            className={`${styles.markdownCellBtn} ${imagePanelOpen && imagePanelRowId === "__new_row__" && imagePanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
-                                                            onClick={(e) => { e.stopPropagation(); openImagePanel("__new_row__", col.key); }}
+                                                            className={`${styles.markdownCellBtn} ${imagePanelOpen && imagePanelRowId === "__new__" + draft.id && imagePanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
+                                                            onClick={(e) => { e.stopPropagation(); openImagePanel("__new__" + draft.id, col.key); }}
                                                             title="Open image editor"
                                                         ><BiImages /></button>
                                                     </div>
@@ -2079,8 +2312,8 @@ export default function SpreadsheetTable<T>({
                                                     <div className={styles.newRowAiWrap}>
                                                         <select
                                                             className={styles.editInput}
-                                                            value={(newRowValues[col.key] as string) ?? ""}
-                                                            onChange={(e) => setNewRowValues(prev => ({ ...prev, [col.key]: e.target.value }))}
+                                                            value={(draft.values[col.key] as string) ?? ""}
+                                                            onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
                                                         >
                                                             <option value="">—</option>
                                                             {col.editOptions?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -2089,10 +2322,10 @@ export default function SpreadsheetTable<T>({
                                                             <span className={styles.newRowAiBtn}>
                                                                 <button
                                                                     className={`${styles.markdownCellBtn} ${styles.markdownCellBtnActive}`}
-                                                                    onClick={() => handleNewRowAiGenerate(col)}
-                                                                    disabled={newRowAiLoading[col.key] || !newRowAiReady}
-                                                                    title={!newRowAiReady ? "Fill in required fields first" : "Fill with AI"}
-                                                                ><PiSparkleFill className={newRowAiLoading[col.key] ? "animate-pulse" : ""} /></button>
+                                                                    onClick={() => handleNewRowAiGenerate(col, draft.id)}
+                                                                    disabled={draft.aiLoading[col.key] || !isDraftAiReady(draft)}
+                                                                    title={!isDraftAiReady(draft) ? "Fill in required fields first" : "Fill with AI"}
+                                                                ><PiSparkleFill className={draft.aiLoading[col.key] ? "animate-pulse" : ""} /></button>
                                                             </span>
                                                         )}
                                                     </div>
@@ -2102,17 +2335,17 @@ export default function SpreadsheetTable<T>({
                                                             className={styles.editInput}
                                                             rows={2}
                                                             placeholder={col.label}
-                                                            value={(newRowValues[col.key] as string) ?? ""}
-                                                            onChange={(e) => setNewRowValues(prev => ({ ...prev, [col.key]: e.target.value }))}
+                                                            value={(draft.values[col.key] as string) ?? ""}
+                                                            onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
                                                         />
                                                         {col.aiGenerate && (
                                                             <span className={styles.newRowAiBtn}>
                                                                 <button
                                                                     className={`${styles.markdownCellBtn} ${styles.markdownCellBtnActive}`}
-                                                                    onClick={() => handleNewRowAiGenerate(col)}
-                                                                    disabled={newRowAiLoading[col.key] || !newRowAiReady}
-                                                                    title={!newRowAiReady ? "Fill in required fields first" : "Fill with AI"}
-                                                                ><PiSparkleFill className={newRowAiLoading[col.key] ? "animate-pulse" : ""} /></button>
+                                                                    onClick={() => handleNewRowAiGenerate(col, draft.id)}
+                                                                    disabled={draft.aiLoading[col.key] || !isDraftAiReady(draft)}
+                                                                    title={!isDraftAiReady(draft) ? "Fill in required fields first" : "Fill with AI"}
+                                                                ><PiSparkleFill className={draft.aiLoading[col.key] ? "animate-pulse" : ""} /></button>
                                                             </span>
                                                         )}
                                                     </div>
@@ -2123,8 +2356,8 @@ export default function SpreadsheetTable<T>({
                                                         allowPast
                                                         portal
                                                         placeholder={col.label}
-                                                        selected={(newRowValues[col.key] as string) ? new Date((newRowValues[col.key] as string) + "T00:00:00") : undefined}
-                                                        onSelect={(date) => setNewRowValues(prev => ({ ...prev, [col.key]: date ? dateFnsFormat(date, "yyyy-MM-dd") : "" }))}
+                                                        selected={(draft.values[col.key] as string) ? new Date((draft.values[col.key] as string) + "T00:00:00") : undefined}
+                                                        onSelect={(date) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: date ? dateFnsFormat(date, "yyyy-MM-dd") : "" } }))}
                                                     />
                                                 ) : (
                                                     <div className={styles.newRowAiWrap}>
@@ -2132,17 +2365,17 @@ export default function SpreadsheetTable<T>({
                                                             className={styles.editInput}
                                                             type={col.editType === "number" ? "number" : col.editType === "datetime-local" ? "datetime-local" : "text"}
                                                             placeholder={col.label}
-                                                            value={(newRowValues[col.key] as string) ?? ""}
-                                                            onChange={(e) => setNewRowValues(prev => ({ ...prev, [col.key]: e.target.value }))}
+                                                            value={(draft.values[col.key] as string) ?? ""}
+                                                            onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
                                                         />
                                                         {col.aiGenerate && (
                                                             <span className={styles.newRowAiBtn}>
                                                                 <button
                                                                     className={`${styles.markdownCellBtn} ${styles.markdownCellBtnActive}`}
-                                                                    onClick={() => handleNewRowAiGenerate(col)}
-                                                                    disabled={newRowAiLoading[col.key] || !newRowAiReady}
-                                                                    title={!newRowAiReady ? "Fill in required fields first" : "Fill with AI"}
-                                                                ><PiSparkleFill className={newRowAiLoading[col.key] ? "animate-pulse" : ""} /></button>
+                                                                    onClick={() => handleNewRowAiGenerate(col, draft.id)}
+                                                                    disabled={draft.aiLoading[col.key] || !isDraftAiReady(draft)}
+                                                                    title={!isDraftAiReady(draft) ? "Fill in required fields first" : "Fill with AI"}
+                                                                ><PiSparkleFill className={draft.aiLoading[col.key] ? "animate-pulse" : ""} /></button>
                                                             </span>
                                                         )}
                                                     </div>
@@ -2153,42 +2386,81 @@ export default function SpreadsheetTable<T>({
                                         </td>
                                     ))}
                                 </tr>
-                            )}
+                            ))}
                             {/* ── New row: extra fields for hidden-but-required columns ── */}
-                            {onCreateRow && newRowOpen && (() => {
+                            {onCreateRow && draftRows.map((draft) => {
                                 const extraCols = columns.filter(
-                                    (c) => c.newRowVisible && c.editable && !activeCols.find((a) => a.key === c.key)
+                                    (c) => c.editable && !activeCols.find((a) => a.key === c.key)
                                 );
                                 if (extraCols.length === 0) return null;
                                 return (
-                                    <tr className={styles.newDraftRowExtra}>
+                                    <tr key={`extra-${draft.id}`} className={styles.newDraftRowExtra}>
                                         <td colSpan={activeCols.length + 1}>
                                             <div className={styles.newRowExtraFields}>
                                                 {extraCols.map((col) => (
                                                     <div key={col.key} className={styles.newRowExtraField}>
                                                         <label className={styles.newRowExtraLabel}>{col.label}</label>
-                                                        {col.editType === "date" ? (
-                                                            <input
-                                                                type="date"
-                                                                className={styles.editInput}
-                                                                value={(newRowValues[col.key] as string) ?? ""}
-                                                                onChange={(e) => setNewRowValues((prev) => ({ ...prev, [col.key]: e.target.value }))}
+                                                        {col.editType === "tags" ? (
+                                                            <TagsEditor
+                                                                tags={(draft.values[col.key] as string[]) ?? []}
+                                                                onChange={(tags) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: tags } }))}
                                                             />
-                                                        ) : col.editType === "number" ? (
-                                                            <input
-                                                                type="number"
+                                                        ) : col.editType === "select" ? (
+                                                            <select
                                                                 className={styles.editInput}
+                                                                value={(draft.values[col.key] as string) ?? ""}
+                                                                onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
+                                                            >
+                                                                <option value="">—</option>
+                                                                {col.editOptions?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                            </select>
+                                                        ) : col.editType === "textarea" ? (
+                                                            <textarea
+                                                                className={styles.editInput}
+                                                                rows={2}
                                                                 placeholder={col.label}
-                                                                value={(newRowValues[col.key] as string) ?? ""}
-                                                                onChange={(e) => setNewRowValues((prev) => ({ ...prev, [col.key]: e.target.value }))}
+                                                                value={(draft.values[col.key] as string) ?? ""}
+                                                                onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
+                                                            />
+                                                        ) : col.editType === "markdown" ? (
+                                                            <div className={styles.markdownCell}>
+                                                                <span style={{ color: "var(--color-foreground-light)", fontSize: 11, opacity: 0.6 }}>
+                                                                    {(draft.values[col.key] as string)?.slice(0, 40) || "—"}
+                                                                </span>
+                                                                <button
+                                                                    className={`${styles.markdownCellBtn} ${markdownPanelOpen && markdownPanelRowId === `__new__${draft.id}` && markdownPanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
+                                                                    onClick={(e) => { e.stopPropagation(); openMarkdownPanel(`__new__${draft.id}`, col.key); }}
+                                                                    title="Open editor"
+                                                                ><BiPencil /></button>
+                                                            </div>
+                                                        ) : col.editType === "images" ? (
+                                                            <div className={styles.markdownCell}>
+                                                                <span style={{ color: "var(--color-foreground-light)", fontSize: 11, opacity: 0.6 }}>
+                                                                    {((draft.values[col.key] as string[])?.length ?? 0)} image{((draft.values[col.key] as string[])?.length ?? 0) !== 1 ? "s" : ""}
+                                                                </span>
+                                                                <button
+                                                                    className={`${styles.markdownCellBtn} ${imagePanelOpen && imagePanelRowId === `__new__${draft.id}` && imagePanelColKey === col.key ? styles.markdownCellBtnActive : ""}`}
+                                                                    onClick={(e) => { e.stopPropagation(); openImagePanel(`__new__${draft.id}`, col.key); }}
+                                                                    title="Open image editor"
+                                                                ><BiImages /></button>
+                                                            </div>
+                                                        ) : col.editType === "date" ? (
+                                                            <DatePicker
+                                                                label={col.label}
+                                                                showLabel={false}
+                                                                allowPast
+                                                                portal
+                                                                placeholder={col.label}
+                                                                selected={(draft.values[col.key] as string) ? new Date((draft.values[col.key] as string) + "T00:00:00") : undefined}
+                                                                onSelect={(date) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: date ? dateFnsFormat(date, "yyyy-MM-dd") : "" } }))}
                                                             />
                                                         ) : (
                                                             <input
-                                                                type="text"
+                                                                type={col.editType === "number" ? "number" : col.editType === "datetime-local" ? "datetime-local" : "text"}
                                                                 className={styles.editInput}
                                                                 placeholder={col.label}
-                                                                value={(newRowValues[col.key] as string) ?? ""}
-                                                                onChange={(e) => setNewRowValues((prev) => ({ ...prev, [col.key]: e.target.value }))}
+                                                                value={(draft.values[col.key] as string) ?? ""}
+                                                                onChange={(e) => updateDraft(draft.id, d => ({ ...d, values: { ...d.values, [col.key]: e.target.value } }))}
                                                             />
                                                         )}
                                                     </div>
@@ -2197,12 +2469,15 @@ export default function SpreadsheetTable<T>({
                                         </td>
                                     </tr>
                                 );
-                            })()}
+                            })}
                             {/* ── Add row button ── */}
-                            {onCreateRow && !newRowOpen && (
+                            {onCreateRow && (
                                 <tr>
                                     <td colSpan={activeCols.length + 1} className={styles.addRowCell}>
-                                        <button className={styles.addRowBtn} onClick={() => setNewRowOpen(true)}>
+                                        <button className={styles.addRowBtn} onClick={() => {
+                                            setVisibleCols(new Set(columns.map((c) => c.key)));
+                                            setDraftRows(prev => [...prev, { id: String(Date.now() + Math.random()), values: {}, aiLoading: {}, fillAiLoading: false }]);
+                                        }}>
                                             <BiPlus /> Add Row
                                         </button>
                                     </td>
@@ -2392,8 +2667,8 @@ export default function SpreadsheetTable<T>({
                 <div className={styles.commitBar}>
                     <span className={styles.commitBarInfo}>
                         {dirtyCount > 0 && `${dirtyCount} row${dirtyCount !== 1 ? "s" : ""} modified`}
-                        {dirtyCount > 0 && newRowOpen && " · "}
-                        {newRowOpen && "1 new row"}
+                        {dirtyCount > 0 && draftRows.length > 0 && " · "}
+                        {draftRows.length > 0 && `${draftRows.length} new row${draftRows.length !== 1 ? "s" : ""}`}
                     </span>
                     <div className={styles.commitBarActions}>
                         <button onClick={discardChanges} className={styles.commitBarDiscard}>
@@ -2508,12 +2783,14 @@ export default function SpreadsheetTable<T>({
                         (() => {
                             const col = columns.find((c) => c.key === ctxMenu.colKey);
                             const hasCellAi = !!col?.aiGenerate;
+                            const draft = ctxMenu.draftId ? draftRows.find(d => d.id === ctxMenu.draftId) : undefined;
+                            const aiReady = draft ? isDraftAiReady(draft) : false;
                             return hasCellAi ? (
                                 <button
                                     className={styles.ctxItem}
                                     onClick={ctxAiFillCell}
-                                    disabled={ctxAiLoading || !newRowAiReady}
-                                    title={!newRowAiReady ? "Fill in required fields first" : undefined}
+                                    disabled={ctxAiLoading || !aiReady}
+                                    title={!aiReady ? "Fill in required fields first" : undefined}
                                 >
                                     <PiSparkleFill /> {ctxAiLoading ? "Generating…" : "Fill with AI"}
                                 </button>
@@ -2538,19 +2815,61 @@ export default function SpreadsheetTable<T>({
                     )}
 
                     {/* Row section for new row */}
-                    {ctxMenu.isNewRow && columns.some((c) => c.editable && c.aiGenerate && c.editType !== "images") && (
-                        <>
-                            <div className={styles.ctxDivider} />
-                            <div className={styles.ctxSection}>Row</div>
-                            <button
-                                className={styles.ctxItem}
-                                onClick={() => { closeCtx(); handleFillRowWithAi(); }}
-                                disabled={fillRowAiLoading || !newRowAiReady}
-                                title={!newRowAiReady ? "Fill in required fields first" : undefined}
-                            >
-                                <PiSparkleFill /> {fillRowAiLoading ? "Filling…" : "Fill Row with AI"}
-                            </button>
-                        </>
+                    {ctxMenu.isNewRow && ctxMenu.draftId && (
+                        (() => {
+                            const draft = draftRows.find(d => d.id === ctxMenu.draftId);
+                            const aiReady = draft ? isDraftAiReady(draft) : false;
+                            const hasAi = columns.some((c) => c.editable && c.aiGenerate && c.editType !== "images");
+                            return (
+                                <>
+                                    <div className={styles.ctxDivider} />
+                                    <div className={styles.ctxSection}>Row</div>
+                                    {hasAi && (
+                                        <button
+                                            className={styles.ctxItem}
+                                            onClick={() => { closeCtx(); if (ctxMenu.draftId) handleFillRowWithAi(ctxMenu.draftId); }}
+                                            disabled={draft?.fillAiLoading || !aiReady}
+                                            title={!aiReady ? "Fill in required fields first" : undefined}
+                                        >
+                                            <PiSparkleFill /> {draft?.fillAiLoading ? "Filling…" : "Fill Row with AI"}
+                                        </button>
+                                    )}
+                                    <button className={styles.ctxItem} onClick={() => {
+                                        if (!draft) return;
+                                        const clipboard: Record<string, string | string[]> = {};
+                                        for (const col of columns) {
+                                            if (!col.editable) continue;
+                                            if (permanentlyLockedCols?.includes(col.key)) continue;
+                                            if (draft.values[col.key] !== undefined) clipboard[col.key] = draft.values[col.key];
+                                        }
+                                        setRowClipboard(clipboard);
+                                        closeCtx();
+                                    }}>
+                                        <BiCopy /> Copy Row Values
+                                    </button>
+                                    {rowClipboard && (
+                                        <button className={styles.ctxItem} onClick={() => {
+                                            if (!ctxMenu.draftId) return;
+                                            updateDraft(ctxMenu.draftId, d => ({
+                                                ...d,
+                                                values: {
+                                                    ...d.values,
+                                                    ...Object.fromEntries(
+                                                        Object.entries(rowClipboard).filter(([key]) => {
+                                                            const col = columns.find(c => c.key === key);
+                                                            return col?.editable && !permanentlyLockedCols?.includes(key);
+                                                        })
+                                                    ),
+                                                },
+                                            }));
+                                            closeCtx();
+                                        }}>
+                                            <BiClipboard /> Paste Row Values
+                                        </button>
+                                    )}
+                                </>
+                            );
+                        })()
                     )}
 
                     {/* Row section (only if right-clicked on a data row, not new row) */}
@@ -2575,6 +2894,39 @@ export default function SpreadsheetTable<T>({
                             {onEdit && (
                                 <button className={styles.ctxItem} onClick={ctxEditRow}>
                                     <BiEdit /> Edit Row
+                                </button>
+                            )}
+                            <button className={styles.ctxItem} onClick={() => {
+                                const item = ctxMenu.rowItem as T;
+                                const clipboard: Record<string, string | string[]> = {};
+                                for (const col of columns) {
+                                    if (!col.editable) continue;
+                                    if (permanentlyLockedCols?.includes(col.key)) continue;
+                                    if (col.editType === "images") {
+                                        clipboard[col.key] = col.getImagesValue ? col.getImagesValue(item) : [];
+                                    } else if (col.editType === "tags") {
+                                        const v = col.getValue ? col.getValue(item) : undefined;
+                                        clipboard[col.key] = Array.isArray(v) ? v : (col.getTagsValue ? col.getTagsValue(item) : []);
+                                    } else {
+                                        clipboard[col.key] = col.getValue ? String(col.getValue(item) ?? "") : "";
+                                    }
+                                }
+                                setRowClipboard(clipboard);
+                                closeCtx();
+                            }}>
+                                <BiCopy /> Copy Row Values
+                            </button>
+                            {isEditMode && rowClipboard && (
+                                <button className={styles.ctxItem} onClick={() => {
+                                    const id = getRowId(ctxMenu.rowItem as T);
+                                    for (const [key, val] of Object.entries(rowClipboard)) {
+                                        const col = columns.find(c => c.key === key);
+                                        if (!col?.editable || isColLocked(col.key)) continue;
+                                        setEditCell(id, key, val);
+                                    }
+                                    closeCtx();
+                                }}>
+                                    <BiClipboard /> Paste Row Values
                                 </button>
                             )}
                             {onBulkDelete && (
@@ -2685,7 +3037,7 @@ export default function SpreadsheetTable<T>({
                                 <div key={String(result.id)} className={styles.commitItem}>
                                     <div className={styles.commitItemMeta}>
                                         <div className={styles.commitItemHeader}>
-                                            <span className={styles.commitItemLabel}>{result.id === "__new_row__" ? "New Row" : `#${result.id}`}</span>
+                                            <span className={styles.commitItemLabel}>{typeof result.id === "string" && result.id.startsWith("__new__") ? "New Row" : `#${result.id}`}</span>
                                             <div className={styles.commitItemStatus}>
                                                 {result.status === "idle" && (
                                                     <span className={styles.commitStatusIdle}>–</span>
@@ -2752,22 +3104,56 @@ export default function SpreadsheetTable<T>({
             {totalPages > 0 && (
                 <div className={styles.pagination}>
                     <div className={styles.pageInfo}>
-                        <span>
+                        <span style={{ whiteSpace: "nowrap" }}>
                             {startItem}&ndash;{endItem} of {totalItems}
                         </span>
-                        <select
-                            className={styles.pageSizeSelect}
-                            value={pageSize}
-                            onChange={(e) =>
-                                onPageSizeChange(Number(e.target.value))
-                            }
-                        >
-                            {[10, 25, 50, 100].map((n) => (
-                                <option key={n} value={n}>
-                                    {n} / page
-                                </option>
-                            ))}
-                        </select>
+                        <div ref={pageSizeDropRef} style={{ position: "relative" }}>
+                            <button
+                                className={styles.pageSizeBtn}
+                                onClick={() => setPageSizeDropOpen((o) => !o)}
+                            >
+                                {isCustomPageSize ? `${pageSize} / page` : `${pageSize} / page`}
+                                <BiChevronDown style={{ fontSize: "10pt" }} />
+                            </button>
+                            {pageSizeDropOpen && (
+                                <div className={styles.pageSizeDrop}>
+                                    {PAGE_SIZE_PRESETS.map((n) => (
+                                        <button
+                                            key={n}
+                                            className={`${styles.ctxItem} ${pageSize === n && !showCustomInput ? styles.ctxItemActive : ""}`}
+                                            onClick={() => { onPageSizeChange(n); setPageSizeDropOpen(false); setShowCustomInput(false); setCustomPageSize(""); }}
+                                        >
+                                            {n} / page
+                                        </button>
+                                    ))}
+                                    <div className={styles.ctxDivider} />
+                                    <button
+                                        className={`${styles.ctxItem} ${showCustomInput ? styles.ctxItemActive : ""}`}
+                                        onClick={() => {
+                                            setCustomPageSize(String(pageSize));
+                                            setShowCustomInput(true);
+                                            setPageSizeDropOpen(false);
+                                        }}
+                                    >
+                                        Custom…
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        {showCustomInput && (
+                            <input
+                                type="number"
+                                className={styles.pageSizeInput}
+                                value={customPageSize}
+                                onChange={(e) => setCustomPageSize(e.target.value)}
+                                onBlur={(e) => {
+                                    const v = parseInt(e.target.value, 10);
+                                    if (!isNaN(v) && v > 0) onPageSizeChange(v);
+                                }}
+                                onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                                autoFocus
+                            />
+                        )}
                     </div>
                     <div className={styles.pageControls}>
                         <button
@@ -2789,6 +3175,103 @@ export default function SpreadsheetTable<T>({
                         </button>
                     </div>
                 </div>
+            )}
+
+            {/* ── Hidden file input for CSV import ─────────────────────── */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                style={{ display: "none" }}
+                onChange={handleImportFile}
+            />
+
+            {/* ── Import CSV modal ──────────────────────────────────────── */}
+            {importModalOpen && createPortal(
+                <div
+                    className={styles.commitOverlay}
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            setImportModalOpen(false);
+                            setImportError(null);
+                            setImportPending(null);
+                        }
+                    }}
+                >
+                    <div className={styles.commitModal} style={{ maxWidth: 540 }}>
+                        <div className={styles.commitModalHeader}>
+                            <span className={styles.commitModalTitle}>
+                                {importPending ? "Duplicate IDs Detected" : "Paste CSV"}
+                            </span>
+                            <button className={styles.commitModalClose} onClick={() => { setImportModalOpen(false); setImportError(null); setImportPending(null); }}>
+                                <BiX />
+                            </button>
+                        </div>
+
+                        {importPending ? (
+                            /* ── Duplicate confirmation ── */
+                            <>
+                                <p style={{ fontSize: "8.5pt", color: "var(--color-foreground-light)", margin: "0 0 12px", lineHeight: 1.6 }}>
+                                    The following {importPending.duplicates.length} row{importPending.duplicates.length !== 1 ? "s" : ""} have IDs that already exist in the table.
+                                    Would you like to <strong>edit the existing rows</strong> with the imported values, or <strong>ignore the duplicates</strong> and only add new rows?
+                                </p>
+                                <div style={{
+                                    background: "var(--color-primary-dark)",
+                                    border: "1px solid var(--color-third)",
+                                    borderRadius: 8,
+                                    padding: "8px 12px",
+                                    maxHeight: 200,
+                                    overflowY: "auto",
+                                    marginBottom: 16,
+                                }}>
+                                    {importPending.duplicates.map((dup) => (
+                                        <div key={String(dup.id)} style={{ fontSize: "8.5pt", fontFamily: "monospace", color: "var(--color-foreground)", padding: "2px 0" }}>
+                                            {String(dup.id)}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                                    <button className={styles.commitBarDiscard} onClick={() => { setImportModalOpen(false); setImportPending(null); setImportError(null); }}>
+                                        Cancel
+                                    </button>
+                                    <button className={styles.commitBarDiscard} onClick={() => { commitImportResult(importPending.newDrafts, []); setImportPending(null); }}>
+                                        Ignore Duplicates
+                                    </button>
+                                    <button className={styles.commitBarBtn} onClick={() => { commitImportResult(importPending.newDrafts, importPending.duplicates); setImportPending(null); }}>
+                                        <BiCheck /> Edit Existing Rows
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            /* ── Paste CSV form ── */
+                            <>
+                                <p style={{ fontSize: "8.5pt", color: "var(--color-foreground-light)", margin: "0 0 10px" }}>
+                                    Paste CSV text below. The first row must be a header row matching the column labels (same format as the CSV export).
+                                </p>
+                                <textarea
+                                    className={styles.editInput}
+                                    style={{ width: "100%", minHeight: 180, fontFamily: "monospace", fontSize: "8pt", resize: "vertical", boxSizing: "border-box" }}
+                                    placeholder={"Column A,Column B,Column C\nvalue1,value2,value3"}
+                                    value={importText}
+                                    onChange={(e) => { setImportText(e.target.value); setImportError(null); }}
+                                    autoFocus
+                                />
+                                {importError && (
+                                    <p style={{ fontSize: "8.5pt", color: "var(--color-danger, #e55)", margin: "6px 0 0" }}>{importError}</p>
+                                )}
+                                <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
+                                    <button className={styles.commitBarDiscard} onClick={() => { setImportModalOpen(false); setImportError(null); }}>
+                                        Cancel
+                                    </button>
+                                    <button className={styles.commitBarBtn} onClick={() => applyImportCsv(importText)}>
+                                        <BiCheck /> Import
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

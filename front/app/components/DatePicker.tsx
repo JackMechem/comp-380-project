@@ -40,7 +40,7 @@ const DatePicker = ({
 }: DatePickerProps) => {
     const [open, setOpen] = useState(autoOpen);
     const [viewMonth, setViewMonth] = useState(selected ?? new Date());
-    const [popupPos, setPopupPos] = useState<{ top: number; left: number } | null>(null);
+    const [popupPos, setPopupPos] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
     const [popupAlign, setPopupAlign] = useState<"center" | "left" | "right">("center");
     const [popupAbove, setPopupAbove] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -65,10 +65,16 @@ const DatePicker = ({
         if (portal && triggerRef.current) {
             const rect = triggerRef.current.getBoundingClientRect();
             const POPUP_WIDTH = 280;
+            const POPUP_HEIGHT = 320;
             const rawLeft = rect.left;
             const rightOverflow = rawLeft + POPUP_WIDTH - (window.innerWidth - 8);
             const left = rightOverflow > 0 ? Math.max(8, rawLeft - rightOverflow) : rawLeft;
-            setPopupPos({ top: rect.bottom + 4, left });
+            const overflowsBelow = rect.bottom + 4 + POPUP_HEIGHT > window.innerHeight - 8;
+            if (overflowsBelow) {
+                setPopupPos({ bottom: window.innerHeight - rect.top + 4, left });
+            } else {
+                setPopupPos({ top: rect.bottom + 4, left });
+            }
         }
         if (!popupRef.current) return;
         const rect = popupRef.current.getBoundingClientRect();
@@ -118,7 +124,7 @@ const DatePicker = ({
             ref={popupRef}
             data-datepicker-portal="true"
             className={`${styles.popup} ${portal ? "" : `${popupPositionClass} ${popupAlignClass}`}`}
-            style={portal && popupPos ? { position: "fixed", top: popupPos.top, left: popupPos.left, zIndex: 99999 } : undefined}
+            style={portal && popupPos ? { position: "fixed", top: popupPos.top, bottom: popupPos.bottom, left: popupPos.left, zIndex: 99999 } : undefined}
         >
             <div className={styles.header}>
                 <button

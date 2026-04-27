@@ -7,11 +7,11 @@ import { useMobileSidebarStore } from "@/stores/mobileSidebarStore";
 import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCar, BiChevronLeft, BiChevronRight, BiChevronDown,
-    BiPlus, BiEdit, BiTable, BiGridAlt, BiX, BiCalendar, BiUser, BiMenu, BiListUl, BiLineChart,
+    BiPlus, BiEdit, BiTable, BiGridAlt, BiX, BiCalendar, BiUser, BiMenu, BiListUl, BiLineChart, BiData,
 } from "react-icons/bi";
 import styles from "./adminSidebar.module.css";
 
-type Section = "cars" | "reservations" | "users" | "stats";
+type Section = "cars" | "reservations" | "users" | "stats" | "tools";
 
 interface SectionDef {
     id: Section;
@@ -58,6 +58,14 @@ const SECTIONS: SectionDef[] = [
         label: "Stats",
         items: [
             { icon: <BiLineChart />, label: "Popularity", view: "popularity" },
+        ],
+    },
+    {
+        id: "tools",
+        icon: <BiData />,
+        label: "Tools",
+        items: [
+            { icon: <BiData />, label: "CSV Generator", view: "csv-generator" },
         ],
     },
 ];
