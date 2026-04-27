@@ -20,6 +20,7 @@ import AccountsListPanel from "@/app/admin/components/panels/AccountsListPanel";
 import UsersListPanel from "@/app/admin/components/panels/UsersListPanel";
 import ReviewsListPanel from "@/app/admin/components/panels/ReviewsListPanel";
 import PaymentsListPanel from "@/app/admin/components/panels/PaymentsListPanel";
+import PopularityPanel from "@/app/admin/components/panels/PopularityPanel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,7 @@ const ADMIN_VIEWS = new Set<UserDashboardView>([
     "list-data", "list-reservations", "list-accounts", "list-users", "list-reviews", "list-payments",
     "view-permissions-admin", "view-permissions-staff",
     "create-invoice", "view-payments",
+    "stats-popularity",
 ]);
 
 export function isAdminView(view: UserDashboardView): boolean {
@@ -91,6 +93,8 @@ export default function AdminContentWrapper() {
             return <ReviewsListPanel />;
         case "list-payments":
             return <PaymentsListPanel />;
+        case "stats-popularity":
+            return <PopularityPanel />;
         case "admin-dashboard":
         default:
             return <AdminDashboardPanel />;

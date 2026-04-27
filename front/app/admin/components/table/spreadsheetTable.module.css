@@ -1168,6 +1168,25 @@ textarea.editInput {
     background: var(--color-accent);
 }
 
+/* ── Browse filter side panel ───────────────────────────────────────────── */
+.filterSidePanel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    border-left: 1px solid var(--color-third);
+    background: var(--color-primary);
+    overflow: hidden;
+}
+
+.filterSectionLabel {
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-foreground-light);
+    margin-bottom: 8px;
+}
+
 /* ── Preview panel ──────────────────────────────────────────────────────── */
 .previewPanel {
     display: flex;
@@ -2183,7 +2202,8 @@ tr:hover .markdownCellBtn {
     }
 
     .previewPanel,
-    .markdownPanel {
+    .markdownPanel,
+    .filterSidePanel {
         position: absolute;
         inset: 0;
         width: 100% !important;
