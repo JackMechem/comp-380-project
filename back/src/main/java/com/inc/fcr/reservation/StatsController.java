@@ -30,26 +30,9 @@ public class StatsController {
     ); // %Y = year, %m = month, %u = week, %d = day
 
     /**
-     * Statistics for admin dashboard information overview (requires write perms to view)
-     * Retrieves Cars and their (estimated) revenue over time for ease of graphing
-     * Estimated by their days checked out per reservation as payments table doesn't store per car payments
-     * Supports query params:
-     * Default query params for filtering, selecting, and searching are applicable
-     * Supports groupByCar and groupByTime boolean params (case sensitive)
-     * Both default to true and at least 1 must be enabled
-     * When both are enabled, Cars may list more than once (once per time unit)
-     * Supports timeUnit param (case sensitive) that controls the time grouping size
-     * Allowed values: "day", "week", "month", "year"
-     * Also controls date returned: "%Y-%m-%d", "%Y-%u", "%Y-%m", "%Y"
-     * Defaults to an appropriate value for the given date range
-     * Date range set through dateRangeStart and dateRangeEnd params
-     * Structure
-     * car is a full car object (selectable) *
-     * timeUnit is the number grouped by *
-     * date is the string partial date of the group for context/ease of display *
-     * revenue is the estimated revenue during the time period on the car(s)
-     * Ex: [{"car": {...}, "timeUnit": 15, "date": "2026-04-15", "revenue": 120.0}, {...}, ...]
-     * * Excluded if not grouped by (included by default)
+     * Retrieves estimated revenue statistics (estimated) for cars over time.
+     * Supports filtering, selecting, searching, groupByCar and/or groupByTime, timeUnit, and dateRange params.
+     * Returns car objects, timeUnit, date, and revenue values.
      */
     public static void getRevenue(Context ctx) {
         try {
@@ -79,25 +62,9 @@ public class StatsController {
 
 
     /**
-     * Statistics for admin dashboard information overview (requires write perms to view)
-     * Retrieves Cars and their popularity over time for ease of graphing
-     * Supports query params:
-     * Default query params for filtering, selecting, and searching are applicable
-     * Supports groupByCar and groupByTime boolean params (case sensitive)
-     * Both default to true and at least 1 must be enabled
-     * When both are enabled, Cars may list more than once (once per time unit)
-     * Supports timeUnit param (case sensitive) that controls the time grouping size
-     * Allowed values: "day", "week", "month", "year"
-     * Also controls date returned: "%Y-%m-%d", "%Y-%u", "%Y-%m", "%Y"
-     * Defaults to an appropriate value for the given popularity date range
-     * Popularity date range set through normal popularity sort range params above
-     * Structure
-     * car is a full car object (selectable) *
-     * timeUnit is the number grouped by *
-     * date is the string partial date of the group for context/ease of display *
-     * popularity is the number of reservations during the time period on the car(s)
-     * Ex: [{"car": {...}, "timeUnit": 15, "date": "2026-04-15", "popularity": 4}, {...}, ...]
-     * * Excluded if not grouped by (included by default)
+     * Retrieves popularity statistics (reservations) for cars over time.
+     * Supports filtering, selecting, searching, groupByCar and/or groupByTime, timeUnit, and dateRange params.
+     * Returns car objects, timeUnit, date, and popularity counts.
      */
     public static void getPopularity(Context ctx) {
         try {
