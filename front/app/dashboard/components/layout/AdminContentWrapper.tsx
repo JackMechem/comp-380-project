@@ -22,6 +22,7 @@ import ReviewsListPanel from "@/app/admin/components/panels/ReviewsListPanel";
 import PaymentsListPanel from "@/app/admin/components/panels/PaymentsListPanel";
 import PopularityPanel from "@/app/admin/components/panels/PopularityPanel";
 import RevenuePanel from "@/app/admin/components/panels/RevenuePanel";
+import CsvGeneratorPanel from "@/app/admin/components/panels/CsvGeneratorPanel";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ const ADMIN_VIEWS = new Set<UserDashboardView>([
     "create-invoice", "view-payments",
     "stats-popularity",
     "stats-revenue",
+    "csv-generator",
 ]);
 
 export function isAdminView(view: UserDashboardView): boolean {
@@ -99,6 +101,8 @@ export default function AdminContentWrapper() {
             return <PopularityPanel />;
         case "stats-revenue":
             return <RevenuePanel />;
+        case "csv-generator":
+            return <CsvGeneratorPanel />;
         case "admin-dashboard":
         default:
             return <AdminDashboardPanel />;

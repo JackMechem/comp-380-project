@@ -69,7 +69,7 @@ export const getReservations = (opts: {
     sortDir?: "asc" | "desc";
 } = {}) => browserApi.reservations.getAll(opts);
 
-export const createReservation = (data: { car: string; user: number; pickUpTime: number; dropOffTime: number; payments?: string[] }) =>
+export const createReservation = (data: { car: string; user: number; pickUpTime: number; dropOffTime: number; dateBooked: number; payments?: string[] }) =>
     browserApi.reservations.create(data);
 
 export const updateReservation = (reservationId: string | number, patch: Record<string, unknown>) =>

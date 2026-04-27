@@ -5,7 +5,7 @@ import { useWindowSize } from "@/app/hooks/useWindowSize";
 import {
     BiCalendar, BiUser, BiChevronLeft, BiChevronRight, BiChevronDown,
     BiLogOut, BiCar, BiPlus, BiEdit, BiTable, BiGridAlt, BiShieldQuarter,
-    BiStar, BiBookmark, BiX, BiMenu, BiSlider, BiReceipt, BiListUl, BiGroup, BiIdCard, BiError, BiLineChart,
+    BiStar, BiBookmark, BiX, BiMenu, BiSlider, BiReceipt, BiListUl, BiGroup, BiIdCard, BiError, BiLineChart, BiData,
 } from "react-icons/bi";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -142,6 +142,14 @@ const ADMIN_SECTIONS: NavSection[] = [
             { icon: <BiReceipt />,   label: "Revenue",       view: "stats-revenue"    },
         ],
     },
+    {
+        id: "tools",
+        icon: <BiData />,
+        label: "Tools",
+        items: [
+            { icon: <BiData />, label: "CSV Generator", view: "csv-generator" },
+        ],
+    },
 ];
 
 const ADMIN_VIEWS = new Set<UserDashboardView>([
@@ -152,6 +160,7 @@ const ADMIN_VIEWS = new Set<UserDashboardView>([
     "create-invoice", "view-payments",
     "stats-popularity",
     "stats-revenue",
+    "csv-generator",
 ]);
 
 const DesktopSidebar = () => {

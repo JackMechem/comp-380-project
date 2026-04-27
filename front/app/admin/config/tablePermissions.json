@@ -83,9 +83,9 @@
         "admin": {
             "canEdit": true,
             "canDelete": true,
-            "canAddRow": false,
+            "canAddRow": true,
             "lockedCols": [],
-            "permanentlyLockedCols": ["paymentId"]
+            "permanentlyLockedCols": []
         },
         "staff": {
             "canEdit": false,

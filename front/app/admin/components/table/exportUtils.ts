@@ -95,3 +95,34 @@ export function buildCsv(headers: string[], rows: unknown[][]): string {
     const body = rows.map(r => r.map(escapeCell).join(",")).join("\n");
     return head + "\n" + body;
 }
+
+// ── CSV parser ────────────────────────────────────────────────────────────────
+
+export function parseCsv(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let field = "";
+    let inQuotes = false;
+    const src = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+    for (let i = 0; i < src.length; i++) {
+        const c = src[i];
+        if (inQuotes) {
+            if (c === '"') {
+                if (src[i + 1] === '"') { field += '"'; i++; }
+                else inQuotes = false;
+            } else {
+                field += c;
+            }
+        } else {
+            if (c === '"') { inQuotes = true; }
+            else if (c === ",") { row.push(field); field = ""; }
+            else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+            else { field += c; }
+        }
+    }
+    // push last field/row
+    row.push(field);
+    if (row.some(f => f !== "")) rows.push(row);
+    return rows;
+}

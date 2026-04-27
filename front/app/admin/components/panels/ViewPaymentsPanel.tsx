@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Payment } from "@/app/types/ReservationTypes";
 import SpreadsheetTable, { Column, RowEdit } from "../table/SpreadsheetTable";
 import { useTablePermissions } from "../../config/useTablePermissions";
+import { createPayment } from "../../actions";
 import { ActiveFilter, FilterableColumn, filtersToRecord } from "../table/FilterPanel";
 import { useTablePrefsStore } from "@/stores/tablePrefsStore";
 
@@ -221,7 +222,7 @@ function PaymentPreview({ payment }: { payment: Payment }) {
 const PAYMENT_TYPES = ["CASH", "CREDIT", "DEBIT", "CHECK", "SERVICE", "INVOICE"];
 
 const COLUMNS: Column<Payment>[] = [
-    { key: "paymentId",   label: "Payment ID",  defaultVisible: true, locked: true,  render: (p) => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{p.paymentId}</span> },
+    { key: "paymentId",   label: "Payment ID",  defaultVisible: true, locked: true, newRowEditable: true, render: (p) => <span style={{ fontFamily: "monospace", fontSize: 11 }}>{p.paymentId}</span> },
     { key: "paymentType", label: "Type",        defaultVisible: true, editable: true, editType: "select", editOptions: PAYMENT_TYPES, getValue: (p) => p.paymentType, render: (p) => p.paymentType },
     { key: "totalAmount", label: "Total",       defaultVisible: true, editable: true, editType: "number", getValue: (p) => p.totalAmount, render: (p) => fmtCurrency(p.totalAmount) },
     { key: "amountPaid",  label: "Amount Paid", defaultVisible: true, editable: true, editType: "number", getValue: (p) => p.amountPaid, render: (p) => fmtCurrency(p.amountPaid) },
@@ -242,7 +243,7 @@ const COLUMNS: Column<Payment>[] = [
 const PAGE_SIZE = 25;
 
 export default function ViewPaymentsPanel() {
-    const { isAdmin, canEdit, canDelete, lockedCols, permanentlyLockedCols } = useTablePermissions("payments");
+    const { isAdmin, canEdit, canDelete, canAddRow, lockedCols, permanentlyLockedCols } = useTablePermissions("payments");
     const [payments, setPayments] = useState<Payment[]>([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(PAGE_SIZE);
@@ -286,6 +287,18 @@ export default function ViewPaymentsPanel() {
                   .toLowerCase()
                   .includes(query.toLowerCase()))
         : payments;
+
+    const handleCreateRow = canAddRow ? async (data: Record<string, string | string[]>) => {
+        await createPayment({
+            paymentId:   String(data.paymentId ?? ""),
+            totalAmount: Number(data.totalAmount ?? 0),
+            amountPaid:  Number(data.amountPaid ?? 0),
+            date:        (() => { const d = String(data.date ?? ""); return d.includes("T") ? d : (d || new Date().toISOString().split("T")[0]) + "T00:00:00Z"; })(),
+            paymentType: String(data.paymentType ?? "INVOICE"),
+            reservations: [],
+        });
+        fetchPage(page, pageSize, activeFilters, true);
+    } : undefined;
 
     const handleSaveEdits = canEdit ? async (edits: RowEdit<Payment>[]) => {
         try {
@@ -344,6 +357,7 @@ export default function ViewPaymentsPanel() {
             onSelectionChange={setSelected}
             bulkDeleting={bulkDeleting}
             onRefresh={() => fetchPage(page, pageSize, activeFilters, true)}
+            onCreateRow={handleCreateRow}
             onSaveEdits={handleSaveEdits}
             onDeleteOne={handleDeleteOne}
             onBulkDelete={handleBulkDelete}
