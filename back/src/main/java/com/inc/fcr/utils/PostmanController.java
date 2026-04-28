@@ -47,6 +47,7 @@ public class PostmanController {
             + carExtras() + ",\n"
             + crudFolder("Reservations", "reservations", "{{reservationId}}", reservationBody()) + ",\n"
             + crudFolder("Users", "users", "{{userId}}", userBody()) + ",\n"
+            + userExtras() + ",\n"
             + crudFolder("Payments", "payments", "{{paymentId}}", paymentBody()) + ",\n"
             + crudFolder("Reviews", "reviews", "{{reviewId}}", reviewBody()) + ",\n"
             + stripeFolder() + ",\n"
@@ -95,6 +96,16 @@ public class PostmanController {
                 body, "Update fields on an existing " + singular.toLowerCase() + ". Send only the fields you want to change.", null) + ",\n"
             + request("Delete " + singular, "DELETE", path + "/" + idVar,
                 null, "Delete a " + singular.toLowerCase() + " by ID.", null)
+        );
+    }
+
+    // ---- User extras ----
+
+    private static String userExtras() {
+        return folder("User Payments",
+            request("Get Payments by User", "GET", "users/{{userId}}/payments",
+                null, "Returns all payments linked to the given user through their reservations.",
+                commonQueryParams())
         );
     }
 

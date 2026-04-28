@@ -11,6 +11,7 @@ import com.inc.fcr.reservation.Reservation;
 import com.inc.fcr.reservation.StatsController;
 import com.inc.fcr.reviews.Review;
 import com.inc.fcr.user.User;
+import com.inc.fcr.user.UserPaymentsController;
 import com.inc.fcr.utils.*;
 import com.inc.fcr.car.enums.EnumController;
 
@@ -147,6 +148,7 @@ public class Main {
                         get(users::getOne, Role.ANYONE);
                         patch(users::update, Role.WRITE);
                         delete(users::delete, Role.ADMIN);
+                        path("payments", () -> get(UserPaymentsController::getByUser, Role.ANYONE));
                     });
                 });
 
