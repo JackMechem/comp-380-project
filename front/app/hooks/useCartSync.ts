@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useUserDashboardStore } from "@/stores/userDashboardStore";
-import { useCartStore, fetchCart } from "@/stores/cartStore";
+import { useCartStore } from "@/stores/cartStore";
 
 /**
  * Fetches cart from the API when the user is authenticated.
@@ -16,7 +16,6 @@ export function useCartSync() {
         if (isAuthenticated && accountId && lastFetchedId.current !== accountId) {
             lastFetchedId.current = accountId;
             useCartStore.getState().clearCart();
-            fetchCart(accountId);
         }
         if (!isAuthenticated) {
             lastFetchedId.current = null;
