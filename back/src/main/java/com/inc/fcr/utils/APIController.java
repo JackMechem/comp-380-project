@@ -1,6 +1,6 @@
 package com.inc.fcr.utils;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.inc.fcr.database.ParsedQueryParams;
@@ -132,6 +132,7 @@ public class APIController {
 
             // Merge specified fields
             ObjectMapper mapper = new ObjectMapper().findAndRegisterModules().registerModule(new JavaTimeModule());
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             // If set to true (default), changes to json objects will be appended to the existing content, not overridden
             mapper.setDefaultMergeable(false);
             // NOTE: Shallow merge, nested trees overridden!
