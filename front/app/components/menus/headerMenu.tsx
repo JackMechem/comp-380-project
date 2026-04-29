@@ -12,7 +12,7 @@ import { useBookmarkStore, BookmarkCar, removeBookmark as removeBookmarkApi, cle
 import { useBookmarkSync } from "@/app/hooks/useBookmarkSync";
 import DefaultProfilePhoto from "../defaultProfilePhoto";
 import Image from "next/image";
-import { BiTrash, BiUser, BiGitCompare, BiTerminal, BiPlus, BiCheck, BiChevronDown, BiChevronUp, BiLogOut } from "react-icons/bi";
+import { BiTrash, BiUser, BiGitCompare, BiTerminal, BiPlus, BiCheck, BiChevronDown, BiChevronUp, BiLogOut, BiDotsVerticalRounded } from "react-icons/bi";
 import { CartProps } from "@/app/types/CartTypes";
 import { BsCart2, BsCart3, BsBookmark, BsPeopleFill } from "react-icons/bs";
 import { IoClose } from "react-icons/io5";
@@ -21,8 +21,8 @@ import styles from "./headerMenu.module.css";
 import { MdSpaceDashboard } from "react-icons/md";
 
 const ROLE_COLOR: Record<string, string> = {
-    ADMIN: "#ef4444",
-    STAFF: "#3b82f6",
+    ADMIN: "var(--color-accent)",
+    STAFF: "var(--color-accent)",
 };
 
 const HeaderMenu = () => {
@@ -39,6 +39,15 @@ const HeaderMenu = () => {
     useBookmarkSync();
 
     const isLoggedIn = isAuthenticated && !!sessionToken;
+
+    const ctxItemStyle: React.CSSProperties = {
+        display: "flex", alignItems: "center", gap: 8,
+        width: "calc(100% - 8px)", margin: "0 4px",
+        padding: "6px 10px", fontSize: "9.5pt",
+        color: "var(--color-foreground)", background: "transparent",
+        border: "none", borderRadius: 6,
+        cursor: "pointer", textAlign: "left", boxSizing: "border-box",
+    };
     const isGuest = isLoggedIn && role === "GUEST";
     const isAdmin = isLoggedIn && (role === "ADMIN" || role === "STAFF");
 
@@ -85,28 +94,32 @@ const HeaderMenu = () => {
     const [cartOpen, setCartOpen] = useState(true);
     const [bookmarksOpen, setBookmarksOpen] = useState(true);
 
-    // Account switcher popup
-    const [acctMenuOpen, setAcctMenuOpen] = useState(false);
-    const acctBtnRef = useRef<HTMLButtonElement>(null);
-    const acctMenuRef = useRef<HTMLDivElement>(null);
-    const [acctMenuPos, setAcctMenuPos] = useState({ top: 0, left: 0 });
+    // Dots context menu (replaces old acctMenu popup)
+    const [dotMenuOpen, setDotMenuOpen] = useState(false);
+    const [dotMenuView, setDotMenuView] = useState<"main" | "accounts">("main");
+    const dotBtnRef = useRef<HTMLButtonElement>(null);
+    const dotMenuRef = useRef<HTMLDivElement>(null);
+    const [dotMenuPos, setDotMenuPos] = useState({ top: 0, left: 0 });
 
     useEffect(() => {
-        if (!acctMenuOpen) return;
+        if (!dotMenuOpen) return;
         const handler = (e: MouseEvent) => {
-            if (acctMenuRef.current?.contains(e.target as Node) || acctBtnRef.current?.contains(e.target as Node)) return;
-            setAcctMenuOpen(false);
+            if (dotMenuRef.current?.contains(e.target as Node) || dotBtnRef.current?.contains(e.target as Node)) return;
+            setDotMenuOpen(false);
+            setDotMenuView("main");
         };
         document.addEventListener("mousedown", handler);
         return () => document.removeEventListener("mousedown", handler);
-    }, [acctMenuOpen]);
+    }, [dotMenuOpen]);
 
-    const openAcctMenu = () => {
-        if (!acctBtnRef.current) return;
-        const rect = acctBtnRef.current.getBoundingClientRect();
-        setAcctMenuPos({ top: rect.bottom + 4, left: rect.right });
-        setAcctMenuOpen(o => !o);
+    const openDotMenu = () => {
+        if (!dotBtnRef.current) return;
+        const rect = dotBtnRef.current.getBoundingClientRect();
+        setDotMenuPos({ top: rect.bottom + 4, left: rect.right });
+        setDotMenuView("main");
+        setDotMenuOpen(v => !v);
     };
+
 
     const displayName = isLoggedIn ? (userName ?? userEmail ?? "User") : null;
     const displayRole = isAdmin
@@ -127,13 +140,13 @@ const HeaderMenu = () => {
 
                 {/* Profile section */}
                 <div className={styles.profileRow}>
-                    <div className={styles.avatarBorder} style={isAdmin ? { borderColor: role === "ADMIN" ? "rgba(239,68,68,0.4)" : "rgba(59,130,246,0.4)" } : undefined}>
+                    <div className={styles.avatarBorder} style={isAdmin ? { borderColor: "color-mix(in srgb, var(--color-accent) 40%, transparent)" } : undefined}>
                         {role === "ADMIN" ? (
-                            <div className={styles.roleAvatar} style={{ background: "#ef4444" }}>
+                            <div className={styles.roleAvatar} style={{ background: "var(--color-accent)" }}>
                                 <BiUser style={{ fontSize: 22, color: "#fff" }} />
                             </div>
                         ) : role === "STAFF" ? (
-                            <div className={styles.roleAvatar} style={{ background: "#3b82f6" }}>
+                            <div className={styles.roleAvatar} style={{ background: "var(--color-accent)" }}>
                                 <BiUser style={{ fontSize: 22, color: "#fff" }} />
                             </div>
                         ) : (
@@ -143,83 +156,148 @@ const HeaderMenu = () => {
                     <div className={styles.profileInfo}>
                         <p className={styles.profileName}>{displayName ?? "Not signed in"}</p>
                         <p className={styles.profileRole}>{displayRole}</p>
-                        {isLoggedIn ? (
-                            <div className={styles.profileActions}>
-                                <Link href="/dashboard" onClick={close} className={styles.gearBtn} title="Dashboard">
-                                    <MdSpaceDashboard />
-                                </Link>
-                                {role === "ADMIN" && (
-                                    <button onClick={() => { close(); setTimeout(openDevConsole, 50); }} className={styles.gearBtn} title="Dev Console">
-                                        <BiTerminal />
-                                    </button>
-                                )}
-                                {isAdmin && (
-                                    <button ref={acctBtnRef} onClick={openAcctMenu} className={`${styles.gearBtn} ${acctMenuOpen ? styles.gearBtnActive : ""}`} title="Switch account">
-                                        <BsPeopleFill />
-                                    </button>
-                                )}
-                                <button onClick={handleSignOut} className={styles.gearBtn} title="Sign out" style={{ color: "var(--color-accent)" }}>
-                                    <BiLogOut />
-                                </button>
-                            </div>
-                        ) : (
+                        {!isLoggedIn && (
                             <div className={styles.authBtns}>
                                 <Link href="/login" onClick={close} className={styles.loginBtn}>Login</Link>
                             </div>
                         )}
                     </div>
-                </div>
-
-                {/* Account switcher popup */}
-                {acctMenuOpen && createPortal(
-                    <div
-                        ref={acctMenuRef}
-                        className={styles.acctMenu}
-                        style={{ top: acctMenuPos.top, left: acctMenuPos.left, transform: "translateX(-100%)" }}
-                    >
-                        {sessions.map((s, i) => {
-                            const active = i === activeSessionIndex;
-                            const color = ROLE_COLOR[s.role] ?? "var(--color-foreground-light)";
-                            const label = s.userName || s.userEmail || `#${s.accountId}`;
-                            return (
-                                <div
-                                    key={s.accountId}
-                                    className={`${styles.acctMenuItem} ${active ? styles.acctMenuItemActive : ""}`}
-                                    onClick={() => {
-                                        if (!active) {
-                                            switchSession(i);
-                                            applySessionCookies(s.token, s.accountId, s.role, s.sessionExpiresAt, s.stripeUserId);
-                                            setAcctMenuOpen(false);
-                                        }
-                                    }}
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => { if (e.key === "Enter" && !active) { switchSession(i); setAcctMenuOpen(false); } }}
-                                >
-                                    <div className={styles.acctMenuAvatar} style={{ background: color }}>
-                                        <BiUser style={{ color: "#fff", fontSize: 11 }} />
-                                    </div>
-                                    <div className={styles.acctMenuInfo}>
-                                        <div className={styles.acctMenuName}>{label}</div>
-                                        <div className={styles.acctMenuRole} style={{ color }}>{s.role}</div>
-                                    </div>
-                                    {active && <BiCheck style={{ color, fontSize: 16, flexShrink: 0 }} />}
-                                    {!active && (
-                                        <button className={styles.acctMenuRemove} onClick={(e) => { e.stopPropagation(); removeSession(i); }} title="Remove">
-                                            <IoClose />
-                                        </button>
-                                    )}
-                                </div>
-                            );
-                        })}
-                        <div className={styles.acctMenuDivider} />
-                        <button className={styles.acctMenuItem} onClick={() => { handleAddAccount(); setAcctMenuOpen(false); }}>
-                            <BiPlus style={{ fontSize: 16, flexShrink: 0 }} /> Add account
+                    {isLoggedIn && (
+                        <button ref={dotBtnRef} onClick={openDotMenu} className={`${styles.gearBtn} ${dotMenuOpen ? styles.gearBtnActive : ""}`} title="More options">
+                            <BiDotsVerticalRounded />
                         </button>
-                        {sessions.length > 1 && (
-                            <button className={`${styles.acctMenuItem} ${styles.acctMenuDanger}`} onClick={() => { clearAllSessions(); setAcctMenuOpen(false); close(); }}>
-                                <IoClose style={{ fontSize: 16, flexShrink: 0 }} /> Sign out all
+                    )}
+                </div>
+                {isLoggedIn && (
+                    <div className={styles.menuActions}>
+                        <Link href="/dashboard" onClick={close} className={styles.menuActionBtn}>
+                            <div className={styles.menuActionIcon}>
+                                <MdSpaceDashboard />
+                            </div>
+                            <div className={styles.menuActionText}>
+                                <span className={styles.menuActionTitle}>Dashboard</span>
+                                <span className={styles.menuActionSub}>Manage your reservations & account</span>
+                            </div>
+                        </Link>
+                        {role === "ADMIN" && (
+                            <button onClick={() => { close(); setTimeout(openDevConsole, 50); }} className={styles.menuActionBtn}>
+                                <div className={styles.menuActionIcon}>
+                                    <BiTerminal />
+                                </div>
+                                <div className={styles.menuActionText}>
+                                    <span className={styles.menuActionTitle}>Dev Console</span>
+                                    <span className={styles.menuActionSub}>Admin tools & debug panel</span>
+                                </div>
                             </button>
+                        )}
+                    </div>
+                )}
+
+                {/* Dots context menu */}
+                {dotMenuOpen && typeof document !== "undefined" && createPortal(
+                    <div
+                        ref={dotMenuRef}
+                        style={{
+                            position: "fixed",
+                            top: dotMenuPos.top,
+                            left: dotMenuPos.left,
+                            transform: "translateX(-100%)",
+                            zIndex: 9999,
+                            background: "var(--color-primary)",
+                            border: "1px solid var(--color-third)",
+                            borderRadius: 10,
+                            padding: "4px 0",
+                            minWidth: 200,
+                            boxShadow: "0 8px 24px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1)",
+                        }}
+                    >
+                        {dotMenuView === "main" ? (
+                            <>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => setDotMenuView("accounts")}
+                                        style={{ ...ctxItemStyle, justifyContent: "space-between" }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                    >
+                                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}><BsPeopleFill size={13} /> Switch Account</span>
+                                        <BiChevronDown size={13} style={{ transform: "rotate(-90deg)" }} />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => { setDotMenuOpen(false); handleSignOut(); }}
+                                    style={{ ...ctxItemStyle, color: "#ef4444" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                    <BiLogOut size={13} /> Sign Out
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => setDotMenuView("main")}
+                                    style={{ ...ctxItemStyle, color: "var(--color-foreground-light)", fontSize: "8.5pt" }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                    <BiChevronDown size={13} style={{ transform: "rotate(90deg)" }} /> Back
+                                </button>
+                                <div style={{ height: 1, background: "var(--color-third)", margin: "4px 0" }} />
+                                {sessions.map((s, i) => {
+                                    const active = i === activeSessionIndex;
+                                    const color = ROLE_COLOR[s.role] ?? "var(--color-foreground-light)";
+                                    const label = s.userName || s.userEmail || `#${s.accountId}`;
+                                    return (
+                                        <div
+                                            key={s.accountId}
+                                            style={{ ...ctxItemStyle, display: "flex", cursor: active ? "default" : "pointer", opacity: active ? 1 : 0.85 }}
+                                            onClick={() => {
+                                                if (!active) {
+                                                    switchSession(i);
+                                                    applySessionCookies(s.token, s.accountId, s.role, s.sessionExpiresAt, s.stripeUserId);
+                                                    setDotMenuOpen(false);
+                                                }
+                                            }}
+                                            onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                        >
+                                            <div className={styles.acctMenuAvatar} style={{ background: color }}>
+                                                <BiUser style={{ color: "#fff", fontSize: 11 }} />
+                                            </div>
+                                            <div className={styles.acctMenuInfo} style={{ flex: 1, minWidth: 0 }}>
+                                                <div className={styles.acctMenuName}>{label}</div>
+                                                <div className={styles.acctMenuRole} style={{ color }}>{s.role}</div>
+                                            </div>
+                                            {active && <BiCheck style={{ color, fontSize: 16, flexShrink: 0 }} />}
+                                            {!active && (
+                                                <button className={styles.acctMenuRemove} onClick={(e) => { e.stopPropagation(); removeSession(i); }} title="Remove">
+                                                    <IoClose />
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                                <div style={{ height: 1, background: "var(--color-third)", margin: "4px 0" }} />
+                                <button
+                                    onClick={() => { handleAddAccount(); setDotMenuOpen(false); }}
+                                    style={ctxItemStyle}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                >
+                                    <BiPlus size={13} /> Add account
+                                </button>
+                                {sessions.length > 1 && (
+                                    <button
+                                        onClick={() => { clearAllSessions(); setDotMenuOpen(false); close(); }}
+                                        style={{ ...ctxItemStyle, color: "#ef4444" }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.background = "var(--color-primary-dark)"; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                                    >
+                                        <IoClose size={13} /> Sign out all
+                                    </button>
+                                )}
+                            </>
                         )}
                     </div>,
                     document.body

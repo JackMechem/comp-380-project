@@ -19,8 +19,11 @@ const CarPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
 
 	return (
 		<div>
-			<NavHeader white={false} mobileLeftSlot={<BackButton iconOnly />} />
+			<NavHeader white={false} />
 			<MainBodyContainer className="mt-[20px]">
+				<div className={styles.backButtonRow}>
+					<BackButton />
+				</div>
 				<ImageView images={carData.images} />
 				<div className={styles.twoColRow}>
 					<LeftColumn carData={carData} reviews={reviews} />

@@ -58,6 +58,7 @@
 	align-items: center;
 	gap: 14px;
 	padding: 20px;
+	justify-content: space-between;
 }
 
 .avatarBorder {
@@ -78,6 +79,7 @@
 .profileInfo {
 	flex: 1;
 	min-width: 0;
+	overflow: hidden;
 }
 
 .profileName {
@@ -96,7 +98,7 @@
 
 .profileActions {
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	align-items: center;
 	gap: 4px;
 	flex-shrink: 0;
@@ -130,6 +132,107 @@
 .gearBtnActive {
 	color: var(--color-accent);
 	background: var(--color-third);
+}
+
+.menuActions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 12px 8px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.menuActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-third);
+    background: var(--color-primary-dark);
+    text-decoration: none;
+    transition: background 150ms, border-color 150ms;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.menuActionBtn:hover {
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-primary-dark));
+    border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.menuActionBtnActive {
+    background: color-mix(in srgb, var(--color-accent) 8%, var(--color-primary-dark));
+    border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.menuActionBtnCompact {
+    background: transparent;
+    border-color: transparent;
+    padding: 7px 14px;
+}
+
+.menuActionBtnCompact:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-third);
+}
+
+.menuActionBtnCompact .menuActionIcon {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    background: transparent;
+}
+
+.menuActionBtnCompact:hover .menuActionIcon {
+    background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.menuActionBtnCompact.menuActionBtnDanger:hover .menuActionIcon {
+    background: color-mix(in srgb, #ef4444 10%, transparent);
+}
+
+.menuActionBtnDanger .menuActionIcon {
+    background: color-mix(in srgb, #ef4444 12%, transparent);
+    color: #ef4444;
+}
+
+.menuActionBtnDanger .menuActionTitle {
+    color: #ef4444;
+}
+
+.menuActionIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 0.6rem;
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    color: var(--color-accent);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.menuActionText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.menuActionTitle {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--color-foreground);
+}
+
+.menuActionSub {
+    font-size: 8pt;
+    color: var(--color-foreground-light);
 }
 
 .signOutBtn {
