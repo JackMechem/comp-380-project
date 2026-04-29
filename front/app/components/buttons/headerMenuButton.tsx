@@ -27,14 +27,12 @@ const HeaderMenuButton = () => {
                 </div>
             )}
             {role === "ADMIN" ? (
-                <div className={styles.rolePill} style={{ background: "#ef4444" }}>
-                    <BiUser style={{ fontSize: 14, color: "#fff" }} />
-                    <span className={styles.rolePillText}>Admin</span>
+                <div className={styles.roleAvatar} style={{ background: "var(--color-accent)" }}>
+                    <BiUser style={{ fontSize: 16, color: "#fff" }} />
                 </div>
             ) : role === "STAFF" ? (
-                <div className={styles.rolePill} style={{ background: "#3b82f6" }}>
-                    <BiUser style={{ fontSize: 14, color: "#fff" }} />
-                    <span className={styles.rolePillText}>Staff</span>
+                <div className={styles.roleAvatar} style={{ background: "var(--color-accent)" }}>
+                    <BiUser style={{ fontSize: 16, color: "#fff" }} />
                 </div>
             ) : (
                 <DefaultProfilePhoto totalHeight={30} headSize={10} />
