@@ -363,19 +363,19 @@ public class ParsedQueryParams {
      *
      * @return the search clause string usable in ORDER and WHERE
      */
-    private String getSearchClause() {
+    public String getSearchClause() {
         if (searchText == null) return "";
         var i = new AtomicInteger(); // java stupidity equivalent to: int i = 0; and i++ below
         return "("+Strings.join(Arrays.stream(searchText.split(" ")).map(e -> {
             boolean invertedMatch = e.startsWith("-");
             if (invertedMatch) e = e.substring(1);
             return " CAST( REGEXP_LIKE(CONCAT_WS(' ', " + searchFieldsToStr() + "), :searchText"+ i.getAndIncrement() +", 'i') AS int) "
-                    + (invertedMatch ? "*-10" : ""); // large negative weight against inverted matches
+                    + (invertedMatch ? "*-10 " : ""); // large negative weight against inverted matches
         }).toList(), " + ")+")";
     }
 
     /** Helper function for search field processing called by {@code getSearchClause()} */
-    private String searchFieldsToStr() {
+    public String searchFieldsToStr() {
         return Strings.join(SEARCH_FIELDS.stream().map(e -> "c." + e).toList(), ", ");
     }
 
